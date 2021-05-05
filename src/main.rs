@@ -102,7 +102,7 @@ fn cpu_feature() {
     // 0x00000001_EDX
     let _has_htt        = bitflag!(a[3], 28);
     let _has_sse2       = bitflag!(a[3], 26);
-    let _has_sse        = bitflag!(a[3], 25);
+    let _has_sse        = bitflag!(a[3], 25); // Streaming SIMD Extensions
     let _has_fxsr       = bitflag!(a[3], 24);
     let _has_mmx        = bitflag!(a[3], 23);
     let _has_cmov       = bitflag!(a[3], 15);
@@ -118,25 +118,42 @@ fn cpu_feature() {
     let _has_osxsave    = bitflag!(a[2], 27);
     let _has_xsave      = bitflag!(a[2], 26);
     let _has_aes        = bitflag!(a[2], 25);
+    let _has_tsc_deadline = bitflag!(a[2], 24);
     let _has_popcnt     = bitflag!(a[2], 23);
     let _has_movbe      = bitflag!(a[2], 22);
+    let _has_x2apic     = bitflag!(a[2], 21);
     let _has_sse4_2     = bitflag!(a[2], 20);
     let _has_sse4_1     = bitflag!(a[2], 19);
-    let _has_pcid       = bitflag!(a[2], 17);
+    let _has_pcid       = bitflag!(a[2], 17); // Process-context identifiers
+    //  Reserved: let _has_       = bitflag!(a[2], 16);
+    let _has_pdcm       = bitflag!(a[2], 15);
+    let _has_xtpr       = bitflag!(a[2], 14);
     let _has_cx16       = bitflag!(a[2], 13);
     let _has_fma3       = bitflag!(a[2], 12);
-    let _has_ssse3      = bitflag!(a[2], 9);
-    let _has_smx        = bitflag!(a[2], 6);
-    let _has_vmx        = bitflag!(a[2], 5);
-    let _has_sse3       = bitflag!(a[2], 0);
+    let _has_sbdg       = bitflag!(a[2], 11);
+    let _has_cnxt_id    = bitflag!(a[2], 10);
+    let _has_ssse3      = bitflag!(a[2], 9); // Supplemental SSE3
+    let _has_tm2        = bitflag!(a[2], 8); // Thermal Monitor 2
+    let _has_est        = bitflag!(a[2], 7); // Enhaced SpeedStep
+    let _has_smx        = bitflag!(a[2], 6); // Safer Mode Extensions
+    let _has_vmx        = bitflag!(a[2], 5); // Virtual Machine Extensions
+    let _has_ds_cpl     = bitflag!(a[2], 4); // CPL Qualified Debug Store
+    let _has_monitor    = bitflag!(a[2], 3); // MONITOR/MWAIT
+    let _has_dtes64     = bitflag!(a[2], 2); // Debus Store
+    let _has_pclmulqdq  = bitflag!(a[2], 1);
+    let _has_sse3       = bitflag!(a[2], 0); 
 
     // 0x00000007_EBX_x0
     let _has_avx512_vl      = bitflag!(b[1], 31);
     let _has_avx512_bw      = bitflag!(b[1], 30);
     let _has_sha            = bitflag!(b[1], 29);
     let _has_avx512_cd      = bitflag!(b[1], 28);
-    let _has_avx512_er      = bitflag!(b[1], 27);
-    let _has_avx512_pf      = bitflag!(b[1], 26);
+    let _has_avx512_er      = bitflag!(b[1], 27); // Xeon Phi only
+    let _has_avx512_pf      = bitflag!(b[1], 26); // Xeon Phi only
+    let _has_intel_pt       = bitflag!(b[1], 25);
+    let _has_clwb           = bitflag!(b[1], 24);
+    let _has_clflushopt     = bitflag!(b[1], 23);
+    let _has_pcommit        = bitflag!(b[1], 22);
     let _has_avx512_ifma    = bitflag!(b[1], 21);
     let _has_avx512_dq      = bitflag!(b[1], 17);
     let _has_avx512_f       = bitflag!(b[1], 16);
@@ -164,13 +181,14 @@ fn cpu_feature() {
     let _has_avx_vnni       = bitflag!(c[0], 4);
 
     // 0x80000001_ECX
-    let _has_lahf           = bitflag!(d[2], 0);
+    let _has_prefetchhw     = bitflag!(d[2], 8); // 3dnowprefetch
+    let _has_lzcnt          = bitflag!(d[2], 5); // abm
+    let _has_lahf           = bitflag!(d[2], 0); // LAHF/SAHF
 
     // AVX512
     // Skylake server
     let _skx_feature        = _has_avx512_f && _has_avx512_dq && _has_avx512_ifma
-                                && _has_avx512_pf && _has_avx512_er && _has_avx512_cd
-                                && _has_avx512_bw && _has_avx512_vl;
+                                && _has_avx512_cd && _has_avx512_bw && _has_avx512_vl;
     // Cannon Lake
     let _cnl_feature        = _skx_feature && _has_avx512_ifma && _has_avx512_vbmi;
     // Cascade Lake
@@ -200,9 +218,8 @@ fn cpu_feature() {
                         && _has_avx512_cd && _has_avx512_dq && _has_avx512_vl;
 
     println!("EDX=0b{:032b}", a[3]);
-    println!(" HTT: {}", _has_htt);
-
     println!("ECX=0b{:032b}", a[2]);
+/*
     println!(" SSE(: {}, 2: {}, 3: {}, 4.1: {}, 4.2: {})\n SSSE3: {}",
         _has_sse, _has_sse2, _has_sse3, _has_sse4_1, _has_sse4_2, _has_ssse3);
     println!(" AVX(: {}, 2: {},) (XSAVE: {}, OSXSAVE: {})",
@@ -211,6 +228,7 @@ fn cpu_feature() {
         _has_avx512_f, _has_avx512_dq, _has_avx512_ifma);
     println!(" Skylake-X feature (AVX512): {}",
         _skx_feature);
+*/
     println!(" x86-64-v1: {}\n x86-64-v2: {}\n x86-64-v3: {}\n x86-64-v4: {}",
                 _x86_64_v1, _x86_64_v2, _x86_64_v3, _x86_64_v4);
 
@@ -377,7 +395,50 @@ fn fam_mod_step() {
 }
 
 fn core_count() {
+    println!("Core Count");
+    line();
 
+    let mut a: [u32; 4] = [0; 4];
+    let mut b: [u32; 4] = [0; 4];
+
+    unsafe {
+        asm!(
+            "cpuid",
+            in("eax") 0x1,
+            lateout("ebx") a[1],
+            lateout("ecx") _,
+            lateout("edx") a[3],
+        );
+        asm!(
+            "cpuid",
+            in("eax") _AX + 0x1e,
+            lateout("ebx") b[1],
+            lateout("ecx") b[2],
+            lateout("edx") _,
+        );
+    }
+
+    let has_htt             = ((a[3] >> 28) & 0x1) == 1;
+    let logical_core        = (a[1] >> 16) & 0xff;
+    let threads_per_core    = ((b[1] >> 8) & 0xff) + 1;
+    let phy_core            =
+                            if has_htt {
+                                logical_core / threads_per_core
+                            } else {
+                                logical_core
+                            };
+    let core_id             = b[1] & 0xff;
+
+    println!("0x{:08x}: eax=0x{:08X} ebx=0x{:08X} ecx=0x{:08X} edx=0x{:08X}",
+        0x1, a[0], a[1], a[2], a[3]);
+    println!("0x{:08x}: eax=0x{:08X} ebx=0x{:08X} ecx=0x{:08X} edx=0x{:08X}",
+        _AX + 0x1e, b[0], b[1], b[2], b[3]);
+    println!("HTT/SMT: {}", has_htt);
+    println!("CoreID: {}", core_id);
+    println!("Physical: {}", phy_core);
+    println!("Logical: {}", logical_core);
+    println!("Threads per Core: {}", threads_per_core);
+    println!();
 }
 
 fn get_vendor_name() {
@@ -424,4 +485,5 @@ fn main() {
     cache_info_amd();
     fam_mod_step();
     cpu_feature();
+    core_count();
 }
