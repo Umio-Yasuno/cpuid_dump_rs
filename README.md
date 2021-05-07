@@ -1,5 +1,7 @@
 ## ToDo
 
+ * [ ] CPUID dump option (for bin)
+ * [ ] Cache info of Intel CPU 
  * [ ] Core Affinity
     * [core_affinity - Rust](https://docs.rs/core_affinity/)
 

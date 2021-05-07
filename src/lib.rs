@@ -1,55 +1,19 @@
 #![feature(asm)]
 #![allow(dead_code)]
 
-// use std::ascii;
-// use std::str;
+pub mod cpuid_dump;
+use cpuid_dump::{line,_AX};
 
+/*
 static _AX: u32 = 0x8000_0000;
 
-pub fn line() {
+fn line() {
     for _i in 0..75 {
         print!("=");
     }
-    println!("");
-}
-
-pub fn cpuid_dump() {
-    println!("CPUID Dump");
-    line();
-
-    let mut a: [u32; 4] = [0; 4];
-
-    for i in 0x0..=0x10 {
-        unsafe {
-            asm!("cpuid",
-                inout("eax") i => a[0],
-                lateout("ebx") a[1],
-                lateout("ecx") a[2],
-                lateout("edx") a[3]
-            );
-        }
-
-        println!(" 0x{:08X}:  eax=0x{:08X} ebx=0x{:08X} ecx=0x{:08X} edx=0x{:08X}",
-            i, a[0], a[1], a[2], a[3]);
-    }
-
-    println!();
-
-    for i in 0x0..=0x20 {
-        unsafe {
-            asm!("cpuid",
-                inout("eax") _AX + i => a[0],
-                lateout("ebx") a[1],
-                lateout("ecx") a[2],
-                lateout("edx") a[3]
-            );
-        }
-
-        println!(" 0x{:08X}:  eax=0x{:08X} ebx=0x{:08X} ecx=0x{:08X} edx=0x{:08X}",
-            _AX + i, a[0], a[1], a[2], a[3]);
-    }
     println!();
 }
+*/
 
 macro_rules! bitflag {
     ($x: expr, $pos: expr) => {
@@ -239,173 +203,6 @@ impl CpuFeature {
     }
 }
 
-pub fn cpu_feature() {
-    println!("CPU Feature Detect");
-    line();
-
-    let mut a: [u32; 4] = [0; 4];
-    let mut b: [u32; 4] = [0; 4];
-    let mut c: [u32; 4] = [0; 4];
-    let mut d: [u32; 4] = [0; 4];
-
-    unsafe {
-        asm!(
-            "cpuid",
-            in("eax") 0x1,
-            lateout("ebx") _,
-            lateout("ecx") a[2],
-            lateout("edx") a[3],
-        );
-        asm! {
-            "cpuid",
-            in("eax") 0x7,
-            lateout("ebx") b[1],
-            inlateout("ecx") 0 => b[2],
-            lateout("edx") b[3],
-        };
-        asm! {
-            "cpuid",
-            inlateout("eax") 0x7 => c[0],
-            lateout("ebx") _,
-            in("ecx") 1,
-            lateout("edx") _,
-        };
-        asm! {
-            "cpuid",
-            in("eax") _AX + 0x1,
-            lateout("ebx") _,
-            lateout("ecx") d[2],
-            lateout("edx") d[3],
-        };
-    }
-
-    // 0x00000001_EDX
-    let _has_htt        = bitflag!(a[3], 28);
-    let _has_sse2       = bitflag!(a[3], 26);
-    let _has_sse        = bitflag!(a[3], 25); // Streaming SIMD Extensions
-    let _has_fxsr       = bitflag!(a[3], 24);
-    let _has_mmx        = bitflag!(a[3], 23);
-    let _has_cmov       = bitflag!(a[3], 15);
-    let _has_syscall    = bitflag!(a[3], 11);
-    let _has_cx8        = bitflag!(a[3], 8);
-    let _has_fpu        = bitflag!(a[3], 0);
-
-    // 0x00000001_ECX
-    let _has_hypervisor = bitflag!(a[2], 31);
-    let _has_rdrnd      = bitflag!(a[2], 30);
-    let _has_f16c       = bitflag!(a[2], 29);
-    let _has_avx        = bitflag!(a[2], 28);
-    let _has_osxsave    = bitflag!(a[2], 27);
-    let _has_xsave      = bitflag!(a[2], 26);
-    let _has_aes        = bitflag!(a[2], 25);
-    let _has_tsc_deadline = bitflag!(a[2], 24);
-    let _has_popcnt     = bitflag!(a[2], 23);
-    let _has_movbe      = bitflag!(a[2], 22);
-    let _has_x2apic     = bitflag!(a[2], 21);
-    let _has_sse4_2     = bitflag!(a[2], 20);
-    let _has_sse4_1     = bitflag!(a[2], 19);
-    let _has_pcid       = bitflag!(a[2], 17); // Process-context identifiers
-    //  Reserved: let _has_       = bitflag!(a[2], 16);
-    let _has_pdcm       = bitflag!(a[2], 15);
-    let _has_xtpr       = bitflag!(a[2], 14);
-    let _has_cx16       = bitflag!(a[2], 13);
-    let _has_fma3       = bitflag!(a[2], 12);
-    let _has_sbdg       = bitflag!(a[2], 11);
-    let _has_cnxt_id    = bitflag!(a[2], 10);
-    let _has_ssse3      = bitflag!(a[2], 9); // Supplemental SSE3
-    let _has_tm2        = bitflag!(a[2], 8); // Thermal Monitor 2
-    let _has_est        = bitflag!(a[2], 7); // Enhaced SpeedStep
-    let _has_smx        = bitflag!(a[2], 6); // Safer Mode Extensions
-    let _has_vmx        = bitflag!(a[2], 5); // Virtual Machine Extensions
-    let _has_ds_cpl     = bitflag!(a[2], 4); // CPL Qualified Debug Store
-    let _has_monitor    = bitflag!(a[2], 3); // MONITOR/MWAIT
-    let _has_dtes64     = bitflag!(a[2], 2); // Debus Store
-    let _has_pclmulqdq  = bitflag!(a[2], 1);
-    let _has_sse3       = bitflag!(a[2], 0); 
-
-    // 0x00000007_EBX_x0
-    let _has_avx512_vl      = bitflag!(b[1], 31);
-    let _has_avx512_bw      = bitflag!(b[1], 30);
-    let _has_sha            = bitflag!(b[1], 29);
-    let _has_avx512_cd      = bitflag!(b[1], 28);
-    let _has_avx512_er      = bitflag!(b[1], 27); // Xeon Phi only
-    let _has_avx512_pf      = bitflag!(b[1], 26); // Xeon Phi only
-    let _has_intel_pt       = bitflag!(b[1], 25);
-    let _has_clwb           = bitflag!(b[1], 24);
-    let _has_clflushopt     = bitflag!(b[1], 23);
-    let _has_pcommit        = bitflag!(b[1], 22);
-    let _has_avx512_ifma    = bitflag!(b[1], 21);
-    let _has_avx512_dq      = bitflag!(b[1], 17);
-    let _has_avx512_f       = bitflag!(b[1], 16);
-    let _has_bmi2           = bitflag!(b[1], 8);
-    let _has_avx2           = bitflag!(b[1], 5);
-    let _has_bmi1           = bitflag!(b[1], 3);
-
-    // 0x00000007_ECX_x0
-    let _has_avx512_vpopcntdq   = bitflag!(b[2], 14);
-    let _has_avx512_bitalg      = bitflag!(b[2], 12);
-    let _has_avx512_vnni        = bitflag!(b[2], 11);
-    let _has_vaes               = bitflag!(b[2], 9);
-    let _has_gfni               = bitflag!(b[2], 8);
-    let _has_avx512_vbmi2       = bitflag!(b[2], 6);
-    let _has_avx512_vbmi        = bitflag!(b[2], 1);
-
-    // 0x00000007_EDX_x0
-    let _has_avx512_fp16            = bitflag!(b[3], 23);
-    let _has_avx512_vp2intersect    = bitflag!(b[3], 8);
-
-    // 0x00000007_ECX_x1
-    let _has_lam            = bitflag!(c[0], 26);
-    let _has_hreset         = bitflag!(c[0], 22);
-    let _has_avx512_bf16    = bitflag!(c[0], 5);
-    let _has_avx_vnni       = bitflag!(c[0], 4);
-
-    // 0x80000001_ECX
-    let _has_prefetchhw     = bitflag!(d[2], 8); // 3dnowprefetch
-    let _has_lzcnt          = bitflag!(d[2], 5); // abm
-    let _has_lahf           = bitflag!(d[2], 0); // LAHF/SAHF
-
-    // AVX512
-    // Skylake server
-    let _skx_avx512        = _has_avx512_f && _has_avx512_dq && _has_avx512_ifma
-                                && _has_avx512_cd && _has_avx512_bw && _has_avx512_vl;
-    // Cannon Lake
-    let _cnl_avx512        = _skx_avx512 && _has_avx512_ifma && _has_avx512_vbmi;
-    // Cascade Lake
-    let _clx_avx512        = _cnl_avx512 && _has_avx512_vnni;
-    // Cooper Lake
-    let _cpx_avx512        = _clx_avx512 && _has_avx512_bf16;
-    // Ice Lake client/server
-    let _icl_avx512        = _clx_avx512 && _has_avx512_vpopcntdq && _has_avx512_bitalg
-                                && _has_gfni && _has_vaes;
-    // Tiger Lake
-    let _tgl_avx512        = _icl_avx512 && _has_avx512_vp2intersect;
-    // Sapphire Rapids
-    let _spr_avx512        = _tgl_avx512 && _has_avx512_bf16 && _has_avx512_fp16
-                                && _has_avx_vnni;
-
-    // https://gitlab.com/x86-psABIs/x86-64-ABI
-    let _x86_64_v1  = _has_cmov && _has_cx8 && _has_fpu
-                        && _has_fxsr && _has_mmx && _has_syscall
-                        && _has_sse && _has_sse2;
-    let _x86_64_v2  = _x86_64_v1 && _has_cx16 && _has_popcnt
-                        && _has_sse3 && _has_sse4_1 && _has_sse4_2
-                        && _has_ssse3;
-    let _x86_64_v3  = _x86_64_v2 && _has_avx && _has_avx2
-                        && _has_bmi1 && _has_bmi2 && _has_f16c
-                        && _has_fma3 && _has_movbe && _has_osxsave;
-    let _x86_64_v4  = _x86_64_v3 && _has_avx512_f && _has_avx512_bw
-                        && _has_avx512_cd && _has_avx512_dq && _has_avx512_vl;
-
-    println!("EDX=0b{:032b}", a[3]);
-    println!("ECX=0b{:032b}", a[2]);
-
-    println!(" x86-64-v1: {}\n x86-64-v2: {}\n x86-64-v3: {}\n x86-64-v4: {}",
-                _x86_64_v1, _x86_64_v2, _x86_64_v3, _x86_64_v4);
-
-    println!();
-}
-
 pub fn get_processor_name() -> String {
     let mut a: [u32; 4] = [0; 4];
     let mut name: Vec<u8> = vec![0x20; 48];
@@ -441,7 +238,7 @@ pub fn cache_info() {
             asm!("cpuid",
                 inlateout("eax") _AX + 0x1d => a[0],
                 lateout("ebx") a[1],
-                inout("ecx") i => a[2],
+                inlateout("ecx") i => a[2],
                 lateout("edx") a[3]
             );
         }
@@ -489,21 +286,19 @@ fn amd_cache_way(ecx: u32) -> u32 {
 }
 
 pub struct CacheInfo {
-    pub l1d_size:   u32,
+    pub l1d_size:   u32, // KiB
     pub l1d_line:   u32,
     pub l1d_way:    u32,
-    pub l1i_size:   u32,
+    pub l1i_size:   u32, // KiB
     pub l1i_line:   u32,
     pub l1i_way:    u32,
-    pub l2_size:    u32,
+    pub l2_size:    u32, // KiB
     pub l2_line:    u32,
     pub l2_way:     u32,
-    pub l3_size:    u32,
+    pub l3_size:    u32, // MiB
     pub l3_line:    u32,
     pub l3_way:     u32,
-/*
-*/
-//    pub has_l4:     bool,
+//  pub has_l4:     bool,
 }
 
 fn cache_info_amd() -> CacheInfo {
@@ -657,11 +452,11 @@ impl CpuCoreCount {
                                     _total_thread
                                 };
         return CpuCoreCount {
-            has_htt: _has_htt,
-            total_thread: _total_thread,
-            thread_per_core: _thread_per_core,
-            phy_core: _phy_core,
-            core_id: (b[1] & 0xff),
+            has_htt:            _has_htt,
+            total_thread:       _total_thread,
+            thread_per_core:    _thread_per_core,
+            phy_core:           _phy_core,
+            core_id:            (b[1] & 0xff),
         }
     }
 }
@@ -727,7 +522,7 @@ pub fn get_vendor_name() -> String {
     let vendor_name =
         if a[1] == 0x6874_7541 && a[2] == 0x444D_4163 && a[3] == 0x6974_6E65 {
             format!("AuthenticAMD")
-        } else if a[1] == 0x756e_6547 && a[2] == 0x4965_6e69 && a[3] == 0x6c65_746e { 
+        } else if a[1] == 0x756E_6547 && a[2] == 0x4965_6E69 && a[3] == 0x6C65_746E { 
             format!("GenuineIntel")
         } else {
             format!("Unknown")

@@ -1,5 +1,7 @@
 extern crate cpuid_asm;
+// extern crate cpuid_dump;
 use cpuid_asm::*;
+// use cpuid_dump::*;
 
 fn main() {
     println!();
@@ -7,8 +9,9 @@ fn main() {
     let a: [u32; 4] = [0; 4];
     let _AX: u32 = 0x80000000;
     
-    cpuid_dump();
 */
+    cpuid_dump::dump();
+
     let vendor_name = get_vendor_name();
     println!("Vendor: {}", vendor_name);
 
