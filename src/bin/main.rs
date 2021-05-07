@@ -29,10 +29,20 @@ fn main() {
     println!();
     let cpu_feature = CpuFeature::get();
     println!(" x86_64_v1: {}\n x86_64_v2: {}\n x86_64_v3: {}\n x86_64_v4: {}",
-        cpu_feature.x86_64_v1, cpu_feature.x86_64_v2, cpu_feature.x86_64_v3, cpu_feature.x86_64_v4);
+        cpu_feature.x86_64_v1, cpu_feature.x86_64_v2,
+        cpu_feature.x86_64_v3, cpu_feature.x86_64_v4);
 
+    println!();
+    let cpu_cache = CacheInfo::get(cpu_info.syn_fam);
+    println!(" L1d Cache: {} KiB, {}-byte line, {}-way",
+        cpu_cache.l1d_size, cpu_cache.l1d_line, cpu_cache.l1d_way);
+    println!(" L1i Cache: {} KiB, {}-byte line, {}-way",
+        cpu_cache.l1i_size, cpu_cache.l1i_line, cpu_cache.l1i_way);
+    println!(" L2 Cache: {} KiB, {}-byte line, {}-way",
+        cpu_cache.l2_size, cpu_cache.l2_line, cpu_cache.l2_way);
+    println!(" L3 Cache: {} MiB, {}-byte line, {}-way",
+        cpu_cache.l3_size, cpu_cache.l3_line, cpu_cache.l3_way);
 /*
-    CacheInfo::get(cpu_info.syn_fam);
     cache_info_amd();
     cache_info();
     cpu_feature();
