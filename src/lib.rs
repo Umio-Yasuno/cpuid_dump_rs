@@ -2,20 +2,10 @@
 #![allow(dead_code)]
 
 pub mod cpuid_dump;
-use cpuid_dump::{line,_AX};
+use cpuid_dump::line;
 pub mod feature_detect;
 // use feature_detect::CpuFeature;
-
-/*
 static _AX: u32 = 0x8000_0000;
-
-fn line() {
-    for _i in 0..75 {
-        print!("=");
-    }
-    println!();
-}
-*/
 
 pub fn get_processor_name() -> String {
     let mut a: [u32; 4] = [0; 4];
@@ -24,7 +14,7 @@ pub fn get_processor_name() -> String {
     for i in 0..=2 {
         unsafe {
             asm!("cpuid",
-                inout("eax") _AX + i + 0x2 => a[0],
+                inlateout("eax") _AX + i + 0x2 => a[0],
                 lateout("ebx") a[1],
                 lateout("ecx") a[2],
                 lateout("edx") a[3]
@@ -93,7 +83,7 @@ fn amd_cache_way(ecx: u32) -> u32 {
             in("eax") _AX + 0x1d,
             lateout("ebx") a,
             in("ecx") ecx,
-            out("edx") _,
+            lateout("edx") _,
         );
     }
     return (a >> 22) + 1;
@@ -185,7 +175,7 @@ impl FamModStep {
 
         unsafe {
             asm!("cpuid",
-                inout("eax") _AX + 0x1 => a,
+                inlateout("eax") _AX + 0x1 => a,
                 lateout("ebx") _,
                 lateout("ecx") _,
                 lateout("edx") _,
@@ -199,7 +189,7 @@ impl FamModStep {
     }
 }
 
-
+/*
 pub fn fam_mod_step() {
     let mut a: u32;
 
@@ -226,6 +216,7 @@ pub fn fam_mod_step() {
         base_fam + ext_fam, base_mod + ext_mod, step);
     println!();
 }
+*/
 
 pub struct CpuCoreCount {
     pub has_htt:            bool,
@@ -242,7 +233,7 @@ impl CpuCoreCount {
 
         unsafe {
             asm!("cpuid",
-                inlateout("eax") 0x1 => a[0],
+                in("eax") 0x1,
                 lateout("ebx") a[1],
                 lateout("ecx") _,
                 lateout("edx") a[3],
@@ -275,6 +266,7 @@ impl CpuCoreCount {
     }
 }
 
+/*
 pub fn core_count() {
     println!("Core Count");
     line();
@@ -319,6 +311,7 @@ pub fn core_count() {
     println!("Threads per Core: {}", threads_per_core);
     println!();
 }
+*/
 
 pub fn get_vendor_name() -> String {
     let mut a: [u32; 4] = [0; 4];
