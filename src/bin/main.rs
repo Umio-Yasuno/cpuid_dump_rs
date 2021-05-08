@@ -1,7 +1,5 @@
 extern crate cpuid_asm;
-// extern crate cpuid_dump;
 use cpuid_asm::*;
-// use cpuid_dump::*;
 use cpuid_asm::feature_detect::*;
 
 use std::env;

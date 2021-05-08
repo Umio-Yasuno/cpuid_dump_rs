@@ -2,7 +2,7 @@
 #![allow(dead_code)]
 
 pub mod cpuid_dump;
-use cpuid_dump::line;
+// use cpuid_dump::line;
 pub mod feature_detect;
 // use feature_detect::CpuFeature;
 static _AX: u32 = 0x8000_0000;
@@ -31,6 +31,7 @@ pub fn get_processor_name() -> String {
     return String::from_utf8(name).unwrap();
 }
 
+/*
 pub fn cache_info() {
     println!("Cache info");
     line();
@@ -74,6 +75,7 @@ pub fn cache_info() {
     }
     println!();
 }
+*/
 
 fn amd_cache_way(ecx: u32) -> u32 {
     let mut a: u32;
