@@ -5,7 +5,7 @@ pub mod cpuid_dump;
 // use cpuid_dump::line;
 pub mod feature_detect;
 // use feature_detect::CpuFeature;
-static _AX: u32 = 0x8000_0000;
+const _AX: u32 = 0x8000_0000;
 
 pub fn get_processor_name() -> String {
     let mut a: [u32; 4] = [0; 4];

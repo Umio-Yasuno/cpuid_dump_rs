@@ -1,4 +1,4 @@
-static _AX: u32 = 0x8000_0000;
+const _AX: u32 = 0x8000_0000;
 
 macro_rules! bitflag {
     ($x: expr, $pos: expr) => {
@@ -34,24 +34,24 @@ impl CpuFeature {
                 lateout("ecx") a[2],
                 lateout("edx") a[3],
             );
-            asm! {"cpuid",
+            asm!("cpuid",
                 in("eax") 0x7,
                 lateout("ebx") b[1],
                 inlateout("ecx") 0 => b[2],
                 lateout("edx") b[3],
-            };
-            asm! {"cpuid",
+            );
+            asm!("cpuid",
                 inlateout("eax") 0x7 => c[0],
                 lateout("ebx") _,
                 in("ecx") 1,
                 lateout("edx") _,
-            };
-            asm! {"cpuid",
+            );
+            asm!("cpuid",
                 in("eax") _AX + 0x1,
                 lateout("ebx") _,
                 lateout("ecx") d[2],
                 lateout("edx") d[3],
-            };
+            );
         }
     
         // 0x00000001_EDX
@@ -127,6 +127,7 @@ impl CpuFeature {
     
         // 0x00000007_EDX_x0
         let _has_avx512_fp16            = bitflag!(b[3], 23);
+        let _has_hybrid                 = bitflag!(b[3], 15);
         let _has_avx512_vp2intersect    = bitflag!(b[3], 8);
     
         // 0x00000007_ECX_x1

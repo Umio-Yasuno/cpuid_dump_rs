@@ -1,3 +1,5 @@
+#![feature(asm)]
+
 extern crate cpuid_asm;
 use cpuid_asm::*;
 use cpuid_asm::feature_detect::*;
@@ -52,6 +54,7 @@ fn main() {
         cpu_cache.l2_size, cpu_cache.l2_line, cpu_cache.l2_way);
     println!(" L3 Cache: {} MiB, {}-byte line, {}-way",
         cpu_cache.l3_size, cpu_cache.l3_line, cpu_cache.l3_way);
+
 /*
     cache_info_amd();
     cache_info();
