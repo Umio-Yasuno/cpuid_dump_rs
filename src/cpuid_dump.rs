@@ -64,6 +64,10 @@ fn cache_prop_amd() {
                 format!("{}B", cache_size)
             };
 
+        if cache_level == 0 || cache_type == "" {
+            return;
+        }
+
         print_cpuid!(_AX + 0x1d, j, a[0], a[1], a[2], a[3]);
         print!(" [L{}{} {}] ",
             cache_level, cache_type, cache_size_str);
