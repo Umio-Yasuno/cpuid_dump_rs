@@ -167,12 +167,17 @@ impl FamModStep {
         let mut a: u32;
 
         unsafe {
-            asm!("cpuid", inlateout("eax") 0x1 => a);
+            asm!("cpuid",
+                inlateout("eax") 0x1 => a,
+                lateout("ebx") _,
+                lateout("ecx") _,
+                lateout("edx") _,
+            );
         }
         return FamModStep {
-            syn_fam: ((a >> 8) & 0xf) + ((a >> 20) & 0xff),
-            syn_mod: ((a >> 4) & 0xf) + ((a >> 12) & 0xf0),
-            step: a & 0xf,
+            syn_fam:    ((a >> 8) & 0xf) + ((a >> 20) & 0xff),
+            syn_mod:    ((a >> 4) & 0xf) + ((a >> 12) & 0xf0),
+            step:       a & 0xf,
         };
     }
 }
