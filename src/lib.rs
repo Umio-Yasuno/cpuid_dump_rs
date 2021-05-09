@@ -57,16 +57,49 @@ pub struct CacheInfo {
     pub l1d_size:   u32, // KiB
     pub l1d_line:   u32,
     pub l1d_way:    u32,
+
     pub l1i_size:   u32, // KiB
     pub l1i_line:   u32,
     pub l1i_way:    u32,
+
     pub l2_size:    u32, // KiB
     pub l2_line:    u32,
     pub l2_way:     u32,
+
     pub l3_size:    u32, // MiB
     pub l3_line:    u32,
     pub l3_way:     u32,
 //  pub has_l4:     bool,
+}
+
+fn cache_info_intel() -> CacheInfo {
+    let mut a: [u32; 4] = [0; 4];
+    let mut b: [u32; 4] = [0; 4];
+    let mut c: [u32; 4] = [0; 4];
+    let mut d: [u32; 4] = [0; 4];
+
+    cpuid!(a[0], a[1], a[2], a[3], 0x4, 0);
+    cpuid!(b[0], b[1], b[2], b[3], 0x4, 1);
+    cpuid!(c[0], c[1], c[2], c[3], 0x4, 2);
+    cpuid!(d[0], d[1], d[2], d[3], 0x4, 3);
+
+    return CacheInfo {
+        l1d_size:   ((a[1] >> 22) + 1) * ((a[1] & 0xfff) + 1) * (a[2] + 1),
+        l1d_line:   (a[1] & 0xfff) + 1,
+        l1d_way:    (a[1] >> 22) + 1,
+
+        l1i_size:   ((b[1] >> 22) + 1) * ((b[1] & 0xfff) + 1) * (b[2] + 1),
+        l1i_line:   (b[1] & 0xfff) + 1,
+        l1i_way:    (b[1] >> 22) + 1,
+
+        l2_size:    ((c[1] >> 22) + 1) * ((c[1] & 0xfff) + 1) * (c[2] + 1),
+        l2_line:    (c[1] & 0xfff) + 1,
+        l2_way:     (c[1] >> 22) + 1,
+
+        l3_size:    ((d[1] >> 22) + 1) * ((d[1] & 0xfff) + 1) * (d[2] + 1),
+        l3_line:    (d[1] & 0xfff) + 1,
+        l3_way:     (d[1] >> 22) + 1,
+    }
 }
 
 fn cache_info_amd() -> CacheInfo {
@@ -80,12 +113,15 @@ fn cache_info_amd() -> CacheInfo {
         l1d_size:   (a[2] >> 24),
         l1d_line:   (a[2] & 0xff),
         l1d_way:    (a[2] >> 16) & 0xff,
+
         l1i_size:   (a[3] >> 24),
         l1i_line:   (a[3] & 0xff),
         l1i_way:    (a[3] >> 16) & 0xff,
+
         l2_size:    (b[2] >> 16),
         l2_line:    b[2] & 0xff,
         l2_way:     amd_cache_way(2),
+
         l3_size:    (b[3] >> 18) / 2,
         l3_line:    b[3] & 0xff,
         l3_way:     amd_cache_way(3),
@@ -94,19 +130,24 @@ fn cache_info_amd() -> CacheInfo {
 
 impl CacheInfo {
     pub fn get(fam: u32) -> CacheInfo {
-        if 0x15 <= fam && fam <= 0x19 {
+        if fam == 0x6 {
+            return cache_info_intel();
+        } else if 0x15 <= fam && fam <= 0x19 {
             return cache_info_amd();
         } else {
             return CacheInfo {
                 l1d_size:   0,
                 l1d_line:   0,
                 l1d_way:    0,
+
                 l1i_size:   0,
                 l1i_line:   0,
                 l1i_way:    0,
+
                 l2_size:    0,
                 l2_line:    0,
                 l2_way:     0,
+
                 l3_size:    0,
                 l3_line:    0,
                 l3_way:     0,
@@ -126,7 +167,7 @@ impl FamModStep {
         let mut a: u32;
 
         unsafe {
-            asm!("cpuid", inlateout("eax") _AX + 0x1 => a);
+            asm!("cpuid", inlateout("eax") 0x1 => a);
         }
         return FamModStep {
             syn_fam: ((a >> 8) & 0xf) + ((a >> 20) & 0xff),
