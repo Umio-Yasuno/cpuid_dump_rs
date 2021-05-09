@@ -41,8 +41,8 @@ fn cpu_name(a: [u32; 4]) {
 
 fn cache_prop_intel_04h() {
     let mut a: [u32; 4] = [0; 4];
-    for j in 0x0..=0x4 {
 
+    for j in 0x0..=0x4 {
         cpuid!(a[0], a[1], a[2], a[3], 0x4, j);
     /* for debug
         match j {
@@ -71,17 +71,14 @@ fn cache_prop_intel_04h() {
                 a[3] = 0;
             },
             4 => {
-                a[0] = 0;
-                a[1] = 0;
-                a[2] = 0;
-                a[3] = 0;
+                a = [0; 4];
             },
             _ => {},
         }
     */
         let cache_level = (a[0] >> 5) & 0b111;
         let cache_type =
-            match (a[0] & 0b11111) {
+            match a[0] & 0b11111 {
                 1 => "D", // Data
                 2 => "I", // Instruction
                 3 => "U", // Unified
@@ -127,8 +124,7 @@ pub fn dump() {
                         && a[3] == 0x6C65_746E;
 
     for i in 0..=0x10 {
-
-        if i == 0x4 /* && vendor_intel */ {
+        if i == 0x4 && vendor_intel {
             cache_prop_intel_04h();
             continue;
         } else if i == 0x7 {
@@ -154,7 +150,6 @@ pub fn dump() {
     println!();
 
     for i in 0x0..=0x20 {
-
         cpuid!(a[0], a[1], a[2], a[3], _AX + i, 0);
         print_cpuid!(_AX + i, 0, a[0], a[1], a[2], a[3]);
 

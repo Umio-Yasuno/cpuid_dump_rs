@@ -1,6 +1,6 @@
 ## ToDo
 
- * [ ] Cache info of Intel CPU 
+ * [x] Cache info of Intel CPU 
  * [x] Core Affinity
 
 ## Document
