@@ -1,4 +1,5 @@
-const _AX: u32 = 0x8000_0000;
+use super::_AX;
+use super::cpuid;
 
 macro_rules! bitflag {
     ($x: expr, $pos: expr) => {
@@ -27,32 +28,10 @@ impl CpuFeature {
         let mut c: [u32; 4] = [0; 4];
         let mut d: [u32; 4] = [0; 4];
 
-        unsafe {
-            asm!("cpuid",
-                in("eax") 0x1,
-                lateout("ebx") _,
-                lateout("ecx") a[2],
-                lateout("edx") a[3],
-            );
-            asm!("cpuid",
-                in("eax") 0x7,
-                lateout("ebx") b[1],
-                inlateout("ecx") 0 => b[2],
-                lateout("edx") b[3],
-            );
-            asm!("cpuid",
-                inlateout("eax") 0x7 => c[0],
-                lateout("ebx") _,
-                in("ecx") 1,
-                lateout("edx") _,
-            );
-            asm!("cpuid",
-                in("eax") _AX + 0x1,
-                lateout("ebx") _,
-                lateout("ecx") d[2],
-                lateout("edx") d[3],
-            );
-        }
+        cpuid!(a[0], a[1], a[2], a[3], 0x1, 0);
+        cpuid!(b[0], b[1], b[2], b[3], 0x7, 0);
+        cpuid!(c[0], c[1], c[2], c[3], 0x7, 0x1);
+        cpuid!(d[0], d[1], d[2], d[3], _AX + 0x1, 0);
     
         // 0x00000001_EDX
         let _has_htt        = bitflag!(a[3], 28);

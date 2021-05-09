@@ -1,4 +1,5 @@
-const _AX: u32 = 0x8000_0000;
+use super::_AX;
+use super::cpuid;
 
 fn line() {
     for _i in 0..75 {
@@ -15,16 +16,19 @@ macro_rules! print_cpuid {
     }
 }
 
+fn vendor_0h() {
+    let mut a: [u32; 4] = [0; 4];
+
+    cpuid!(a[0], a[1], a[2], a[3], 0, 0);
+    print_cpuid!(0, 0, a[0], a[1], a[2], a[3]);
+    print!(" [{}]", super::get_vendor_name());
+    println!();
+}
+
 fn total_thread_01h() {
     let mut a: [u32; 4] = [0; 4];
-    unsafe {
-        asm!("cpuid",
-            inlateout("eax") 0x1 => a[0],
-            lateout("ebx") a[1],
-            lateout("ecx") a[2],
-            lateout("edx") a[3]
-        );
-    }
+    cpuid!(a[0], a[1], a[2], a[3], 0x1, 0x0);
+
     print_cpuid!(0x1, 0, a[0], a[1], a[2], a[3]);
     print!(" [Total {} thread]", (a[1] >> 16) & 0xff);
     println!();
@@ -33,14 +37,7 @@ fn total_thread_01h() {
 fn cpuid_feature_07h() {
     let mut a: [u32; 4] = [0; 4];
     for j in 0x0..=0x1 {
-        unsafe {
-            asm!("cpuid",
-                inlateout("eax") 0x7 => a[0],
-                lateout("ebx") a[1],
-                inlateout("ecx") j => a[2],
-                lateout("edx") a[3]
-            );
-        }
+        cpuid!(a[0], a[1], a[2], a[3], 0x7, j);
         print_cpuid!(0x7, j, a[0], a[1], a[2], a[3]);
         println!();
     }
@@ -50,14 +47,8 @@ fn cpu_name(i: u32) {
     let mut a: [u32; 4] = [0; 4];
     let mut name: Vec<u8> = vec![0x20; 16];
 
-    unsafe {
-        asm!("cpuid",
-            inlateout("eax") _AX + i => a[0],
-            lateout("ebx") a[1],
-            lateout("ecx") a[2],
-            lateout("edx") a[3]
-        );
-    }
+    cpuid!(a[0], a[1], a[2], a[3], _AX + i, 0);
+
     for j in 0..=3 {
         name[(j*4) as usize]   =  (a[j as usize] & 0xff) as u8;
         name[(j*4+1) as usize] = ((a[j as usize] >> 8)  & 0xff) as u8;
@@ -71,14 +62,9 @@ fn cpu_name(i: u32) {
 
 fn cache_amd_80_05h() {
     let mut a: [u32; 4] = [0; 4];
-    unsafe {
-        asm!("cpuid",
-            inlateout("eax") _AX + 0x5 => a[0],
-            lateout("ebx") a[1],
-            lateout("ecx") a[2],
-            lateout("edx") a[3]
-        );
-    }
+
+    cpuid!(a[0], a[1], a[2], a[3], _AX + 0x5, 0);
+
     print_cpuid!(_AX + 0x5, 0, a[0], a[1], a[2], a[3]);
     print!(" [L1D {}K/L1I {}K]", (a[2] >> 24) & 0xff, (a[3] >> 24) & 0xff);
     println!();
@@ -86,14 +72,8 @@ fn cache_amd_80_05h() {
 
 fn cache_amd_80_06h() {
     let mut a: [u32; 4] = [0; 4];
-    unsafe {
-        asm!("cpuid",
-            inlateout("eax") _AX + 0x6 => a[0],
-            lateout("ebx") a[1],
-            lateout("ecx") a[2],
-            lateout("edx") a[3]
-        );
-    }
+
+    cpuid!(a[0], a[1], a[2], a[3], _AX + 0x6, 0);
     print_cpuid!(_AX + 0x6, 0, a[0], a[1], a[2], a[3]);
     print!(" [L2 {}K/L3 {}M]", (a[2] >> 16), (a[3] >> 18) / 2);
     println!();
@@ -101,14 +81,8 @@ fn cache_amd_80_06h() {
 
 fn l1tlb_1g_amd_80_19h() {
     let mut a: [u32; 4] = [0; 4];
-    unsafe {
-        asm!("cpuid",
-            inlateout("eax") _AX + 0x19 => a[0],
-            lateout("ebx") a[1],
-            lateout("ecx") a[2],
-            lateout("edx") a[3]
-        );
-    }
+
+    cpuid!(a[0], a[1], a[2], a[3], _AX + 0x19, 0);
     print_cpuid!(_AX + 0x19, 0, a[0], a[1], a[2], a[3]);
     print!(" [L1TLB 1G (D: {}/I: {}]", a[2] & 12, (a[2] >> 16) & 12);
     println!();
@@ -117,14 +91,8 @@ fn l1tlb_1g_amd_80_19h() {
 fn cache_prop_amd() {
     let mut a: [u32; 4] = [0; 4];
     for j in 0x0..=0x4 {
-        unsafe {
-            asm!("cpuid",
-                inlateout("eax") _AX + 0x1d => a[0],
-                lateout("ebx") a[1],
-                inlateout("ecx") j => a[2],
-                lateout("edx") a[3]
-            );
-        }
+
+        cpuid!(a[0], a[1], a[2], a[3], _AX + 0x1d, j);
 
         let cache_level = (a[0] >> 5) & 0b111;
         let cache_type =
@@ -161,14 +129,7 @@ fn cache_prop_amd() {
 fn thread_per_core_amd_08_1eh() {
     let mut a: [u32; 4] = [0; 4];
 
-    unsafe {
-        asm!("cpuid",
-            inlateout("eax") _AX + 0x1e => a[0],
-            lateout("ebx") a[1],
-            lateout("ecx") a[2],
-            lateout("edx") a[3],
-        );
-    }
+    cpuid!(a[0], a[1], a[2], a[3], _AX + 0x1e, 0);
     print_cpuid!(_AX + 0x1e, 0, a[0], a[1], a[2], a[3]);
     print!(" [{} thread per core]", ((a[1] >> 8) & 0xff) + 1);
     println!();
@@ -180,14 +141,7 @@ pub fn dump() {
 
     let mut a: [u32; 4] = [0; 4];
 
-    unsafe {
-        asm!("cpuid",
-            in("eax") 0,
-            lateout("ebx") a[1],
-            lateout("ecx") a[2],
-            lateout("edx") a[3],
-        );
-    }
+    cpuid!(a[0], a[1], a[2], a[3], 0, 0);
 
     let vendor_amd =    a[1] == 0x6874_7541 
                         && a[2] == 0x444D_4163
@@ -198,7 +152,10 @@ pub fn dump() {
 
     for i in 0x0..=0x10 {
 
-        if i == 0x1 {
+        if i == 0x0 {
+            vendor_0h();
+            continue;
+        } else if i == 0x1 {
             total_thread_01h();
             continue;
         } else if i == 0x7 {
@@ -206,14 +163,7 @@ pub fn dump() {
             continue;
         }
 
-        unsafe {
-            asm!("cpuid",
-                inlateout("eax") i => a[0],
-                lateout("ebx") a[1],
-                lateout("ecx") a[2],
-                lateout("edx") a[3]
-            );
-        }
+        cpuid!(a[0], a[1], a[2], a[3], i, 0);
         print_cpuid!(i, 0, a[0], a[1], a[2], a[3]);
 
         if i == 0x1 {
@@ -252,14 +202,7 @@ pub fn dump() {
             continue;
         }
 
-        unsafe {
-            asm!("cpuid",
-                inlateout("eax") _AX + i => a[0],
-                lateout("ebx") a[1],
-                lateout("ecx") a[2],
-                lateout("edx") a[3]
-            );
-        }
+        cpuid!(a[0], a[1], a[2], a[3], _AX + i, 0);
         print_cpuid!(_AX + i, 0, a[0], a[1], a[2], a[3]);
         println!();
     }

@@ -1,9 +1,7 @@
 ## ToDo
 
  * [ ] Cache info of Intel CPU 
- * [ ] Core Affinity
-    * [core_affinity - Rust](https://docs.rs/core_affinity/)
-
+ * [x] Core Affinity
 
 ## Document
 ### Rust

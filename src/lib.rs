@@ -7,19 +7,27 @@ pub mod feature_detect;
 // use feature_detect::CpuFeature;
 const _AX: u32 = 0x8000_0000;
 
+#[macro_export]
+macro_rules! cpuid {
+    ($out_eax: expr, $out_ebx: expr, $out_ecx: expr, $out_edx: expr,
+    $in_eax: expr, $in_ecx: expr) => {
+        unsafe {
+            asm!("cpuid",
+                inlateout("eax") $in_eax => $out_eax,
+                lateout("ebx") $out_ebx,
+                inlateout("ecx") $in_ecx => $out_ecx,
+                lateout("edx") $out_edx,
+            );
+        }
+    }
+}
+
 pub fn get_processor_name() -> String {
     let mut a: [u32; 4] = [0; 4];
     let mut name: Vec<u8> = vec![0x20; 48];
 
     for i in 0..=2 {
-        unsafe {
-            asm!("cpuid",
-                inlateout("eax") _AX + i + 0x2 => a[0],
-                lateout("ebx") a[1],
-                lateout("ecx") a[2],
-                lateout("edx") a[3]
-            );
-        }
+        cpuid!(a[0], a[1], a[2], a[3], _AX + i + 0x2, 0);
         for j in 0..=3 {
             name[(i*16+j*4) as usize]   =  (a[j as usize] & 0xff) as u8;
             name[(i*16+j*4+1) as usize] = ((a[j as usize] >> 8)  & 0xff) as u8;
@@ -65,20 +73,8 @@ fn cache_info_amd() -> CacheInfo {
     let mut a: [u32; 4] = [0; 4];
     let mut b: [u32; 4] = [0; 4];
 
-    unsafe {
-        asm!("cpuid",
-            in("eax") _AX + 0x5,
-            lateout("ebx") _,
-            lateout("ecx") a[2],
-            lateout("edx") a[3]
-        );
-        asm!("cpuid",
-            in("eax") _AX + 0x6,
-            lateout("ebx") _,
-            lateout("ecx") b[2],
-            lateout("edx") b[3]
-        );
-    }
+    cpuid!(a[0], a[1], a[2], a[3], _AX + 0x5, 0);
+    cpuid!(b[0], b[1], b[2], b[3], _AX + 0x6, 0);
     
     return CacheInfo {
         l1d_size:   (a[2] >> 24),
@@ -130,12 +126,7 @@ impl FamModStep {
         let mut a: u32;
 
         unsafe {
-            asm!("cpuid",
-                inlateout("eax") _AX + 0x1 => a,
-                lateout("ebx") _,
-                lateout("ecx") _,
-                lateout("edx") _,
-            );
+            asm!("cpuid", inlateout("eax") _AX + 0x1 => a);
         }
         return FamModStep {
             syn_fam: ((a >> 8) & 0xf) + ((a >> 20) & 0xff),
@@ -158,20 +149,8 @@ impl CpuCoreCount {
         let mut a: [u32; 4] = [0; 4];
         let mut b: [u32; 4] = [0; 4];
 
-        unsafe {
-            asm!("cpuid",
-                in("eax") 0x1,
-                lateout("ebx") a[1],
-                lateout("ecx") _,
-                lateout("edx") a[3],
-            );
-            asm!("cpuid",
-                in("eax") _AX + 0x1e,
-                lateout("ebx") b[1],
-                lateout("ecx") b[2],
-                lateout("edx") _,
-            );
-        }
+        cpuid!(a[0], a[1], a[2], a[3], 0x1, 0);
+        cpuid!(b[0], b[1], b[2], b[3], _AX + 0x1e, 0);
 
         let _has_htt            = ((a[3] >> 28) & 0x1) == 1;
         let _total_thread       = (a[1] >> 16) & 0xff;
@@ -196,14 +175,7 @@ impl CpuCoreCount {
 pub fn get_vendor_name() -> String {
     let mut a: [u32; 4] = [0; 4];
 
-    unsafe {
-        asm!("cpuid",
-            in("eax") 0,
-            lateout("ebx") a[1],
-            lateout("ecx") a[2],
-            lateout("edx") a[3],
-        );
-    }
+    cpuid!(a[0], a[1], a[2], a[3], 0, 0);
 
     // TODO: add other vendor
     let vendor_name =

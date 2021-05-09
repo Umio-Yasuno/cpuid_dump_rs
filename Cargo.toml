@@ -12,3 +12,4 @@ name = "cpuid_asm"
 path = "src/lib.rs"
 
 [dependencies]
+libc = "0.2"
