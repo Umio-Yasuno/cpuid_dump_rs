@@ -5,9 +5,37 @@ use cpuid_asm::*;
 use cpuid_asm::feature_detect::*;
 
 extern crate libc;
-use libc::{cpu_set_t, CPU_SET, sched_setaffinity};
+use libc::{cpu_set_t, CPU_SET, CPU_ZERO, sched_setaffinity};
 
-use std::{mem, env};
+use std::{mem, env, thread};
+
+/*
+fn dump_core_select(i: u32) {
+}
+*/
+
+fn dump_all() {
+    let core_count = CpuCoreCount::get();
+
+    for i in 0..(core_count.total_thread) {
+        thread::spawn( move || {
+            unsafe {
+                let mut set = mem::zeroed::<cpu_set_t>();
+                CPU_SET(i as usize, &mut set);
+
+                sched_setaffinity(0,
+                                  mem::size_of::<cpu_set_t>(),
+                                  &set);
+            }
+
+            let core_all = CpuCoreCount::get();
+            println!("Core ID: {:<3} / Thread: {:<3}",
+                core_all.core_id, i);
+            cpuid_dump::dump();
+
+        }).join().unwrap();
+    }
+}
 
 fn main() {
     println!();
@@ -27,23 +55,7 @@ fn main() {
     }
     
     if opt_dump && opt_dump_all {
-        let core_count = CpuCoreCount::get();
-
-        for i in 0..(core_count.total_thread) {
-            unsafe {
-                let mut set = mem::zeroed::<cpu_set_t>();
-                CPU_SET(i as usize, &mut set);
-
-                sched_setaffinity(0,
-                                  mem::size_of::<cpu_set_t>(),
-                                  &set);
-            }
-
-            let core_all = CpuCoreCount::get();
-            println!("Core ID: {:3} / Thread : {:3}", core_all.core_id, i);
-
-            cpuid_dump::dump();
-        }
+        dump_all();
     } else if opt_dump {
         cpuid_dump::dump();
     }
@@ -57,6 +69,8 @@ fn main() {
     let cpu_info = FamModStep::get();
     println!("Family: 0x{0:X} ({0}), Model: 0x{1:X} ({1}), Stepping: {2}",
         cpu_info.syn_fam, cpu_info.syn_mod, cpu_info.step);
+    println!("Code Name: {}",
+        codename::get_codename(cpu_info.syn_fam, cpu_info.syn_mod, cpu_info.step));
     println!();
 
     let cpu_feature = CpuFeature::get();
@@ -74,9 +88,8 @@ fn main() {
         cpu_cache.l2_size, cpu_cache.l2_line, cpu_cache.l2_way);
     println!(" L3 Cache: {} MiB, {}-byte line, {}-way",
         cpu_cache.l3_size, cpu_cache.l3_line, cpu_cache.l3_way);
+    println!();
 
-    println!("Code Name: {}",
-        codename::get_codename(cpu_info.syn_fam, cpu_info.syn_mod, cpu_info.step));
 /*
     cache_info_amd();
     cache_info();
