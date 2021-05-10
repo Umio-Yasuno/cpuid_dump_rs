@@ -38,9 +38,9 @@ pub fn get_codename(f: u32, m: u32, s: u32) -> String {
 
             //  Broadwell
             0x3D    => format!("Broadwell"),
-            0x3D    => format!("Broadwell (Iris Pro)"),
-            0x3D    => format!("Broadwell (Server)"),
-            0x3D    => format!("Broadwell (Micro Server)"),
+            0x47    => format!("Broadwell (Iris Pro)"),
+            0x4F    => format!("Broadwell (Server)"),
+            0x56    => format!("Broadwell (Micro Server)"),
 
             //  Skylake
             0x4E    => format!("Skylake (Mobile)"),
