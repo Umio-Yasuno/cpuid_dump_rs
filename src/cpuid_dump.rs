@@ -30,10 +30,10 @@ fn cpu_name(a: [u32; 4]) {
     let mut name: Vec<u8> = vec![0x20; 16];
 
     for j in 0..=3 {
-        name[(j*4) as usize]   =  (a[j as usize] & 0xff) as u8;
-        name[(j*4+1) as usize] = ((a[j as usize] >> 8)  & 0xff) as u8;
-        name[(j*4+2) as usize] = ((a[j as usize] >> 16) & 0xff) as u8;
-        name[(j*4+3) as usize] = ((a[j as usize] >> 24) & 0xff) as u8;
+        name[(j*4)   as usize]  =  (a[j as usize] & 0xff) as u8;
+        name[(j*4+1) as usize]  = ((a[j as usize] >> 8)  & 0xff) as u8;
+        name[(j*4+2) as usize]  = ((a[j as usize] >> 16) & 0xff) as u8;
+        name[(j*4+3) as usize]  = ((a[j as usize] >> 24) & 0xff) as u8;
     }
 
     print!(" [{}]", String::from_utf8(name).unwrap());
@@ -124,7 +124,12 @@ pub fn dump() {
                         && a[3] == 0x6C65_746E;
 
     for i in 0..=0x10 {
-        if i == 0x4 && vendor_intel {
+        if (0x2 <= i && i <= 0x4)
+        || (0x8 <= i && i <= 0xA)
+        || (0xC == i) || (0xE == i)
+        && vendor_amd {
+            continue;
+        } else if i == 0x4 && vendor_intel {
             cache_prop_intel_04h();
             continue;
         } else if i == 0x7 {
@@ -150,6 +155,11 @@ pub fn dump() {
     println!();
 
     for i in 0x0..=0x21 {
+
+        if (0xB <= i && i <= 0x18) && vendor_amd {
+            continue;
+        }
+
         cpuid!(a[0], a[1], a[2], a[3], _AX + i, 0);
         print_cpuid!(_AX + i, 0, a[0], a[1], a[2], a[3]);
 
@@ -161,29 +171,60 @@ pub fn dump() {
         } else if i == 0x6 && vendor_amd {
             print!(" [L2 {}K/L3 {}M]",
                 (a[2] >> 16), (a[3] >> 18) / 2);
+        } else if i == 0x7 && vendor_amd {
+            if ((a[0] >> 9) & 1) == 1 {
+                print!(" [CPB]");
+            }
+        } else if i == 0x8 && vendor_amd {
+            let ibpb    = ((a[1] >> 12) & 1) == 1;
+            let stibp   = ((a[1] >> 15) & 1) == 1;
+            let ssbd    = ((a[1] >> 24) & 1) == 1;
+            let psfd    = ((a[1] >> 28) & 1) == 1;
+
+            let mut buff = String::new();
+
+            if ibpb  { buff.push_str("IBPB "); }
+            if stibp { buff.push_str("STIBP "); }
+            if ssbd  { buff.push_str("SSBD "); }
+            if psfd  { buff.push_str("PSFD "); }
+
+            if buff != "" {
+                print!(" [{}]", buff);
+            }
+        } else if i == 0x1A && vendor_amd {
+            let fp256   = (a[0] & 0b100) == 1;
+            let fp128   = (a[0] & 0b001) == 1;
+
+            print!(" [{}]",
+                if fp256 {
+                    format!("FP256")
+                } else if fp128 {
+                    format!("FP128")
+                } else {
+                    format!("FP64")
+                }
+            );
         } else if i == 0x1e && vendor_amd {
             print!(" [{} thread per core]",
                 ((a[1] >> 8) & 0xff) + 1);
         } else if i == 0x1f && vendor_amd {
-            let sme     = (a[0] & 0b1) == 1;
-            let sev     = ((a[0] >> 1) & 0b1) == 1;
-            let sev_es  = ((a[0] >> 3) & 0b1) == 1;
-            let snp     = ((a[0] >> 4) & 0b1) == 1;
+            let sme     =  (a[0] & 1) == 1;
+            let sev     = ((a[0] >> 1) & 1) == 1;
+            let sev_es  = ((a[0] >> 3) & 1) == 1;
+            let snp     = ((a[0] >> 4) & 1) == 1;
 
-            let buff =  if sme && sev && sev_es && snp {
-                            format!("SME SEV(-ES, SNP)")
-                        } else if sme && sev && sev_es {
-                            format!("SME SEV(-ES)")
-                        } else if sme && sev {
-                            format!("SME SEV")
-                        } else if sme {
-                            format!("SME")
-                        } else {
-                            format!("D")
-                        };
-            
+            let mut buff = String::new();
 
-            print!(" [{}]", buff);
+            if sme { buff.push_str("SME "); }
+            if sev {
+                buff.push_str("SEV");
+                if sev_es { buff.push_str("(-ES)"); }
+                if snp    { buff.push_str(" SNP"); }
+            }
+
+            if buff != "" {
+                print!(" [{}]", buff);
+            }
         }
 
         println!();

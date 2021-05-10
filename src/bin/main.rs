@@ -56,8 +56,10 @@ fn main() {
     
     if opt_dump && opt_dump_all {
         dump_all();
+        return;
     } else if opt_dump {
         cpuid_dump::dump();
+        return;
     }
 
     let vendor_name = get_vendor_name();
@@ -67,7 +69,7 @@ fn main() {
     println!("Processor Name: {}", cpu_name);
 
     let cpu_info = FamModStep::get();
-    println!("Family: 0x{0:X} ({0}), Model: 0x{1:X} ({1}), Stepping: {2}",
+    println!("Family: {0:#X} ({0}), Model: {1:#X} ({1}), Stepping: {2}",
         cpu_info.syn_fam, cpu_info.syn_mod, cpu_info.step);
     println!("Code Name: {}",
         codename::get_codename(cpu_info.syn_fam, cpu_info.syn_mod, cpu_info.step));
