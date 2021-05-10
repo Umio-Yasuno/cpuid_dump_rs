@@ -75,6 +75,8 @@ fn main() {
     println!(" L3 Cache: {} MiB, {}-byte line, {}-way",
         cpu_cache.l3_size, cpu_cache.l3_line, cpu_cache.l3_way);
 
+    println!("Code Name: {}",
+        codename::get_codename(cpu_info.syn_fam, cpu_info.syn_mod, cpu_info.step));
 /*
     cache_info_amd();
     cache_info();

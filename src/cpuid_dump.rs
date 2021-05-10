@@ -149,18 +149,41 @@ pub fn dump() {
 
     println!();
 
-    for i in 0x0..=0x20 {
+    for i in 0x0..=0x21 {
         cpuid!(a[0], a[1], a[2], a[3], _AX + i, 0);
         print_cpuid!(_AX + i, 0, a[0], a[1], a[2], a[3]);
 
         if 0x2 <= i && i <= 0x4 {
             cpu_name(a);
         } else if i == 0x5 && vendor_amd {
-            print!(" [L1D {}K/L1I {}K]", (a[2] >> 24) & 0xff, (a[3] >> 24) & 0xff);
+            print!(" [L1D {}K/L1I {}K]",
+                (a[2] >> 24) & 0xff, (a[3] >> 24) & 0xff);
         } else if i == 0x6 && vendor_amd {
-            print!(" [L2 {}K/L3 {}M]", (a[2] >> 16), (a[3] >> 18) / 2);
+            print!(" [L2 {}K/L3 {}M]",
+                (a[2] >> 16), (a[3] >> 18) / 2);
         } else if i == 0x1e && vendor_amd {
-            print!(" [{} thread per core]", ((a[1] >> 8) & 0xff) + 1);
+            print!(" [{} thread per core]",
+                ((a[1] >> 8) & 0xff) + 1);
+        } else if i == 0x1f && vendor_amd {
+            let sme     = (a[0] & 0b1) == 1;
+            let sev     = ((a[0] >> 1) & 0b1) == 1;
+            let sev_es  = ((a[0] >> 3) & 0b1) == 1;
+            let snp     = ((a[0] >> 4) & 0b1) == 1;
+
+            let buff =  if sme && sev && sev_es && snp {
+                            format!("SME SEV(-ES, SNP)")
+                        } else if sme && sev && sev_es {
+                            format!("SME SEV(-ES)")
+                        } else if sme && sev {
+                            format!("SME SEV")
+                        } else if sme {
+                            format!("SME")
+                        } else {
+                            format!("D")
+                        };
+            
+
+            print!(" [{}]", buff);
         }
 
         println!();

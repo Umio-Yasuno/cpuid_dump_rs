@@ -5,6 +5,7 @@ pub mod cpuid_dump;
 // use cpuid_dump::line;
 pub mod feature_detect;
 // use feature_detect::CpuFeature;
+pub mod codename;
 const _AX: u32 = 0x8000_0000;
 
 #[macro_export]
