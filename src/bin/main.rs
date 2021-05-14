@@ -4,15 +4,12 @@ extern crate cpuid_asm;
 use cpuid_asm::*;
 use cpuid_asm::feature_detect::*;
 
+#[cfg(target_os = "linux")]
 extern crate libc;
+#[cfg(target_os = "linux")]
 use libc::{cpu_set_t, CPU_SET, CPU_ZERO, sched_setaffinity};
 
 use std::{mem, env, thread};
-
-/*
-fn dump_core_select(i: u32) {
-}
-*/
 
 fn dump_all() {
     let core_count = CpuCoreCount::get();
@@ -92,10 +89,5 @@ fn main() {
         cpu_cache.l3_size, cpu_cache.l3_line, cpu_cache.l3_way);
     println!();
 
-/*
-    cache_info_amd();
-    cache_info();
-    cpu_feature();
-*/
 }
 

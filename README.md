@@ -2,6 +2,7 @@
 
  * [x] Cache info of Intel CPU 
  * [x] Core Affinity
+    * [ ] Support for Windows OS
 
 ## Document
 ### Rust

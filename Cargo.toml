@@ -11,5 +11,5 @@ license = "MIT"
 name = "cpuid_asm"
 path = "src/lib.rs"
 
-[dependencies]
-libc = "0.2"
+[target.'cfg(target_os = "linux")'.dependencies]
+libc = "^0.2"
