@@ -189,6 +189,7 @@ pub struct CpuCoreCount {
     pub total_thread:       u32,
     pub thread_per_core:    u32,
     pub core_id:            u32,
+    pub apic_id:       u32,
 }
 
 impl CpuCoreCount {
@@ -215,6 +216,7 @@ impl CpuCoreCount {
             thread_per_core:    _thread_per_core,
             phy_core:           _phy_core,
             core_id:            (b[1] & 0xff),
+            apic_id:            (a[1] >> 24) & 0xff,
         }
     }
 }

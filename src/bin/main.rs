@@ -14,6 +14,11 @@ use std::{mem, env, thread};
 fn dump_all() {
     let core_count = CpuCoreCount::get();
 
+    if cfg!(windows) {
+        println!("dump_all func supports Linux only.");
+        return;
+    }
+
     for i in 0..(core_count.total_thread) {
         thread::spawn( move || {
             unsafe {
@@ -25,9 +30,9 @@ fn dump_all() {
                                   &set);
             }
 
-            let core_all = CpuCoreCount::get();
+            let id = CpuCoreCount::get();
             println!("Core ID: {:<3} / Thread: {:<3}",
-                core_all.core_id, i);
+                id.core_id, i);
             cpuid_dump::dump();
 
         }).join().unwrap();
