@@ -1,11 +1,10 @@
-use super::_AX;
-use super::cpuid;
+use super::{_AX, cpuid};
 use crate::feature_detect::CpuFeature;
 
 macro_rules! print_cpuid {
     ($in_eax: expr, $in_ecx: expr,
     $out_eax: expr, $out_ebx: expr, $out_ecx: expr, $out_edx: expr) => {
-        print!(" {:08X}_x{:X}:  eax={:08X}h ebx={:08X}h ecx={:08X}h edx={:08X}h",
+        print!(" {:08X}h_x{:X}:  eax={:08X}h ebx={:08X}h ecx={:08X}h edx={:08X}h",
             $in_eax, $in_ecx,
             $out_eax, $out_ebx, $out_ecx, $out_edx);
     }
@@ -37,11 +36,11 @@ fn cpuid_feature_07h() {
 fn cpu_name(a: [u32; 4]) {
     let mut name: [u8; 16] = [0x20; 16];
 
-    for j in 0..=3 {
-        name[(j*4)   as usize]  =  (a[j as usize] & 0xFF) as u8;
-        name[(j*4+1) as usize]  = ((a[j as usize] >> 8)  & 0xFF) as u8;
-        name[(j*4+2) as usize]  = ((a[j as usize] >> 16) & 0xFF) as u8;
-        name[(j*4+3) as usize]  = ((a[j as usize] >> 24) & 0xFF) as u8;
+    for j in 0..=3 as usize {
+        name[(j*4)]    =  (a[j] & 0xFF) as u8;
+        name[(j*4+1)]  = ((a[j] >> 8)  & 0xFF) as u8;
+        name[(j*4+2)]  = ((a[j] >> 16) & 0xFF) as u8;
+        name[(j*4+3)]  = ((a[j] >> 24) & 0xFF) as u8;
     }
 
     print!(" [{}]", String::from_utf8(name.to_vec()).unwrap());
@@ -237,7 +236,7 @@ pub fn dump() {
         if (0x2 <= i && i <= 0x4)
         || (0x8 <= i && i <= 0xA)
         || (0xC == i) || (0xE == i)
-        /*|| (0x11 <= i)*/
+        || (0x11 <= i)
         && vendor_amd {
             continue;
         } else if i == 0x4 && vendor_intel {
@@ -292,21 +291,21 @@ pub fn dump() {
         } else if i == 0x5 && vendor_amd {
             print!(" [L1D {}K/L1I {}K]",
                 a[2] >> 24, (a[3] >> 24) & 0xFF);
-            print!("\n{:70} [L1TLB: {} entry]",
+            print!("\n{:71} [L1TLB: {} entry]",
                 " ", a[1] & 0xFF);
 
         } else if i == 0x6 && vendor_amd {
             print!(" [L2 {}K/L3 {}M]",
                 (a[2] >> 16), (a[3] >> 18) / 2);
 
-            print!("\n{:70} [L2dTLB: 4K {}, 2M {}",
+            print!("\n{:71} [L2dTLB: 4K {}, 2M {}",
                 " ", ((a[1] >> 16) & 0xFFF), ((a[0] >> 16) & 0xFFF));
-            print!("\n{:79} 4M {:4}]",
+            print!("\n{:80} 4M {:4}]",
                 " ", ((a[0] >> 16) & 0xFFF) / 2);
 
-            print!("\n{:70} [L2iTLB: 4K {}, 2M {}",
+            print!("\n{:71} [L2iTLB: 4K {}, 2M {}",
                 " ", a[1] & 0xFFF, a[0] & 0xFFF);
-            print!("\n{:79} 4M {:4}]",
+            print!("\n{:80} 4M {:4}]",
                 " ", (a[0] & 0xFFF) / 2);
 
         } else if i == 0x7 && vendor_amd {

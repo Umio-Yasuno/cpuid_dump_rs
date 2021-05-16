@@ -19,11 +19,12 @@ fn dump_all() {
         return;
     }
 
-    for i in 0..(core_count.total_thread) {
+    for i in 0..(core_count.total_thread) as usize {
         thread::spawn( move || {
             unsafe {
                 let mut set = mem::zeroed::<cpu_set_t>();
-                CPU_SET(i as usize, &mut set);
+                CPU_ZERO(&mut set);
+                CPU_SET(i, &mut set);
 
                 sched_setaffinity(0,
                                   mem::size_of::<cpu_set_t>(),
@@ -46,6 +47,7 @@ fn main() {
 
     let mut opt_dump: bool      = false;
     let mut opt_dump_all: bool  = false;
+    let mut opt_c2c: bool       = false;
 
     for opt in args {
         //  println!("{}", opt);
@@ -53,6 +55,8 @@ fn main() {
             opt_dump = true;
         } else if opt == "-a" || opt == "--all" {
             opt_dump_all = true;
+        } else if opt == "-c2c" {
+            opt_c2c = true;
         }
     }
     
@@ -61,6 +65,9 @@ fn main() {
         return;
     } else if opt_dump {
         cpuid_dump::dump();
+        return;
+    } else if opt_c2c {
+        c2c_bench::c2c();
         return;
     }
 

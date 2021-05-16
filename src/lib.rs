@@ -2,10 +2,10 @@
 #![allow(dead_code)]
 
 pub mod cpuid_dump;
-// use cpuid_dump::line;
 pub mod feature_detect;
-// use feature_detect::CpuFeature;
 pub mod codename;
+pub mod c2c_bench;
+
 const _AX: u32 = 0x8000_0000;
 
 #[macro_export]
@@ -27,13 +27,13 @@ pub fn get_processor_name() -> String {
     let mut a: [u32; 4] = [0; 4];
     let mut name: Vec<u8> = vec![0x20; 48];
 
-    for i in 0..=2 {
-        cpuid!(a[0], a[1], a[2], a[3], _AX + i + 0x2, 0);
+    for i in 0..=2 as usize {
+        cpuid!(a[0], a[1], a[2], a[3], _AX + 0x2 + i as u32, 0);
         for j in 0..=3 {
-            name[(i*16+j*4) as usize]   =  (a[j as usize] & 0xff) as u8;
-            name[(i*16+j*4+1) as usize] = ((a[j as usize] >> 8)  & 0xff) as u8;
-            name[(i*16+j*4+2) as usize] = ((a[j as usize] >> 16) & 0xff) as u8;
-            name[(i*16+j*4+3) as usize] = ((a[j as usize] >> 24) & 0xff) as u8;
+            name[(i*16+j*4)]   =  (a[j] & 0xff) as u8;
+            name[(i*16+j*4+1)] = ((a[j] >> 8)  & 0xff) as u8;
+            name[(i*16+j*4+2)] = ((a[j] >> 16) & 0xff) as u8;
+            name[(i*16+j*4+3)] = ((a[j] >> 24) & 0xff) as u8;
         }
     }
 
@@ -161,6 +161,7 @@ pub struct FamModStep {
    pub syn_fam: u32,
    pub syn_mod: u32,
    pub step:    u32,
+   pub raw_eax: u32,
 }
 
 impl FamModStep {
@@ -179,6 +180,7 @@ impl FamModStep {
             syn_fam:    ((a >> 8) & 0xf) + ((a >> 20) & 0xff),
             syn_mod:    ((a >> 4) & 0xf) + ((a >> 12) & 0xf0),
             step:       a & 0xf,
+            raw_eax:    a,
         };
     }
 }

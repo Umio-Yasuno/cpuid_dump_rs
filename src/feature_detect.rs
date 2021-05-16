@@ -1,5 +1,4 @@
-use super::_AX;
-use super::cpuid;
+use super::{_AX, cpuid};
 
 macro_rules! bitflag {
     ($x: expr, $pos: expr) => {
@@ -8,6 +7,7 @@ macro_rules! bitflag {
 }
 
 pub struct CpuFeature {
+/*
     pub skx_avx512:     bool,
     pub cnl_avx512:     bool,
     pub clx_avx512:     bool,
@@ -15,6 +15,7 @@ pub struct CpuFeature {
     pub icl_avx512:     bool,
     pub tgl_avx512:     bool,
     pub spr_avx512:     bool,
+*/
     pub x86_64_v1:      bool,
     pub x86_64_v2:      bool,
     pub x86_64_v3:      bool,
@@ -105,9 +106,23 @@ impl CpuFeature {
         let _has_avx512_vbmi        = bitflag!(b[2], 1);
     
         // 0x00000007_EDX_x0
+        let _has_ssbd                   = bitflag!(b[3], 31);
+        let _has_l1dflush               = bitflag!(b[3], 28);
+        let _has_stibp                  = bitflag!(b[3], 27);
+        let _has_ibpb                   = bitflag!(b[3], 26);
+        let _has_amx_int8               = bitflag!(b[3], 25);
+        let _has_amx_tile               = bitflag!(b[3], 24);
         let _has_avx512_fp16            = bitflag!(b[3], 23);
+        let _has_amx_bf16               = bitflag!(b[3], 22);
+        let _has_cet_ibt                = bitflag!(b[3], 20);
+        let _has_pconfig                = bitflag!(b[3], 18);
+        let _has_tsxldtrk               = bitflag!(b[3], 16);
         let _has_hybrid                 = bitflag!(b[3], 15);
+        let _has_serialize              = bitflag!(b[3], 14);
+        let _has_md_clear               = bitflag!(b[3], 10);
         let _has_avx512_vp2intersect    = bitflag!(b[3], 8);
+        let _has_uintr                  = bitflag!(b[3], 5);
+        let _has_fsrm                   = bitflag!(b[3], 4); // Fast Short REP MOV
     
         // 0x00000007_ECX_x1
         let _has_lam            = bitflag!(c[0], 26);
@@ -120,6 +135,7 @@ impl CpuFeature {
         let _has_lzcnt          = bitflag!(d[2], 5); // abm
         let _has_lahf           = bitflag!(d[2], 0); // LAHF/SAHF
     
+    /*
         // AVX512
         // Skylake server
         let _skx_avx512     = _has_avx512_f && _has_avx512_dq && _has_avx512_ifma
@@ -138,6 +154,7 @@ impl CpuFeature {
         // Sapphire Rapids
         let _spr_avx512     = _tgl_avx512 && _has_avx512_bf16 && _has_avx512_fp16
                             && _has_avx_vnni;
+    */
     
         // https://gitlab.com/x86-psABIs/x86-64-ABI
         let _x86_64_v1  = _has_cmov && _has_cx8 && _has_fpu
@@ -153,6 +170,7 @@ impl CpuFeature {
                         && _has_avx512_cd && _has_avx512_dq && _has_avx512_vl;
 
         return CpuFeature {
+        /*
             skx_avx512:     _skx_avx512,
             cnl_avx512:     _cnl_avx512,
             clx_avx512:     _clx_avx512,
@@ -160,6 +178,7 @@ impl CpuFeature {
             icl_avx512:     _icl_avx512,
             tgl_avx512:     _tgl_avx512,
             spr_avx512:     _spr_avx512,
+        */
             x86_64_v1:      _x86_64_v1,
             x86_64_v2:      _x86_64_v2,
             x86_64_v3:      _x86_64_v3,
