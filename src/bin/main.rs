@@ -34,7 +34,7 @@ fn dump_all() {
             let id = CpuCoreCount::get();
             println!("Core ID: {:<3} / Thread: {:<3}",
                 id.core_id, i);
-            cpuid_dump::dump();
+            //cpuid_dump::dump();
 
         }).join().unwrap();
     }
@@ -60,6 +60,7 @@ fn main() {
         }
     }
     
+    /*
     if opt_dump && opt_dump_all {
         dump_all();
         return;
@@ -70,7 +71,7 @@ fn main() {
         c2c_bench::c2c();
         return;
     }
-
+    */
     let vendor_name = get_vendor_name();
     println!("Vendor: {}", vendor_name);
 

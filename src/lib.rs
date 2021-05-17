@@ -1,12 +1,12 @@
 #![feature(asm)]
 #![allow(dead_code)]
 
-pub mod cpuid_dump;
+//  pub mod cpuid_dump;
 pub mod feature_detect;
 pub mod codename;
-pub mod c2c_bench;
+//  pub mod c2c_bench;
 
-const _AX: u32 = 0x8000_0000;
+pub const _AX: u32 = 0x8000_0000;
 
 #[macro_export]
 macro_rules! cpuid {

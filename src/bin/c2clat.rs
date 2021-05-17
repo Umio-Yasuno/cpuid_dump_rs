@@ -8,7 +8,9 @@ extern crate libc;
 #[cfg(target_os = "linux")]
 use libc::{cpu_set_t, CPU_SET, CPU_ISSET, CPU_ZERO, sched_setaffinity, sched_getaffinity};
 
-use std::{mem, thread, time};
+extern crate cpuid_asm;
+
+use std::{env, mem, thread, time};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicIsize, Ordering};
 
@@ -24,14 +26,22 @@ macro_rules! pin_thread { ($cpu: expr) => {
             return;
         }
     }
-    }
-}
+}}
 
 const NSAMPLES: isize = 1_000;
 
-pub fn c2c() {
+fn main() {
+    let args: Vec<String> = env::args().collect();
 
-    let ncpu = super::CpuCoreCount::get();
+    let mut opt_md: bool = false;
+
+    for opt in args {
+        if opt == "-md" {
+            opt_md = true;
+        }
+    }
+
+    let ncpu = cpuid_asm::CpuCoreCount::get();
     let mut cpus: Vec<usize> = Vec::new();
 
     unsafe {
@@ -60,6 +70,7 @@ pub fn c2c() {
         for j in (i+1)..(ncpu) {
 
             let seq1 = Arc::new(AtomicIsize::new(-1));
+            let _pad = Arc::new(AtomicIsize::new(-1));
             let seq2 = Arc::new(AtomicIsize::new(-1));
 
             let _seq1 = seq1.clone();
@@ -95,7 +106,7 @@ pub fn c2c() {
 
                 perf = start.elapsed().as_nanos();
                 tmp = std::cmp::min(tmp, perf);
-                if _m != 0 {
+                if _m != 0 {  // pin_thread cost
                     avg += perf;
                 }
             }
@@ -111,33 +122,53 @@ pub fn c2c() {
         }
     }
 
-    println!("[min (ns)]");
-    print!(" CPU");
+macro_rules! md_table { ($opt: expr) => {
+    if $opt { " |" } else { "" };
+    }
+}
+
+    println!("\n{}[min (ns)]", if opt_md {"#### "} else {""} );
+    print!(" CPU{}", md_table!(opt_md));
     for n in &cpus {
-        print!("{:>5}", n);
+        print!("{:>5}{}", n, md_table!(opt_md) );
     }
     println!();
+    if opt_md {
+        print!(" --: | ");
+        for _n in 0..ncpu {
+            print!(" --: | ");
+        }
+        println!();
+    }
     for i in 0..ncpu {
-        print!("{:>4}", i);
+        print!("{:>4}{}", i, md_table!(opt_md) );
         for j in 0..ncpu {
-            print!("{:>5}", min_result[i][j]);
+            print!("{:>5}{}", min_result[i][j], md_table!(opt_md));
         }
         println!();
     }
     println!();
 
-    println!("[avg (ns)]");
-    print!(" CPU");
+    println!("\n{}[avg (ns)]", if opt_md {"#### "} else {""} );
+    print!(" CPU{}", md_table!(opt_md));
     for n in &cpus {
-        print!("{:>5}", n);
+        print!("{:>5}{}", n, md_table!(opt_md));
     }
     println!();
-    for i in 0..ncpu {
-        print!("{:>4}", i);
-        for j in 0..ncpu {
-            print!("{:>5}", avg_result[i][j]);
+    if opt_md {
+        print!(" --: | ");
+        for _n in 0..ncpu {
+            print!(" --: | ");
         }
         println!();
     }
+    for i in 0..ncpu {
+        print!("{:>4}{}", i, md_table!(opt_md) );
+        for j in 0..ncpu {
+            print!("{:>5}{}", avg_result[i][j], md_table!(opt_md));
+        }
+        println!();
+    }
+    println!();
 }
 

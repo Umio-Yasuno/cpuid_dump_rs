@@ -1,5 +1,15 @@
-use super::{_AX, cpuid};
-use crate::feature_detect::CpuFeature;
+#![feature(asm)]
+
+extern crate cpuid_asm;
+use cpuid_asm::{_AX, cpuid};
+use cpuid_asm::feature_detect::CpuFeature;
+
+#[cfg(target_os = "linux")]
+extern crate libc;
+#[cfg(target_os = "linux")]
+use libc::{cpu_set_t, CPU_SET, CPU_ZERO, sched_setaffinity};
+
+use std::{mem, env, thread};
 
 macro_rules! print_cpuid {
     ($in_eax: expr, $in_ecx: expr,
@@ -153,8 +163,22 @@ fn intel_hybrid_1ah(a: [u32; 4]) {
         _       => format!(""),
     };
 
-    if core_type != "" {
+    if core_type.len() != 0 {
         print!(" [{}]", core_type);
+    }
+}
+
+fn apmi_amd_80_07h(edx: u32) {
+    let cpb  = ((edx >> 9) & 0b1) == 1;
+    let rapl = ((edx >> 14) & 0b1) == 1;
+
+    let mut buff = String::new();
+
+    if cpb  { buff.push_str("CPB "); }
+    if rapl { buff.push_str("RAPL "); }
+
+    if buff.len() != 0 {
+        print!(" [{}]", buff.trim_end());
     }
 }
 
@@ -171,7 +195,7 @@ fn spec_amd_80_08h(a: [u32; 4]) {
     if ssbd  { buff.push_str("SSBD "); }
     if psfd  { buff.push_str("PSFD "); }
 
-    if buff != "" {
+    if buff.len() != 0 {
         print!(" [{}]", buff.trim_end());
     }
 }
@@ -188,7 +212,7 @@ fn fpu_width_amd_80_1ah(a: [u32; 4]) {
         buff.push_str("FP128");
     }
 
-    if buff != "" {
+    if buff.len() != 0 {
         print!(" [{}]", buff);
     }
 }
@@ -207,12 +231,12 @@ fn secure_amd_80_1fh(a: [u32; 4]) {
         if snp    { buff.push_str("SNP "); }
     }
 
-    if buff != "" {
+    if buff.len() != 0 {
         print!(" [{}]", buff.trim_end());
     }
 }
 
-pub fn dump() {
+fn dump() {
     println!("CPUID Dump");
 
     let mut buff = String::new();
@@ -261,7 +285,7 @@ pub fn dump() {
         print_cpuid!(i, 0, a[0], a[1], a[2], a[3]);
 
         if i == 0 {
-            print!(" [{}]", super::get_vendor_name());
+            print!(" [{}]", cpuid_asm::get_vendor_name());
         } else if i == 0x1 {
             print!(" [F: {}, M: {}, S: {}]",
                 ((a[0] >> 8) & 0xF) + ((a[0] >> 20) & 0xFF),
@@ -309,9 +333,7 @@ pub fn dump() {
                 " ", (a[0] & 0xFFF) / 2);
 
         } else if i == 0x7 && vendor_amd {
-            if ((a[0] >> 9) & 1) == 1 {
-                print!(" [CPB]");
-            }
+            apmi_amd_80_07h(a[3]);
         } else if i == 0x8 && vendor_amd {
             spec_amd_80_08h(a);
         } else if i == 0x19 && vendor_amd {
@@ -328,4 +350,48 @@ pub fn dump() {
         println!();
     }
     println!();
+}
+
+fn dump_all() {
+    let core_count = cpuid_asm::CpuCoreCount::get();
+
+    if cfg!(windows) {
+        println!("dump_all func supports Linux only.");
+        return;
+    }
+
+    for i in 0..(core_count.total_thread) as usize {
+        thread::spawn( move || {
+            unsafe {
+                let mut set = mem::zeroed::<cpu_set_t>();
+                CPU_ZERO(&mut set);
+                CPU_SET(i, &mut set);
+
+                sched_setaffinity(0,
+                                  mem::size_of::<cpu_set_t>(),
+                                  &set);
+            }
+
+            let id = cpuid_asm::CpuCoreCount::get();
+            println!("Core ID: {:<3} / Thread: {:<3}",
+                id.core_id, i);
+            dump();
+
+        }).join().unwrap();
+    }
+}
+
+fn main() {
+    println!();
+
+    let args: Vec<String> = env::args().collect();
+
+    for opt in args {
+        if opt == "-a" || opt == "--all" {
+            dump_all();
+            return;
+        }
+    }
+
+    dump();
 }
