@@ -28,11 +28,41 @@ macro_rules! pin_thread { ($cpu: expr) => {
     }
 }}
 
+fn print_table  (title: &str, result: Vec<Vec<u128>>,
+                cpu_list: &Vec<usize>, ncpu: usize, opt_md: bool) {
+
+        macro_rules! md_table { ($opt: expr) => {
+            if $opt { " |" } else { "" };
+            }
+        }
+
+    println!("\n{}{}", if opt_md {"#### "} else {""}, title );
+    print!(" CPU{}", md_table!(opt_md));
+    for n in cpu_list {
+        print!("{:>5}{}", n, md_table!(opt_md) );
+    }
+    println!();
+    if opt_md {
+        print!(" --: | ");
+        for _n in 0..ncpu {
+            print!(" --: | ");
+        }
+        println!();
+    }
+    for i in 0..ncpu {
+        print!("{:>4}{}", i, md_table!(opt_md) );
+        for j in 0..ncpu {
+            print!("{:>5}{}", result[i][j], md_table!(opt_md));
+        }
+        println!();
+    }
+    println!();
+}
+
 const NSAMPLES: isize = 1_000;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-
     let mut opt_md: bool = false;
 
     for opt in args {
@@ -61,20 +91,21 @@ fn main() {
         }
     }
 
-    let ncpu = cpus.len();
+    let ncpu: usize = cpus.len();
     
-    let mut avg_result = vec![vec![0; ncpu]; ncpu];
-    let mut min_result = vec![vec![0; ncpu]; ncpu];
-
-    for i in 0..(ncpu) {
-        for j in (i+1)..(ncpu) {
+    let mut min_result: Vec<Vec<u128>> = vec![vec![0; ncpu]; ncpu];
+    let mut avg_result: Vec<Vec<u128>> = vec![vec![0; ncpu]; ncpu];
 
             let seq1 = Arc::new(AtomicIsize::new(-1));
             let _pad = Arc::new(AtomicIsize::new(-1));
             let seq2 = Arc::new(AtomicIsize::new(-1));
 
-            let _seq1 = seq1.clone();
-            let _seq2 = seq2.clone();
+    for i in 0..(ncpu) {
+        for j in (i+1)..(ncpu) {
+
+
+            let seq_1 = seq1.clone();
+            let seq_2 = seq2.clone();
 
             let c = cpus[i];
 
@@ -82,8 +113,8 @@ fn main() {
                 pin_thread!(c);
                 for _m in 0..100 {
                     for n in 0..NSAMPLES {
-                        while _seq1.load(Ordering::Acquire) != n {}
-                        _seq2.store(n, Ordering::Release);
+                        while seq_1.load(Ordering::Acquire) != n {}
+                        seq_2.store(n, Ordering::Release);
                     }
                 }
             });
@@ -118,57 +149,10 @@ fn main() {
 
             avg_result[i][j] = avg / NSAMPLES as u128 / (100-1) / 2;
             avg_result[j][i] = avg / NSAMPLES as u128 / (100-1) / 2;
-
         }
     }
 
-macro_rules! md_table { ($opt: expr) => {
-    if $opt { " |" } else { "" };
-    }
-}
-
-    println!("\n{}[min (ns)]", if opt_md {"#### "} else {""} );
-    print!(" CPU{}", md_table!(opt_md));
-    for n in &cpus {
-        print!("{:>5}{}", n, md_table!(opt_md) );
-    }
-    println!();
-    if opt_md {
-        print!(" --: | ");
-        for _n in 0..ncpu {
-            print!(" --: | ");
-        }
-        println!();
-    }
-    for i in 0..ncpu {
-        print!("{:>4}{}", i, md_table!(opt_md) );
-        for j in 0..ncpu {
-            print!("{:>5}{}", min_result[i][j], md_table!(opt_md));
-        }
-        println!();
-    }
-    println!();
-
-    println!("\n{}[avg (ns)]", if opt_md {"#### "} else {""} );
-    print!(" CPU{}", md_table!(opt_md));
-    for n in &cpus {
-        print!("{:>5}{}", n, md_table!(opt_md));
-    }
-    println!();
-    if opt_md {
-        print!(" --: | ");
-        for _n in 0..ncpu {
-            print!(" --: | ");
-        }
-        println!();
-    }
-    for i in 0..ncpu {
-        print!("{:>4}{}", i, md_table!(opt_md) );
-        for j in 0..ncpu {
-            print!("{:>5}{}", avg_result[i][j], md_table!(opt_md));
-        }
-        println!();
-    }
-    println!();
+    print_table("[min (ns)]", min_result, &cpus, ncpu, opt_md);
+    print_table("[avg (ns)]", avg_result, &cpus, ncpu, opt_md);
 }
 

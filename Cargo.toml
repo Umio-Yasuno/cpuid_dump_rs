@@ -14,11 +14,3 @@ path = "src/lib.rs"
 [target.'cfg(target_os = "linux")'.dependencies]
 libc = "^0.2"
 
-[profile.release]
-debug = false
-opt-level = 3
-incremental = true
-lto = true
-codegen-units = 1
-debug-assertions = false
-
