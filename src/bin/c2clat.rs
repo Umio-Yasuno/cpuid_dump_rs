@@ -10,7 +10,7 @@ use libc::{cpu_set_t, CPU_SET, CPU_ISSET, CPU_ZERO, sched_setaffinity, sched_get
 
 extern crate cpuid_asm;
 
-use std::{env, mem, thread, time};
+use std::{mem, thread, time};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicIsize, Ordering};
 
@@ -62,10 +62,8 @@ fn print_table  (title: &str, result: Vec<Vec<u128>>,
 const NSAMPLES: isize = 1_000;
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
     let mut opt_md: bool = false;
-
-    for opt in args {
+    for opt in std::env::args() {
         if opt == "-md" {
             opt_md = true;
         }
@@ -85,7 +83,7 @@ fn main() {
         }
 
         for i in 0..(ncpu.total_thread) as usize {
-            if CPU_ISSET(i, &mut set) {
+            if CPU_ISSET(i, &set) {
                 cpus.push(i);
             }
         }
@@ -96,27 +94,27 @@ fn main() {
     let mut min_result: Vec<Vec<u128>> = vec![vec![0; ncpu]; ncpu];
     let mut avg_result: Vec<Vec<u128>> = vec![vec![0; ncpu]; ncpu];
 
-    #[repr(align(64))]
-    struct ArcMem {
-        val: Arc<AtomicIsize>,
-        _pad: isize,
+    // TODO: align for cache line
+    #[derive(Clone)]
+    #[repr (align(64))]
+    struct Seq {
+        v: Arc<AtomicIsize>,
     }
-
-    let seq1 = ArcMem {
-        val: Arc::new(AtomicIsize::new(-1)),
-        _pad: 0,
-    };
-    let seq2 = ArcMem {
-        val: Arc::new(AtomicIsize::new(-1)),
-        _pad: 0,
-    };
+    impl Seq {
+        fn set() -> Seq {
+            return Seq {
+                v: Arc::new(AtomicIsize::new(-1)),
+            }
+        }
+    }
+    let seq1 = Seq::set();
+    let seq2 = Seq::set();
 
     for i in 0..(ncpu) {
         for j in (i+1)..(ncpu) {
 
-
-            let seq_1 = seq1.val.clone();
-            let seq_2 = seq2.val.clone();
+            let _seq1 = seq1.clone();
+            let _seq2 = seq2.clone();
 
             let c = cpus[i];
 
@@ -124,8 +122,8 @@ fn main() {
                 pin_thread!(c);
                 for _m in 0..100 {
                     for n in 0..NSAMPLES {
-                        while seq_1.load(Ordering::Acquire) != n {}
-                        seq_2.store(n, Ordering::Release);
+                        while _seq1.v.load(Ordering::Acquire) != n {}
+                        _seq2.v.store(n, Ordering::Release);
                     }
                 }
             });
@@ -136,17 +134,18 @@ fn main() {
 
             pin_thread!(cpus[j]);
             for _m in 0..100 {
-                seq1.val.store(-1, Ordering::Release);
-                seq2.val.store(-1, Ordering::Release);
+                seq1.v.store(-1, Ordering::Release);
+                seq2.v.store(-1, Ordering::Release);
 
                 let start = time::Instant::now();
 
                 for n in 0..NSAMPLES {
-                    seq1.val.store(n, Ordering::Release);
-                    while seq2.val.load(Ordering::Acquire) != n {}
+                    seq1.v.store(n, Ordering::Release);
+                    while seq2.v.load(Ordering::Acquire) != n {}
                 }
 
                 perf = start.elapsed().as_nanos();
+
                 tmp = std::cmp::min(tmp, perf);
                 if _m != 0 {  // pin_thread cost
                     avg += perf;
