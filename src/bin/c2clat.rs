@@ -96,16 +96,27 @@ fn main() {
     let mut min_result: Vec<Vec<u128>> = vec![vec![0; ncpu]; ncpu];
     let mut avg_result: Vec<Vec<u128>> = vec![vec![0; ncpu]; ncpu];
 
-            let seq1 = Arc::new(AtomicIsize::new(-1));
-            let _pad = Arc::new(AtomicIsize::new(-1));
-            let seq2 = Arc::new(AtomicIsize::new(-1));
+    #[repr(align(64))]
+    struct ArcMem {
+        val: Arc<AtomicIsize>,
+        _pad: isize,
+    }
+
+    let seq1 = ArcMem {
+        val: Arc::new(AtomicIsize::new(-1)),
+        _pad: 0,
+    };
+    let seq2 = ArcMem {
+        val: Arc::new(AtomicIsize::new(-1)),
+        _pad: 0,
+    };
 
     for i in 0..(ncpu) {
         for j in (i+1)..(ncpu) {
 
 
-            let seq_1 = seq1.clone();
-            let seq_2 = seq2.clone();
+            let seq_1 = seq1.val.clone();
+            let seq_2 = seq2.val.clone();
 
             let c = cpus[i];
 
@@ -125,14 +136,14 @@ fn main() {
 
             pin_thread!(cpus[j]);
             for _m in 0..100 {
-                seq1.store(-1, Ordering::Release);
-                seq2.store(-1, Ordering::Release);
+                seq1.val.store(-1, Ordering::Release);
+                seq2.val.store(-1, Ordering::Release);
 
                 let start = time::Instant::now();
 
                 for n in 0..NSAMPLES {
-                    seq1.store(n, Ordering::Release);
-                    while seq2.load(Ordering::Acquire) != n {}
+                    seq1.val.store(n, Ordering::Release);
+                    while seq2.val.load(Ordering::Acquire) != n {}
                 }
 
                 perf = start.elapsed().as_nanos();
