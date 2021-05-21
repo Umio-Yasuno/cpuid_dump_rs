@@ -4,6 +4,22 @@
  * [x] Core Affinity
     * [ ] Support for Windows OS
 
+## Usage
+### cpuid_dump
+
+    $ cargo run --bin cpuid_dump
+    // all thread
+    $ cargo run --bin cpuid_dump -- -a
+
+### c2clat (Original: [rigtorp/c2clat](https://github.com/rigtorp/c2clat))
+
+    $ cargo build --release --bin c2clat
+    $ ./target/release/c2clat
+    // Output Markdown table
+    $ ./target/release/c2clat -md
+    // gnuplot
+    $ ./target/release/c2clat -p | gnuplot -p
+
 ## Document
 ### Rust
  * [asm - The Rust Unstable Book](https://doc.rust-lang.org/beta/unstable-book/library-features/asm.html)
