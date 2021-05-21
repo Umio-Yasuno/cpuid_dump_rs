@@ -381,18 +381,20 @@ fn spec_amd_80_08h(a: [u32; 4]) {
 
 fn fpu_width_amd_80_1ah(a: [u32; 4]) {
     let fp256 = ((a[0] >> 3) & 0b1) == 1;
+    let movu  = ((a[0] >> 1) & 0b1) == 1;
     let fp128 = (a[0] & 0b1) == 1;
 
     let mut buff = String::new();
             
     if fp256 {
-        buff.push_str("FP256");
+        buff.push_str("FP256 ");
     } else if fp128 {
-        buff.push_str("FP128");
+        buff.push_str("FP128 ");
     }
+    if movu { buff.push_str("MOVU "); }
 
     if buff.len() != 0 {
-        print!(" [{}]", buff);
+        print!(" [{}]", buff.trim_end());
     }
 }
 
@@ -428,12 +430,8 @@ fn dump() {
 
     cpuid!(a[0], a[1], a[2], a[3], 0, 0);
 
-    let vendor_amd =    a[1] == 0x6874_7541 
-                        && a[2] == 0x444D_4163
-                        && a[3] == 0x6974_6E65;
-    let vendor_intel =  a[1] == 0x756E_6547
-                        && a[2] == 0x4965_6E69
-                        && a[3] == 0x6C65_746E;
+    let vendor_amd   = a[1] == 0x6874_7541 && a[2] == 0x444D_4163 && a[3] == 0x6974_6E65;
+    let vendor_intel = a[1] == 0x756E_6547 && a[2] == 0x4965_6E69 && a[3] == 0x6C65_746E;
 
     for i in 0..=0x20 {
         if (0x2 <= i && i <= 0x4)
@@ -544,12 +542,12 @@ fn dump() {
 }
 
 fn dump_all() {
-    let core_count = cpuid_asm::CpuCoreCount::get();
-
     if cfg!(windows) {
         println!("dump_all func supports Linux only.");
         return;
     }
+
+    let core_count = cpuid_asm::CpuCoreCount::get();
 
     for i in 0..(core_count.total_thread) as usize {
         thread::spawn( move || {
@@ -566,6 +564,7 @@ fn dump_all() {
             let id = cpuid_asm::CpuCoreCount::get();
             println!("Core ID: {:<3} / Thread: {:<3}",
                 id.core_id, i);
+
             dump();
 
         }).join().unwrap();

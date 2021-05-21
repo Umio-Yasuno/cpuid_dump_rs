@@ -28,21 +28,30 @@ macro_rules! pin_thread { ($cpu: expr) => {
     }
 }}
 
-fn print_table  (title: &str, result: Vec<Vec<u128>>,
-                cpu_list: &Vec<usize>, ncpu: usize, opt_md: bool) {
+fn print_matrix  (title: &str, result: Vec<Vec<u128>>,
+                cpu_list: &Vec<usize>, ncpu: usize, opt: &Opt) {
 
-        macro_rules! md_table { ($opt: expr) => {
-            if $opt { " |" } else { "" };
-            }
+    macro_rules! md_table { ($opt: expr) => {
+        if $opt { " |" } else { "" };
         }
+    }
 
-    println!("\n{}{}", if opt_md {"#### "} else {""}, title );
-    print!(" CPU{}", md_table!(opt_md));
+    if opt.plot {
+        println!("set title \"Inter-core one-way data latency between CPU cores [{}]\"", title);
+        println!("set xlabel \"CPU\"");
+        println!("set ylabel \"CPU\"");
+        println!("set cblabel \"Latency (ns)\"");
+        println!("$data << EOD");
+    } else {
+        println!("\n{}[{} (ns)]", if opt.md { "#### " } else { "" }, title );
+    }
+
+    print!(" CPU{}", md_table!(opt.md));
     for n in cpu_list {
-        print!("{:>5}{}", n, md_table!(opt_md) );
+        print!("{:>5}{}", n, md_table!(opt.md) );
     }
     println!();
-    if opt_md {
+    if opt.md {
         print!(" --: | ");
         for _n in 0..ncpu {
             print!(" --: | ");
@@ -50,22 +59,38 @@ fn print_table  (title: &str, result: Vec<Vec<u128>>,
         println!();
     }
     for i in 0..ncpu {
-        print!("{:>4}{}", i, md_table!(opt_md) );
+        print!("{:>4}{}", i, md_table!(opt.md) );
         for j in 0..ncpu {
-            print!("{:>5}{}", result[i][j], md_table!(opt_md));
+            print!("{:>5}{}", result[i][j], md_table!(opt.md));
         }
         println!();
+    }
+
+    if opt.plot {
+        println!("EOD");
+        print!("plot '$data' matrix rowheaders columnheaders using 2:1:3 ");
+        println!("with image");
     }
     println!();
 }
 
 const NSAMPLES: isize = 1_000;
 
+struct Opt {
+    md:     bool,
+    plot:   bool,
+}
+
 fn main() {
-    let mut opt_md: bool = false;
-    for opt in std::env::args() {
-        if opt == "-md" {
-            opt_md = true;
+    let mut opt = Opt { md: false, plot: false, };
+
+    for v in std::env::args() {
+        if v == "-md" {
+            opt.md   = true;
+            opt.plot = false;
+        } else if v == "-p" {
+            opt.md   = false;
+            opt.plot = true;
         }
     }
 
@@ -162,7 +187,20 @@ fn main() {
         }
     }
 
-    print_table("[min (ns)]", min_result, &cpus, ncpu, opt_md);
-    print_table("[avg (ns)]", avg_result, &cpus, ncpu, opt_md);
+    if opt.plot {
+        println!("reset");
+        println!("unset key");
+        println!("set auto noextend");
+        println!("set multiplot layout 2,1");
+        println!("set size ratio 1");
+        println!("set palette grey negative gamma 2.5");
+    }
+    
+    print_matrix("min", min_result, &cpus, ncpu, &opt);
+    print_matrix("avg", avg_result, &cpus, ncpu, &opt);
+
+    if opt.plot {
+        println!("unset multiplot");
+    }
 }
 
