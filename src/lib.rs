@@ -52,22 +52,38 @@ fn amd_cache_way(ecx: u32) -> u32 {
     return (a >> 22) + 1;
 }
 
+fn get_clflush_size() -> u32 {
+    let mut a: u32;
+
+    unsafe {
+        asm!("cpuid",
+            inlateout("eax") 0x1 => a,
+            lateout("ebx") _,
+            lateout("ecx") _,
+            lateout("edx") _,
+        );
+    }
+    return ((a >> 8) & 0xFF) * 8;
+}
+
 pub struct CacheInfo {
-    pub l1d_size:   u32, // KiB
-    pub l1d_line:   u32,
-    pub l1d_way:    u32,
+    pub l1d_size: u32, // KiB
+    pub l1d_line: u32,
+    pub l1d_way:  u32,
 
-    pub l1i_size:   u32, // KiB
-    pub l1i_line:   u32,
-    pub l1i_way:    u32,
+    pub l1i_size: u32, // KiB
+    pub l1i_line: u32,
+    pub l1i_way:  u32,
 
-    pub l2_size:    u32, // KiB
-    pub l2_line:    u32,
-    pub l2_way:     u32,
+    pub l2_size:  u32, // KiB
+    pub l2_line:  u32,
+    pub l2_way:   u32,
 
-    pub l3_size:    u32, // MiB
-    pub l3_line:    u32,
-    pub l3_way:     u32,
+    pub l3_size:  u32, // MiB
+    pub l3_line:  u32,
+    pub l3_way:   u32,
+
+    pub clflush_size: u32, // B
 //  pub has_l4:     bool,
 }
 
@@ -98,6 +114,8 @@ fn cache_info_intel() -> CacheInfo {
         l3_size:    ((d[1] >> 22) + 1) * ((d[1] & 0xfff) + 1) * (d[2] + 1),
         l3_line:    (d[1] & 0xfff) + 1,
         l3_way:     (d[1] >> 22) + 1,
+
+        clflush_size: get_clflush_size(),
     }
 }
 
@@ -124,6 +142,8 @@ fn cache_info_amd() -> CacheInfo {
         l3_size:    (b[3] >> 18) / 2,
         l3_line:    b[3] & 0xff,
         l3_way:     amd_cache_way(3),
+
+        clflush_size: get_clflush_size(),
     };
 }
 
@@ -150,6 +170,8 @@ impl CacheInfo {
                 l3_size:    0,
                 l3_line:    0,
                 l3_way:     0,
+
+                clflush_size: 0,
             }
         }
     }
