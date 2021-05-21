@@ -218,9 +218,11 @@ impl CpuCoreCount {
     pub fn get() -> CpuCoreCount {
         let mut a: [u32; 4] = [0; 4];
         let mut b: [u32; 4] = [0; 4];
+        let mut c: [u32; 4] = [0; 4];
 
         cpuid!(a[0], a[1], a[2], a[3], 0x1, 0);
         cpuid!(b[0], b[1], b[2], b[3], _AX + 0x1e, 0);
+        cpuid!(c[0], c[1], c[2], c[3], 0x4, 0);
 
         let _has_htt            = ((a[3] >> 28) & 0x1) == 1;
         let _total_thread       = (a[1] >> 16) & 0xff;
