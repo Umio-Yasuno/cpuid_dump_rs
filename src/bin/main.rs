@@ -7,74 +7,8 @@ extern crate cpuid_asm;
 use cpuid_asm::*;
 use cpuid_asm::feature_detect::*;
 
-#[cfg(target_os = "linux")]
-extern crate libc;
-#[cfg(target_os = "linux")]
-use libc::{cpu_set_t, CPU_SET, CPU_ZERO, sched_setaffinity};
-
-use std::{mem, env, thread};
-
-fn dump_all() {
-    let core_count = CpuCoreCount::get();
-
-    if cfg!(windows) {
-        println!("dump_all func supports Linux only.");
-        return;
-    }
-
-    for i in 0..(core_count.total_thread) as usize {
-        thread::spawn( move || {
-            unsafe {
-                let mut set = mem::zeroed::<cpu_set_t>();
-                CPU_ZERO(&mut set);
-                CPU_SET(i, &mut set);
-
-                sched_setaffinity(0,
-                                  mem::size_of::<cpu_set_t>(),
-                                  &set);
-            }
-
-            let id = CpuCoreCount::get();
-            println!("Core ID: {:<3} / Thread: {:<3}",
-                id.core_id, i);
-            //cpuid_dump::dump();
-
-        }).join().unwrap();
-    }
-}
-
 fn main() {
-    println!();
 
-    let args: Vec<String> = env::args().collect();
-
-    let mut opt_dump: bool      = false;
-    let mut opt_dump_all: bool  = false;
-    let mut opt_c2c: bool       = false;
-
-    for opt in args {
-        //  println!("{}", opt);
-        if opt == "-d" || opt == "--dump" {
-            opt_dump = true;
-        } else if opt == "-a" || opt == "--all" {
-            opt_dump_all = true;
-        } else if opt == "-c2c" {
-            opt_c2c = true;
-        }
-    }
-    
-    /*
-    if opt_dump && opt_dump_all {
-        dump_all();
-        return;
-    } else if opt_dump {
-        cpuid_dump::dump();
-        return;
-    } else if opt_c2c {
-        c2c_bench::c2c();
-        return;
-    }
-    */
     let vendor_name = get_vendor_name();
     println!("Vendor: {}", vendor_name);
 

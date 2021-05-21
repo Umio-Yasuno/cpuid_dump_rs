@@ -3,11 +3,15 @@
 extern crate cpuid_asm;
 use cpuid_asm::{_AX, cpuid};
 use cpuid_asm::{feature_detect::CpuFeature, bitflag};
-
+/*
 #[cfg(target_os = "linux")]
 extern crate libc;
+*/
 #[cfg(target_os = "linux")]
 use libc::{cpu_set_t, CPU_SET, CPU_ZERO, sched_setaffinity};
+
+#[cfg(target_os = "windows")]
+use kernel32::{GetCurrentThread, SetThreadAffinityMask};
 
 use std::{mem, thread};
 
@@ -542,15 +546,11 @@ fn dump() {
 }
 
 fn dump_all() {
-    if cfg!(windows) {
-        println!("dump_all func supports Linux only.");
-        return;
-    }
-
     let core_count = cpuid_asm::CpuCoreCount::get();
 
     for i in 0..(core_count.total_thread) as usize {
         thread::spawn( move || {
+            #[cfg(target_os = "linux")]
             unsafe {
                 let mut set = mem::zeroed::<cpu_set_t>();
                 CPU_ZERO(&mut set);
@@ -559,6 +559,10 @@ fn dump_all() {
                 sched_setaffinity(0,
                                   mem::size_of::<cpu_set_t>(),
                                   &set);
+            }
+            #[cfg(target_os = "windows")]
+            unsafe {
+                SetThreadAffinityMask(GetCurrentThread(), 1 << i);
             }
 
             let id = cpuid_asm::CpuCoreCount::get();

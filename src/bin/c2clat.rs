@@ -3,10 +3,15 @@
 //  c2c_bench.rs was ported from c2clat:
 //      https://github.com/rigtorp/c2clat
 
+/*
 #[cfg(target_os = "linux")]
 extern crate libc;
+*/
 #[cfg(target_os = "linux")]
 use libc::{cpu_set_t, CPU_SET, CPU_ISSET, CPU_ZERO, sched_setaffinity, sched_getaffinity};
+
+#[cfg(target_os = "windows")]
+use kernel32::{GetCurrentThread, SetThreadAffinityMask};
 
 extern crate cpuid_asm;
 
@@ -15,17 +20,22 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicIsize, Ordering};
 
 macro_rules! pin_thread { ($cpu: expr) => {
-     unsafe {
-        let mut set = mem::zeroed::<cpu_set_t>();
-        CPU_ZERO(&mut set);
-        CPU_SET($cpu, &mut set);
+        #[cfg(target_os = "linux")]
+        unsafe {
+            let mut set = mem::zeroed::<cpu_set_t>();
+            CPU_ZERO(&mut set);
+            CPU_SET($cpu, &mut set);
 
-        let status = sched_setaffinity(0, mem::size_of::<cpu_set_t>(), &set);
-        if status == -1 {
-            eprintln!("sched_setaffinity failed");
-            return;
+            let status = sched_setaffinity(0, mem::size_of::<cpu_set_t>(), &set);
+            if status == -1 {
+                eprintln!("sched_setaffinity failed");
+                return;
+            }
         }
-    }
+        #[cfg(target_os = "windows")]
+        unsafe {
+            SetThreadAffinityMask(GetCurrentThread(), 1 << $cpu);
+        }
 }}
 
 fn print_matrix  (title: &str, result: Vec<Vec<u128>>,
@@ -97,6 +107,7 @@ fn main() {
     let ncpu = cpuid_asm::CpuCoreCount::get();
     let mut cpus: Vec<usize> = Vec::new();
 
+    #[cfg(target_os = "linux")]
     unsafe {
         let mut set = mem::zeroed::<cpu_set_t>();
         CPU_ZERO(&mut set);
@@ -112,6 +123,10 @@ fn main() {
                 cpus.push(i);
             }
         }
+    }
+    #[cfg(target_os = "windows")]
+    for i in 0..(ncpu.total_thread) as usize {
+        cpus.push(i);
     }
 
     let ncpu: usize = cpus.len();
