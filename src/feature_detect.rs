@@ -1,9 +1,10 @@
 use super::{_AX, cpuid};
 
+#[macro_export]
 macro_rules! bitflag {
     ($x: expr, $pos: expr) => {
         (($x >> $pos) & 1) == 1;
-    };
+    }
 }
 
 pub struct CpuFeature {
@@ -124,7 +125,7 @@ impl CpuFeature {
         let _has_uintr                  = bitflag!(b[3], 5);
         let _has_fsrm                   = bitflag!(b[3], 4); // Fast Short REP MOV
     
-        // 0x00000007_ECX_x1
+        // 0x00000007_EAX_x1
         let _has_lam            = bitflag!(c[0], 26);
         let _has_hreset         = bitflag!(c[0], 22);
         let _has_avx512_bf16    = bitflag!(c[0], 5);

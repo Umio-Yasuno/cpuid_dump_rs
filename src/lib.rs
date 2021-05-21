@@ -1,10 +1,8 @@
 #![feature(asm)]
 #![allow(dead_code)]
 
-//  pub mod cpuid_dump;
 pub mod feature_detect;
 pub mod codename;
-//  pub mod c2c_bench;
 
 pub const _AX: u32 = 0x8000_0000;
 
@@ -191,7 +189,7 @@ pub struct CpuCoreCount {
     pub total_thread:       u32,
     pub thread_per_core:    u32,
     pub core_id:            u32,
-    pub apic_id:       u32,
+    pub apic_id:            u32,
 }
 
 impl CpuCoreCount {
