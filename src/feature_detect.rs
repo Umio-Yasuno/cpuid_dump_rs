@@ -1,3 +1,6 @@
+//  Copyright (c) 2021 Umio Yasuno
+//  SPDX-License-Identifier: MIT
+
 use super::{_AX, cpuid};
 
 #[macro_export]

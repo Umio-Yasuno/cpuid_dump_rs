@@ -1,3 +1,6 @@
+//  Copyright (c) 2021 Umio Yasuno
+//  SPDX-License-Identifier: MIT
+
 #![feature(asm)]
 
 extern crate cpuid_asm;

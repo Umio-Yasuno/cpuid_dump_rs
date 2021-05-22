@@ -1,3 +1,6 @@
+//  Copyright (c) 2021 Umio Yasuno
+//  SPDX-License-Identifier: MIT
+
 #![feature(asm)]
 #![allow(dead_code)]
 #![allow(unused_variables)]

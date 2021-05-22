@@ -1,3 +1,6 @@
+//  Copyright (c) 2021 Umio Yasuno
+//  SPDX-License-Identifier: MIT
+
 //  f: Family, m: Model, s: Stepping
 pub fn get_codename(f: u32, m: u32, s: u32) -> String {
 
@@ -51,11 +54,11 @@ pub fn get_codename(f: u32, m: u32, s: u32) -> String {
                 _   => format!("Skylake (Server)"),
             },
             0x8E => match s {
-                0x9 =>  format!("Amber Lake (Mobile)"),
-                0xA =>  format!("Coffee Lake (Mobile)"),
+                0x9 => format!("Amber Lake (Mobile)"),
+                0xA => format!("Coffee Lake (Mobile)"),
                 0xB|
-                0xC =>format!("Whiskey Lake (Mobile)"),
-                _   =>  format!("Kaby Lake (Mobile)"),
+                0xC => format!("Whiskey Lake (Mobile)"),
+                _   => format!("Kaby Lake (Mobile)"),
             },
             0x9E => match s {
                 0xA|

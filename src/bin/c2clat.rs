@@ -2,6 +2,9 @@
 //  SPDX-License-Identifier: MIT
 //  c2c_bench.rs was ported from c2clat:
 //      https://github.com/rigtorp/c2clat
+//
+//  Copyright (c) 2021 Umio Yasuno
+//  SPDX-License-Identifier: MIT
 
 /*
 #[cfg(target_os = "linux")]
