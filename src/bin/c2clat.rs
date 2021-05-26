@@ -97,13 +97,19 @@ struct Opt {
 fn main() {
     let mut opt = Opt { md: false, plot: false, };
 
-    for v in std::env::args() {
+    let opt_args: Vec<String> = std::env::args().collect();
+
+    for i in 1..opt_args.len() {
+        let v = &opt_args[i];
+
         if v == "-md" {
             opt.md   = true;
             opt.plot = false;
         } else if v == "-p" {
             opt.md   = false;
             opt.plot = true;
+        } else {
+            return;
         }
     }
 
@@ -139,9 +145,10 @@ fn main() {
 
     // TODO: align for cache line
     #[derive(Clone)]
-    #[repr (align(64))]
+    #[repr (C)]
+    #[repr (align(8))]
     struct Seq {
-        v: Arc<AtomicIsize>,
+        v: Arc<AtomicIsize>
     }
     impl Seq {
         fn set() -> Seq {

@@ -27,10 +27,16 @@ macro_rules! print_cpuid {
     }
 }
 
+/*
 macro_rules! pad {
     () => {
         format!("{:70}", " ");
     }
+}
+*/
+
+fn pad() -> String {
+    return format!("{:70}", "");
 }
 
 fn print_feature(buff: Vec<String>) {
@@ -41,13 +47,13 @@ fn print_feature(buff: Vec<String>) {
         if 9 < v.len() {
             print!("{} [{}]{}",
                 if (c % 3) != 1 {
-                    format!("\n{}", pad!())
+                    format!("\n{}", pad())
                 } else {
                     format!("")
                 },
                 v.trim_end_matches('/'),
                 if (c % 3) != 0 && c != len {
-                    format!("\n{}", pad!())
+                    format!("\n{}", pad())
                 } else {
                     format!("") 
                 },
@@ -57,7 +63,7 @@ fn print_feature(buff: Vec<String>) {
         }
 
         if (c % 3) == 0 && c != len {
-            print!("\n{}", pad!());
+            print!("\n{}", pad());
         }
 
         c += 1;
@@ -281,7 +287,7 @@ fn cache_prop_intel_04h() {
     */
         let cache_level = (a[0] >> 5) & 0b111;
         let cache_type =
-            match a[0] & 0b1 {
+            match a[0] & 0b11111 {
                 1 => "D", // Data
                 2 => "I", // Instruction
                 3 => "U", // Unified
@@ -475,10 +481,10 @@ fn dump() {
                 ((a[0] >> 8) & 0xF) + ((a[0] >> 20) & 0xFF),
                 ((a[0] >> 4) & 0xF) + ((a[0] >> 12) & 0xF0),
                 a[0] & 0xF);
-            print!("\n{} [APIC ID: {}]", pad!(), a[1] >> 24);
-            print!("\n{} [Total {} thread]", pad!(), (a[1] >> 16) & 0xFF);
-            print!("\n{} [CLFlush: {}B]", pad!(), ((a[1] >> 8) & 0xFF) * 8);
-            print!("\n{}", pad!());
+            print!("\n{} [APIC ID: {}]", pad(), a[1] >> 24);
+            print!("\n{} [Total {} thread]", pad(), (a[1] >> 16) & 0xFF);
+            print!("\n{} [CLFlush: {}B]", pad(), ((a[1] >> 8) & 0xFF) * 8);
+            print!("\n{}", pad());
             feature_00_01h(a);
         } else if i == 0x16 && vendor_intel {
             print!(" [{}/{}/{} MHz]",
@@ -502,7 +508,7 @@ fn dump() {
         if i == 0x1 {
             if vendor_amd {
                 print!(" [PkgType: {}]", a[1] >> 28);
-                print!("\n{}", pad!());
+                print!("\n{}", pad());
             }
             feature_80_01h(a);
         } else if 0x2 <= i && i <= 0x4 {
@@ -511,21 +517,21 @@ fn dump() {
             print!(" [L1D {}K/L1I {}K]",
                 a[2] >> 24, (a[3] >> 24) & 0xFF);
             print!("\n{} [L1TLB: {} entry]",
-                pad!(), a[1] & 0xFF);
+                pad(), a[1] & 0xFF);
 
         } else if i == 0x6 && vendor_amd {
             print!(" [L2 {}K/L3 {}M]",
                 (a[2] >> 16), (a[3] >> 18) / 2);
 
             print!("\n{} [L2dTLB: 4K {}, 2M {}",
-                pad!(), ((a[1] >> 16) & 0xFFF), ((a[0] >> 16) & 0xFFF));
+                pad(), ((a[1] >> 16) & 0xFFF), ((a[0] >> 16) & 0xFFF));
             print!("\n{}{:9} 4M {:4}]",
-                pad!(), " ", ((a[0] >> 16) & 0xFFF) / 2);
+                pad(), " ", ((a[0] >> 16) & 0xFFF) / 2);
 
             print!("\n{} [L2iTLB: 4K {}, 2M {}",
-                pad!(), a[1] & 0xFFF, a[0] & 0xFFF);
+                pad(), a[1] & 0xFFF, a[0] & 0xFFF);
             print!("\n{}{:9} 4M {:4}]",
-                pad!(), "", (a[0] & 0xFFF) / 2);
+                pad(), "", (a[0] & 0xFFF) / 2);
 
         } else if i == 0x7 && vendor_amd {
             apmi_amd_80_07h(a[3]);
@@ -539,7 +545,7 @@ fn dump() {
         } else if i == 0x1e && vendor_amd {
             print!(" [Core ID: {}]", a[1] & 0xFF);
             print!("\n{} [{} thread per core]",
-                pad!(), ((a[1] >> 8) & 0xFF) + 1);
+                pad(), ((a[1] >> 8) & 0xFF) + 1);
         } else if i == 0x1f && vendor_amd {
             secure_amd_80_1fh(a);
         }

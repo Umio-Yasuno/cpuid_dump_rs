@@ -91,7 +91,10 @@ pub fn get_codename(f: u32, m: u32, s: u32) -> String {
             //  Hybrid
             0x8A => format!("Lakefield"),
             0x97 => format!("Alder Lake"),
-            0x9A => format!("Alder Lake (Mobile)"),
+            0x9A => match s {
+                0x1  => format!("Alder Lake-M (Mobile)"),
+                _    => format!("Alder Lake-P (Mobile)"),
+            },
 
             //  Atom
             //  Bonnell
@@ -138,7 +141,7 @@ pub fn get_codename(f: u32, m: u32, s: u32) -> String {
             0x08 => format!("Pinnacle Ridge"),
             0x11 => format!("Raven Ridge"),
             0x18 => format!("Picasso"),
-            0x20 => format!("Raven2"),
+            0x20 => format!("Raven2 (Dali/Pollock)"),
             //  Zen 2
             0x31 => format!("Rome"),
             0x60 => format!("Renoir"),
