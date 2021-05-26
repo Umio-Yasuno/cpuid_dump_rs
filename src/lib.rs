@@ -24,6 +24,27 @@ macro_rules! cpuid {
     }
 }
 
+pub struct cpuid_out {
+    pub eax: u32,
+    pub ebx: u32,
+    pub ecx: u32,
+    pub edx: u32,
+}
+
+impl cpuid_out {
+    pub fn get(in_eax: u32, in_ecx: u32) -> cpuid_out {
+        let mut tmp = [0u32; 4];
+        cpuid!(tmp[0], tmp[1], tmp[2], tmp[3], in_eax, in_ecx);
+
+        return cpuid_out {
+            eax: tmp[0],
+            ebx: tmp[1],
+            ecx: tmp[2],
+            edx: tmp[3],
+        }
+    }
+}
+
 pub fn get_processor_name() -> String {
     let mut a: [u32; 4] = [0; 4];
     let mut name: Vec<u8> = vec![0x20; 48];
@@ -151,7 +172,8 @@ fn cache_info_amd() -> CacheInfo {
 }
 
 impl CacheInfo {
-    pub fn get(fam: u32) -> CacheInfo {
+    pub fn get() -> CacheInfo {
+        let fam = FamModStep::get().syn_fam;
         if fam == 0x6 {
             return cache_info_intel();
         } else if 0x15 <= fam && fam <= 0x19 {

@@ -87,19 +87,24 @@ fn print_matrix  (title: &str, result: Vec<Vec<u128>>,
     println!();
 }
 
-const NSAMPLES: isize = 1_000;
-
 struct Opt {
     md:     bool,
     plot:   bool,
 }
 
 fn main() {
+    let mut NSAMPLES: isize= 1_000;
+
     let mut opt = Opt { md: false, plot: false, };
 
     let opt_args: Vec<String> = std::env::args().collect();
 
-    for i in 1..opt_args.len() {
+    let mut i = 1;
+    for _ in 1..opt_args.len() {
+        if opt_args.len() <= i {
+            break;
+        }
+
         let v = &opt_args[i];
 
         if v == "-md" {
@@ -108,9 +113,17 @@ fn main() {
         } else if v == "-p" {
             opt.md   = false;
             opt.plot = true;
+        } else if v == "-n" {
+            NSAMPLES = opt_args[i+1].parse::<isize>().expect("Please number");
+            if NSAMPLES <= 1 {
+                return;
+            }
+            i += 2;
+            continue;
         } else {
             return;
         }
+        i += 1;
     }
 
     let ncpu = cpuid_asm::CpuCoreCount::get();
@@ -143,17 +156,23 @@ fn main() {
     let mut min_result: Vec<Vec<u128>> = vec![vec![0; ncpu]; ncpu];
     let mut avg_result: Vec<Vec<u128>> = vec![vec![0; ncpu]; ncpu];
 
+    
     // TODO: align for cache line
     #[derive(Clone)]
-    #[repr (C)]
-    #[repr (align(8))]
+    #[repr (C, align(64))]
     struct Seq {
-        v: Arc<AtomicIsize>
+        v: Arc<AtomicIsize>,
+        _pad: Vec<Arc<AtomicIsize>>,
     }
     impl Seq {
         fn set() -> Seq {
+            let c = cpuid_asm::CacheInfo::get();
+            let line = c.l1d_line;
+
             return Seq {
                 v: Arc::new(AtomicIsize::new(-1)),
+                _pad: vec![Arc::new(AtomicIsize::new(0));
+                            line as usize / mem::size_of::<isize>() - 1],
             }
         }
     }
