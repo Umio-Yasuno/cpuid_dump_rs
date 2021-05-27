@@ -46,16 +46,17 @@ impl cpuid_out {
 }
 
 pub fn get_processor_name() -> String {
-    let mut a: [u32; 4] = [0; 4];
     let mut name: Vec<u8> = vec![0x20; 48];
 
     for i in 0..=2 as usize {
-        cpuid!(a[0], a[1], a[2], a[3], _AX + 0x2 + i as u32, 0);
+        let tmp = cpuid_out::get(_AX + 0x2 + i as u32, 0);
+        let reg = [tmp.eax, tmp.ebx, tmp.ecx, tmp.edx];
+
         for j in 0..=3 {
-            name[(i*16+j*4)]   =  (a[j] & 0xff) as u8;
-            name[(i*16+j*4+1)] = ((a[j] >> 8)  & 0xff) as u8;
-            name[(i*16+j*4+2)] = ((a[j] >> 16) & 0xff) as u8;
-            name[(i*16+j*4+3)] = ((a[j] >> 24) & 0xff) as u8;
+            name[(i*16+j*4)]   =  (reg[j] & 0xff) as u8;
+            name[(i*16+j*4+1)] = ((reg[j] >> 8)  & 0xff) as u8;
+            name[(i*16+j*4+2)] = ((reg[j] >> 16) & 0xff) as u8;
+            name[(i*16+j*4+3)] = ((reg[j] >> 24) & 0xff) as u8;
         }
     }
 
@@ -63,31 +64,11 @@ pub fn get_processor_name() -> String {
 }
 
 fn amd_cache_way(ecx: u32) -> u32 {
-    let mut a: u32;
-
-    unsafe {
-        asm!("cpuid",
-            in("eax") _AX + 0x1d,
-            lateout("ebx") a,
-            in("ecx") ecx,
-            lateout("edx") _,
-        );
-    }
-    return (a >> 22) + 1;
+    return (cpuid_out::get(_AX + 0x1D, ecx).ebx >> 22) + 1;
 }
 
 fn get_clflush_size() -> u32 {
-    let mut a: u32;
-
-    unsafe {
-        asm!("cpuid",
-            inlateout("eax") 0x1 => a,
-            lateout("ebx") _,
-            lateout("ecx") _,
-            lateout("edx") _,
-        );
-    }
-    return ((a >> 8) & 0xFF) * 8;
+    return ((cpuid_out::get(0x1, 0).ebx >> 8) & 0xFF) * 8;
 }
 
 pub struct CacheInfo {
@@ -112,59 +93,52 @@ pub struct CacheInfo {
 }
 
 fn cache_info_intel() -> CacheInfo {
-    let mut a: [u32; 4] = [0; 4];
-    let mut b: [u32; 4] = [0; 4];
-    let mut c: [u32; 4] = [0; 4];
-    let mut d: [u32; 4] = [0; 4];
 
-    cpuid!(a[0], a[1], a[2], a[3], 0x4, 0);
-    cpuid!(b[0], b[1], b[2], b[3], 0x4, 1);
-    cpuid!(c[0], c[1], c[2], c[3], 0x4, 2);
-    cpuid!(d[0], d[1], d[2], d[3], 0x4, 3);
+    let sub00h = cpuid_out::get(0x4, 0);
+    let sub01h = cpuid_out::get(0x4, 0x1);
+    let sub02h = cpuid_out::get(0x4, 0x2);
+    let sub03h = cpuid_out::get(0x4, 0x3);
 
     return CacheInfo {
-        l1d_size:   ((a[1] >> 22) + 1) * ((a[1] & 0xfff) + 1) * (a[2] + 1),
-        l1d_line:   (a[1] & 0xfff) + 1,
-        l1d_way:    (a[1] >> 22) + 1,
+        l1d_size:   ((sub00h.ebx >> 22) + 1) * ((sub00h.ebx & 0xfff) + 1) * (sub00h.ecx + 1),
+        l1d_line:   (sub00h.ebx & 0xfff) + 1,
+        l1d_way:    (sub00h.ebx >> 22) + 1,
 
-        l1i_size:   ((b[1] >> 22) + 1) * ((b[1] & 0xfff) + 1) * (b[2] + 1),
-        l1i_line:   (b[1] & 0xfff) + 1,
-        l1i_way:    (b[1] >> 22) + 1,
+        l1i_size:   ((sub01h.ebx >> 22) + 1) * ((sub01h.ebx & 0xfff) + 1) * (sub01h.ecx + 1),
+        l1i_line:   (sub01h.ebx & 0xfff) + 1,
+        l1i_way:    (sub01h.ebx >> 22) + 1,
 
-        l2_size:    ((c[1] >> 22) + 1) * ((c[1] & 0xfff) + 1) * (c[2] + 1),
-        l2_line:    (c[1] & 0xfff) + 1,
-        l2_way:     (c[1] >> 22) + 1,
+        l2_size:    ((sub02h.ebx >> 22) + 1) * ((sub02h.ebx & 0xfff) + 1) * (sub02h.ecx + 1),
+        l2_line:    (sub02h.ebx & 0xfff) + 1,
+        l2_way:     (sub02h.ebx >> 22) + 1,
 
-        l3_size:    ((d[1] >> 22) + 1) * ((d[1] & 0xfff) + 1) * (d[2] + 1),
-        l3_line:    (d[1] & 0xfff) + 1,
-        l3_way:     (d[1] >> 22) + 1,
+        l3_size:    ((sub03h.ebx >> 22) + 1) * ((sub03h.ebx & 0xfff) + 1) * (sub03h.ecx + 1),
+        l3_line:    (sub03h.ebx & 0xfff) + 1,
+        l3_way:     (sub03h.ebx >> 22) + 1,
 
         clflush_size: get_clflush_size(),
     }
 }
 
 fn cache_info_amd() -> CacheInfo {
-    let mut a: [u32; 4] = [0; 4];
-    let mut b: [u32; 4] = [0; 4];
+    let lf_80_05h = cpuid_out::get(_AX + 0x5, 0);
+    let lf_80_06h = cpuid_out::get(_AX + 0x6, 0);
 
-    cpuid!(a[0], a[1], a[2], a[3], _AX + 0x5, 0);
-    cpuid!(b[0], b[1], b[2], b[3], _AX + 0x6, 0);
-    
     return CacheInfo {
-        l1d_size:   (a[2] >> 24),
-        l1d_line:   (a[2] & 0xff),
-        l1d_way:    (a[2] >> 16) & 0xff,
+        l1d_size:   (lf_80_05h.ecx >> 24),
+        l1d_line:   (lf_80_05h.ecx & 0xFF),
+        l1d_way:    (lf_80_05h.ecx >> 16) & 0xFF,
 
-        l1i_size:   (a[3] >> 24),
-        l1i_line:   (a[3] & 0xff),
-        l1i_way:    (a[3] >> 16) & 0xff,
+        l1i_size:   (lf_80_05h.edx >> 24),
+        l1i_line:   (lf_80_05h.edx & 0xFF),
+        l1i_way:    (lf_80_05h.edx >> 16) & 0xFF,
 
-        l2_size:    (b[2] >> 16),
-        l2_line:    b[2] & 0xff,
+        l2_size:    (lf_80_06h.ecx >> 16),
+        l2_line:    lf_80_06h.ecx & 0xFF,
         l2_way:     amd_cache_way(2),
 
-        l3_size:    (b[3] >> 18) / 2,
-        l3_line:    b[3] & 0xff,
+        l3_size:    (lf_80_06h.edx >> 18) / 2,
+        l3_line:    lf_80_06h.edx & 0xFF,
         l3_way:     amd_cache_way(3),
 
         clflush_size: get_clflush_size(),
@@ -211,21 +185,12 @@ pub struct FamModStep {
 
 impl FamModStep {
     pub fn get() -> FamModStep {
-        let mut a: u32;
-
-        unsafe {
-            asm!("cpuid",
-                inlateout("eax") 0x1 => a,
-                lateout("ebx") _,
-                lateout("ecx") _,
-                lateout("edx") _,
-            );
-        }
+        let eax = cpuid_out::get(0x1, 0).eax;
         return FamModStep {
-            syn_fam:    ((a >> 8) & 0xf) + ((a >> 20) & 0xff),
-            syn_mod:    ((a >> 4) & 0xf) + ((a >> 12) & 0xf0),
-            step:       a & 0xf,
-            raw_eax:    a,
+            syn_fam:    ((eax >> 8) & 0xf) + ((eax >> 20) & 0xff),
+            syn_mod:    ((eax >> 4) & 0xf) + ((eax >> 12) & 0xf0),
+            step:       eax & 0xf,
+            raw_eax:    eax,
         };
     }
 }
@@ -241,45 +206,49 @@ pub struct CpuCoreCount {
 
 impl CpuCoreCount {
     pub fn get() -> CpuCoreCount {
-        let mut a: [u32; 4] = [0; 4];
-        let mut b: [u32; 4] = [0; 4];
-        let mut c: [u32; 4] = [0; 4];
+        let lf_01h = cpuid_out::get(0x1, 0);
+        let lf_04h = cpuid_out::get(0x4, 0);
+        //  let lf_0bh = cpuid_out::get(0xB, 0);
+        let lf_80_1eh = cpuid_out::get(_AX + 0x1E, 0);
 
-        cpuid!(a[0], a[1], a[2], a[3], 0x1, 0);
-        cpuid!(b[0], b[1], b[2], b[3], _AX + 0x1e, 0);
-        cpuid!(c[0], c[1], c[2], c[3], 0x4, 0);
-
-        let _has_htt            = ((a[3] >> 28) & 0x1) == 1;
-        let _total_thread       = (a[1] >> 16) & 0xff;
-        let _thread_per_core    = ((b[1] >> 8) & 0xff) + 1;
-        let _phy_core           = if _has_htt && 1 < _thread_per_core {
-                                    _total_thread / _thread_per_core
+        let _has_htt            = ((lf_01h.edx >> 28) & 0b1) == 1;
+        let _total_thread       = (lf_01h.ebx >> 16) & 0xFF;
+        let _thread_per_core    = if _has_htt && 1 < ((lf_80_1eh.ebx >> 8) & 0xFF) + 1 {
+                                    ((lf_80_1eh.ebx >> 8) & 0xFF) + 1
                                 } else if _has_htt {
-                                    _total_thread / 2
+                                    2
                                 } else {
-                                    _total_thread
+                                    1
                                 };
+        let _phy_core           = _total_thread / _thread_per_core;
+        let _apic_id            = (lf_01h.ebx >> 24) & 0xFF;
+        //  TODO: CoreID for Intel CPU
+        let _core_id            = lf_80_1eh.ebx & 0xFF;
+
         return CpuCoreCount {
             has_htt:            _has_htt,
             total_thread:       _total_thread,
             thread_per_core:    _thread_per_core,
             phy_core:           _phy_core,
-            core_id:            (b[1] & 0xff),
-            apic_id:            (a[1] >> 24) & 0xff,
+            apic_id:            _apic_id,
+            core_id:            _core_id,
         }
     }
 }
 
 pub fn get_vendor_name() -> String {
-    let mut a: [u32; 4] = [0; 4];
 
-    cpuid!(a[0], a[1], a[2], a[3], 0, 0);
+    let tmp = cpuid_out::get(0, 0);
 
     // TODO: add other vendor
     let vendor_name =
-        if a[1] == 0x6874_7541 && a[2] == 0x444D_4163 && a[3] == 0x6974_6E65 {
+        if tmp.ebx == 0x6874_7541
+        && tmp.ecx == 0x444D_4163
+        && tmp.edx == 0x6974_6E65 {
             format!("AuthenticAMD")
-        } else if a[1] == 0x756E_6547 && a[2] == 0x4965_6E69 && a[3] == 0x6C65_746E { 
+        } else if tmp.ebx == 0x756E_6547
+        && tmp.ecx == 0x4965_6E69
+        && tmp.edx == 0x6C65_746E { 
             format!("GenuineIntel")
         } else {
             format!("Unknown")

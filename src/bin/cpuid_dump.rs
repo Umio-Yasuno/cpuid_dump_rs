@@ -457,7 +457,7 @@ fn dump() {
             feature_00_07h();
             continue;
         } else if i == 0xB {
-            for j in 0..=3 {
+            for j in 0..=1 {
                 let tmp = cpuid_out::get(i, j);
                 print_cpuid!(i, j, tmp);
                 println!();
@@ -543,6 +543,8 @@ fn dump() {
             print!(" [Core ID: {}]", tmp.ebx & 0xFF);
             print!("\n{} [{} thread per core]",
                 pad(), ((tmp.ebx >> 8) & 0xFF) + 1);
+            print!("\n{} [Node ID: {}]",
+                pad(), tmp.ecx & 0xFF);
         } else if i == 0x1f && vendor_amd {
             secure_amd_80_1fh(tmp.eax);
         }
