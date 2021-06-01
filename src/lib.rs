@@ -9,16 +9,18 @@ pub mod codename;
 
 pub const _AX: u32 = 0x8000_0000;
 
-#[macro_export]
 macro_rules! cpuid {
     ($out_eax: expr, $out_ebx: expr, $out_ecx: expr, $out_edx: expr,
     $in_eax: expr, $in_ecx: expr) => {
         unsafe {
             asm!("cpuid",
-                inlateout("eax") $in_eax => $out_eax,
-                lateout("ebx") $out_ebx,
-                inlateout("ecx") $in_ecx => $out_ecx,
-                lateout("edx") $out_edx,
+                inlateout("rax")    $in_eax =>  $out_eax,
+                inlateout("rcx")    $in_ecx =>  $out_ecx,
+                //lateout("ebx")                  $out_ebx,
+                lateout("rdx")                  $out_edx,
+            );
+            asm!("mov {0}, rbx",
+                out(reg) $out_ebx,
             );
         }
     }
@@ -64,11 +66,11 @@ pub fn get_processor_name() -> String {
 }
 
 fn amd_cache_way(ecx: u32) -> u32 {
-    return (cpuid_out::get(_AX + 0x1D, ecx).ebx >> 22) + 1;
+    (cpuid_out::get(_AX + 0x1D, ecx).ebx >> 22) + 1
 }
 
 fn get_clflush_size() -> u32 {
-    return ((cpuid_out::get(0x1, 0).ebx >> 8) & 0xFF) * 8;
+    ((cpuid_out::get(0x1, 0).ebx >> 8) & 0xFF) * 8
 }
 
 pub struct CacheInfo {

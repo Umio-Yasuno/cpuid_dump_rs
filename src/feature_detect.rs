@@ -19,7 +19,7 @@ pub struct Bmi {
 }
 
 impl Bmi {
-    fn get() -> Bmi {
+    pub fn get() -> Bmi {
         let lf_01h    = cpuid_out::get(0x1, 0);
         let lf_07h    = cpuid_out::get(0x7, 0);
         let lf_80_01h = cpuid_out::get(_AX + 0x1, 0);
@@ -252,4 +252,9 @@ impl intel_avx512 {
     }
 }
     
-
+pub struct Crypt {
+    pub aes:    bool,
+    pub sha:    bool,
+    pub gfni:   bool,
+    pub vaes:   bool,
+}

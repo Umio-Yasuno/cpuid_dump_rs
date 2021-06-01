@@ -114,7 +114,9 @@ fn main() {
             opt.md   = false;
             opt.plot = true;
         } else if v == "-n" {
-            NSAMPLES = opt_args[i+1].parse::<isize>().expect("Please number");
+            NSAMPLES = opt_args[i+1].parse::<isize>()
+                .expect("Please number");
+
             if NSAMPLES <= 1 {
                 return;
             }

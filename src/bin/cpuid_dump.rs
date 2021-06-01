@@ -19,7 +19,7 @@ use std::{mem, thread};
 
 macro_rules! print_cpuid {
     ($in_eax: expr, $in_ecx: expr, $out: expr) => {
-        print!(" {:08X}h_x{:X}: eax={:08X}h ebx={:08X}h ecx={:08X}h edx={:08X}h",
+        print!(" {:08X}h_x{:X}:  {:08X}h {:08X}h {:08X}h {:08X}h ",
             $in_eax, $in_ecx,
             $out.eax, $out.ebx, $out.ecx, $out.edx);
     }
@@ -32,7 +32,7 @@ macro_rules! pad { () => {
 */
 
 fn pad() -> String {
-    return format!("{:70}", "");
+    format!("{:56}", "")
 }
 
 fn print_feature(buff: Vec<String>) {
@@ -204,7 +204,7 @@ fn feature_00_07h() {
                 if bitflag!(tmp.eax, 22) { buff.push(format!("HRESET"));       }
                 if bitflag!(tmp.eax, 26) { buff.push(format!("LAM"));          }
             },
-            _ => {},
+            _ => unreachable!(),
         }
         print_feature(buff);
         println!();
@@ -426,7 +426,10 @@ fn secure_amd_80_1fh(eax: u32) {
 
 fn dump() {
     println!("CPUID Dump");
-
+//    buff.push(format!(" (out)EAX"));
+    println!(" (in)EAX_xECX:  {:<9} {:<9} {:<9} {:<9}"
+        ,"(out)EAX", "(out)EBX", "(out)ECX", "(out)EDX");
+    
     let mut buff = String::new();
     for _i in 0..72 {
         buff.push_str("=");

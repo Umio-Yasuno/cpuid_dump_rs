@@ -92,8 +92,8 @@ pub fn get_codename(f: u32, m: u32, s: u32) -> String {
             0x8A => format!("Lakefield"),
             0x97 => format!("Alder Lake"),
             0x9A => match s {
-                0x1  => format!("Alder Lake-M (Mobile)"),
-                _    => format!("Alder Lake-P (Mobile)"),
+                0x1 => format!("Alder Lake-M (Mobile)"),
+                _   => format!("Alder Lake-P (Mobile)"),
             },
 
             //  Atom
