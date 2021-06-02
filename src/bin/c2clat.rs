@@ -239,7 +239,7 @@ fn main() {
         println!("set auto noextend");
         println!("set multiplot layout 2,1");
         println!("set size ratio 1");
-        println!("set palette grey negative gamma 2.5");
+        println!("set palette color negative");
     }
     
     print_matrix("min", min_result, &cpus, ncpu, &opt);

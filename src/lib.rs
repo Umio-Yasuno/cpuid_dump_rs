@@ -1,48 +1,22 @@
 //  Copyright (c) 2021 Umio Yasuno
 //  SPDX-License-Identifier: MIT
 
-#![feature(asm)]
+//  #![feature(asm)]
 #![allow(dead_code)]
+
+//  use x86::cpuid::{cpuid, CpuIdResult};
+use core::arch::x86_64::{__cpuid_count, CpuidResult};
 
 pub mod feature_detect;
 pub mod codename;
 
 pub const _AX: u32 = 0x8000_0000;
 
+#[macro_export]
 macro_rules! cpuid {
-    ($out_eax: expr, $out_ebx: expr, $out_ecx: expr, $out_edx: expr,
-    $in_eax: expr, $in_ecx: expr) => {
+    ($in_eax: expr, $in_ecx: expr) => {
         unsafe {
-            asm!("cpuid",
-                inlateout("rax")    $in_eax =>  $out_eax,
-                inlateout("rcx")    $in_ecx =>  $out_ecx,
-                //lateout("ebx")                  $out_ebx,
-                lateout("rdx")                  $out_edx,
-            );
-            asm!("mov {0}, rbx",
-                out(reg) $out_ebx,
-            );
-        }
-    }
-}
-
-pub struct cpuid_out {
-    pub eax: u32,
-    pub ebx: u32,
-    pub ecx: u32,
-    pub edx: u32,
-}
-
-impl cpuid_out {
-    pub fn get(in_eax: u32, in_ecx: u32) -> cpuid_out {
-        let mut tmp = [0u32; 4];
-        cpuid!(tmp[0], tmp[1], tmp[2], tmp[3], in_eax, in_ecx);
-
-        return cpuid_out {
-            eax: tmp[0],
-            ebx: tmp[1],
-            ecx: tmp[2],
-            edx: tmp[3],
+            __cpuid_count($in_eax, $in_ecx)
         }
     }
 }
@@ -51,7 +25,7 @@ pub fn get_processor_name() -> String {
     let mut name: Vec<u8> = vec![0x20; 48];
 
     for i in 0..=2 as usize {
-        let tmp = cpuid_out::get(_AX + 0x2 + i as u32, 0);
+        let tmp = cpuid!(_AX + 0x2 + i as u32, 0);
         let reg = [tmp.eax, tmp.ebx, tmp.ecx, tmp.edx];
 
         for j in 0..=3 {
@@ -66,11 +40,11 @@ pub fn get_processor_name() -> String {
 }
 
 fn amd_cache_way(ecx: u32) -> u32 {
-    (cpuid_out::get(_AX + 0x1D, ecx).ebx >> 22) + 1
+    (cpuid!(_AX + 0x1D, ecx).ebx >> 22) + 1
 }
 
 fn get_clflush_size() -> u32 {
-    ((cpuid_out::get(0x1, 0).ebx >> 8) & 0xFF) * 8
+    ((cpuid!(0x1, 0).ebx >> 8) & 0xFF) * 8
 }
 
 pub struct CacheInfo {
@@ -96,10 +70,10 @@ pub struct CacheInfo {
 
 fn cache_info_intel() -> CacheInfo {
 
-    let sub00h = cpuid_out::get(0x4, 0);
-    let sub01h = cpuid_out::get(0x4, 0x1);
-    let sub02h = cpuid_out::get(0x4, 0x2);
-    let sub03h = cpuid_out::get(0x4, 0x3);
+    let sub00h = cpuid!(0x4, 0);
+    let sub01h = cpuid!(0x4, 0x1);
+    let sub02h = cpuid!(0x4, 0x2);
+    let sub03h = cpuid!(0x4, 0x3);
 
     return CacheInfo {
         l1d_size:   ((sub00h.ebx >> 22) + 1) * ((sub00h.ebx & 0xfff) + 1) * (sub00h.ecx + 1),
@@ -123,8 +97,8 @@ fn cache_info_intel() -> CacheInfo {
 }
 
 fn cache_info_amd() -> CacheInfo {
-    let lf_80_05h = cpuid_out::get(_AX + 0x5, 0);
-    let lf_80_06h = cpuid_out::get(_AX + 0x6, 0);
+    let lf_80_05h = cpuid!(_AX + 0x5, 0);
+    let lf_80_06h = cpuid!(_AX + 0x6, 0);
 
     return CacheInfo {
         l1d_size:   (lf_80_05h.ecx >> 24),
@@ -187,7 +161,7 @@ pub struct FamModStep {
 
 impl FamModStep {
     pub fn get() -> FamModStep {
-        let eax = cpuid_out::get(0x1, 0).eax;
+        let eax = cpuid!(0x1, 0).eax;
         return FamModStep {
             syn_fam:    ((eax >> 8) & 0xf) + ((eax >> 20) & 0xff),
             syn_mod:    ((eax >> 4) & 0xf) + ((eax >> 12) & 0xf0),
@@ -208,10 +182,10 @@ pub struct CpuCoreCount {
 
 impl CpuCoreCount {
     pub fn get() -> CpuCoreCount {
-        let lf_01h = cpuid_out::get(0x1, 0);
-        let lf_04h = cpuid_out::get(0x4, 0);
-        //  let lf_0bh = cpuid_out::get(0xB, 0);
-        let lf_80_1eh = cpuid_out::get(_AX + 0x1E, 0);
+        let lf_01h = cpuid!(0x1, 0);
+        let lf_04h = cpuid!(0x4, 0);
+        //  let lf_0bh = cpuid!(0xB, 0);
+        let lf_80_1eh = cpuid!(_AX + 0x1E, 0);
 
         let _has_htt            = ((lf_01h.edx >> 28) & 0b1) == 1;
         let _total_thread       = (lf_01h.ebx >> 16) & 0xFF;
@@ -240,7 +214,7 @@ impl CpuCoreCount {
 
 pub fn get_vendor_name() -> String {
 
-    let tmp = cpuid_out::get(0, 0);
+    let tmp = cpuid!(0, 0);
 
     // TODO: add other vendor
     let vendor_name =
@@ -258,4 +232,3 @@ pub fn get_vendor_name() -> String {
 
     return vendor_name;
 }
-

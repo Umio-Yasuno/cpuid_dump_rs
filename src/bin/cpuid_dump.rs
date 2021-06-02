@@ -1,10 +1,10 @@
 //  Copyright (c) 2021 Umio Yasuno
 //  SPDX-License-Identifier: MIT
 
-#![feature(asm)]
+use core::arch::x86_64::{__cpuid_count, CpuidResult};
 
 extern crate cpuid_asm;
-use cpuid_asm::{_AX, cpuid_out, bitflag};
+use cpuid_asm::{_AX, cpuid, bitflag};
 /*
 #[cfg(target_os = "linux")]
 extern crate libc;
@@ -101,7 +101,7 @@ fn feature_00_01h(ecx: u32, edx: u32) {
 
 fn feature_00_07h() {
     for j in 0x0..=0x1 {
-        let tmp = cpuid_out::get(0x7, j);
+        let tmp = cpuid!(0x7, j);
         print_cpuid!(0x7, j, tmp);
 
         let mut buff: Vec<String> = vec![format!(""); 0];
@@ -231,7 +231,7 @@ fn feature_80_01h(ecx: u32, edx: u32) {
     print_feature(buff);
 }
 
-fn cpu_name(tmp: cpuid_out) {
+fn cpu_name(tmp: CpuidResult) {
     let reg = [tmp.eax, tmp.ebx, tmp.ecx, tmp.edx];
     let mut name: [u8; 16] = [0x20; 16];
 
@@ -247,7 +247,7 @@ fn cpu_name(tmp: cpuid_out) {
 
 fn cache_prop_intel_04h() {
     for j in 0x0..=0x4 {
-        let tmp = cpuid_out::get(0x4, j);
+        let tmp = cpuid!(0x4, j);
     /* for debug
         match j {
             0 => {
@@ -316,7 +316,7 @@ fn enum_amd_0dh() {
     let in_ecx: Vec<u32> = vec![0x0, 0x1, 0x2, 0x9, 0xB, 0xC];
 
     for j in in_ecx {
-        let tmp = cpuid_out::get(0xD, j);
+        let tmp = cpuid!(0xD, j);
         print_cpuid!(0xD, j, tmp);
 
         match j {
@@ -436,7 +436,7 @@ fn dump() {
     }
     println!("{}", buff);
 
-    let vendor_check = cpuid_out::get(0, 0);
+    let vendor_check = cpuid!(0, 0);
 
     let vendor_amd   = vendor_check.ebx == 0x6874_7541
                     && vendor_check.ecx == 0x444D_4163
@@ -461,7 +461,7 @@ fn dump() {
             continue;
         } else if i == 0xB {
             for j in 0..=1 {
-                let tmp = cpuid_out::get(i, j);
+                let tmp = cpuid!(i, j);
                 print_cpuid!(i, j, tmp);
                 println!();
             }
@@ -471,7 +471,7 @@ fn dump() {
             continue;
         }
 
-        let tmp = cpuid_out::get(i, 0);
+        let tmp = cpuid!(i, 0);
         print_cpuid!(i, 0, tmp);
 
         if i == 0 {
@@ -502,7 +502,7 @@ fn dump() {
             continue;
         }
 
-        let tmp = cpuid_out::get(_AX + i, 0);
+        let tmp = cpuid!(_AX + i, 0);
         print_cpuid!(_AX + i, 0, tmp);
 
         if i == 0x1 {
@@ -555,12 +555,11 @@ fn dump() {
     }
     println!();
 }
-
 fn dump_all() {
-    let core_count = cpuid_asm::CpuCoreCount::get();
+    let thread_count = cpuid_asm::CpuCoreCount::get().total_thread;
 
-    for i in 0..(core_count.total_thread) as usize {
-        thread::spawn( move || {
+    for i in 0..(thread_count) as usize {
+        thread::spawn(move || {
             #[cfg(target_os = "linux")]
             unsafe {
                 let mut set = mem::zeroed::<cpu_set_t>();
@@ -576,9 +575,9 @@ fn dump_all() {
                 SetThreadAffinityMask(GetCurrentThread(), 1 << i);
             }
 
-            let id = cpuid_asm::CpuCoreCount::get();
+            let id = cpuid_asm::CpuCoreCount::get().core_id;
             println!("Core ID: {:<3} / Thread: {:<3}",
-                id.core_id, i);
+                id, i);
 
             dump();
 
@@ -595,6 +594,5 @@ fn main() {
             return;
         }
     }
-
     dump();
 }

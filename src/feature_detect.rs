@@ -1,7 +1,8 @@
 //  Copyright (c) 2021 Umio Yasuno
 //  SPDX-License-Identifier: MIT
 
-use super::{_AX, cpuid_out};
+use super::{_AX, cpuid};
+use core::arch::x86_64::{__cpuid_count, CpuidResult};
 
 #[macro_export]
 macro_rules! bitflag {
@@ -20,9 +21,9 @@ pub struct Bmi {
 
 impl Bmi {
     pub fn get() -> Bmi {
-        let lf_01h    = cpuid_out::get(0x1, 0);
-        let lf_07h    = cpuid_out::get(0x7, 0);
-        let lf_80_01h = cpuid_out::get(_AX + 0x1, 0);
+        let lf_01h    = cpuid!(0x1, 0);
+        let lf_07h    = cpuid!(0x7, 0);
+        let lf_80_01h = cpuid!(_AX + 0x1, 0);
 
         let _popcnt  = bitflag!(lf_01h.ecx, 23);
 
@@ -52,9 +53,9 @@ pub struct x86_64_abi {
 
 impl x86_64_abi {
     pub fn get() -> x86_64_abi {
-        let lf_01h      = cpuid_out::get(0x1, 0);
-        let lf_07h      = cpuid_out::get(0x7, 0);
-        let lf_80_01h   = cpuid_out::get(_AX + 0x1, 0);
+        let lf_01h      = cpuid!(0x1, 0);
+        let lf_07h      = cpuid!(0x7, 0);
+        let lf_80_01h   = cpuid!(_AX + 0x1, 0);
     
         //  0x00000001_EDX
         //  let _has_htt        = bitflag!(lf_01h.edx, 28);
@@ -196,8 +197,8 @@ pub struct intel_avx512 {
 
 impl intel_avx512 {
     pub fn get() -> intel_avx512 {
-        let lf_07h              = cpuid_out::get(0x7, 0);
-        let lf_07h_sub_01h      = cpuid_out::get(0x7, 0x1);
+        let lf_07h              = cpuid!(0x7, 0);
+        let lf_07h_sub_01h      = cpuid!(0x7, 0x1);
 
         //  0x00000007_EBX_x0
         let _has_avx512_vl      = bitflag!(lf_07h.ebx, 31);
