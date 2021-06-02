@@ -4,7 +4,7 @@
 use core::arch::x86_64::{__cpuid_count, CpuidResult};
 
 extern crate cpuid_asm;
-use cpuid_asm::{_AX, cpuid, bitflag};
+use cpuid_asm::{_AX, cpuid, bitflag, Vendor};
 /*
 #[cfg(target_os = "linux")]
 extern crate libc;
@@ -22,9 +22,17 @@ macro_rules! print_cpuid {
         print!(" {:08X}h_x{:X}:  {:08X}h {:08X}h {:08X}h {:08X}h ",
             $in_eax, $in_ecx,
             $out.eax, $out.ebx, $out.ecx, $out.edx);
-    }
+    };
 }
 
+macro_rules! has_ftr {
+    ($ftr_bool: expr, $name_str: expr) => {
+        if $ftr_bool { $name_str } else { "" }
+    };
+    ($ftr_bool: expr, $name_str: expr, $else_ftr: expr, $else_name: expr) => {
+        if $ftr_bool { $name_str } else if $else_ftr { $else_name } else { "" }
+    };
+}
 /*
 macro_rules! pad { () => {
     format!("{:70}", " ");
@@ -78,11 +86,11 @@ fn feature_00_01h(ecx: u32, edx: u32) {
     if bitflag!(edx, 28) { buff.push(format!("HTT"));  }
     if bitflag!(edx, 25) {
         buff.push(format!("SSE{0}{1}{2}{3}",
-            if bitflag!(edx, 26) { "/2" }   else { "" },
+            has_ftr!(bitflag!(edx, 26), "/2"),
             // 0x0000_0007_ECX_x0
-            if bitflag!(ecx,  0) { "/3" }   else { "" },
-            if bitflag!(ecx, 19) { "/4.1" } else { "" },
-            if bitflag!(ecx, 20) { "/4.2" } else { "" },
+            has_ftr!(bitflag!(ecx,  0), "/3"),
+            has_ftr!(bitflag!(ecx, 19), "/4.1"),
+            has_ftr!(bitflag!(ecx, 20), "/4.2"),
         ));
     }
     // 0x0000_0007_ECX_x0
@@ -113,7 +121,7 @@ fn feature_00_07h() {
                 if bitflag!(tmp.ebx,  2) { buff.push(format!("SGX"));      }
                 if bitflag!(tmp.ebx,  3) {
                     buff.push(format!("BMI1{}",
-                        if bitflag!(tmp.ebx, 8) { "/2" } else { "" },
+                        has_ftr!(bitflag!(tmp.ebx, 8), "/2"),
                     ));
                 }
                 if bitflag!(tmp.ebx,  5) { buff.push(format!("AVX2"));         }
@@ -129,12 +137,12 @@ fn feature_00_07h() {
                 || bitflag!(tmp.ebx, 28) || bitflag!(tmp.ebx, 30) || bitflag!(tmp.ebx, 31) {
                     buff.push(
                         format!("AVX512_{0}{1}{2}{3}{4}{5}",
-                            if bitflag!(tmp.ebx, 16) { "F/"    } else { "" },
-                            if bitflag!(tmp.ebx, 17) { "DQ/"   } else { "" },
-                            if bitflag!(tmp.ebx, 21) { "IFMA/" } else { "" },
-                            if bitflag!(tmp.ebx, 28) { "CD/"   } else { "" },
-                            if bitflag!(tmp.ebx, 30) { "BW/"   } else { "" },
-                            if bitflag!(tmp.ebx, 31) { "VL/"   } else { "" },
+                            has_ftr!(bitflag!(tmp.ebx, 16), "F/"),
+                            has_ftr!(bitflag!(tmp.ebx, 17), "DQ/"),
+                            has_ftr!(bitflag!(tmp.ebx, 21), "IFMA/"),
+                            has_ftr!(bitflag!(tmp.ebx, 28), "CD/"),
+                            has_ftr!(bitflag!(tmp.ebx, 30), "BW/"),
+                            has_ftr!(bitflag!(tmp.ebx, 31), "VL/"),
                         )
                     );
                 }
@@ -148,11 +156,11 @@ fn feature_00_07h() {
                 || bitflag!(tmp.ecx, 12) || bitflag!(tmp.ecx, 14) {
                     buff.push(
                         format!("AVX512_{0}{1}{2}{3}{4}",
-                            if bitflag!(tmp.ecx,  1) { "VBMI/" }      else { "" },
-                            if bitflag!(tmp.ecx,  6) { "VBMI2/" }     else { "" },
-                            if bitflag!(tmp.ecx, 11) { "VNNI/" }      else { "" },
-                            if bitflag!(tmp.ecx, 12) { "BITALG/" }    else { "" },
-                            if bitflag!(tmp.ecx, 14) { "VPOPCNTDQ/" } else { "" },
+                            has_ftr!(bitflag!(tmp.ecx,  1), "VBMI/"),
+                            has_ftr!(bitflag!(tmp.ecx,  6), "VBMI2/"),
+                            has_ftr!(bitflag!(tmp.ecx, 11), "VNNI/"),
+                            has_ftr!(bitflag!(tmp.ecx, 12), "BITALG/"),
+                            has_ftr!(bitflag!(tmp.ecx, 14), "VPOPCNTDQ/"),
                     ));
                 }
 
@@ -166,7 +174,7 @@ fn feature_00_07h() {
                 if bitflag!(tmp.ecx, 25) { buff.push(format!("CLDEMOTE"));     }
                 if bitflag!(tmp.ecx, 27) {
                     buff.push(format!("MOVDIRI{}",
-                        if bitflag!(tmp.ecx, 28) { "/64B" } else { "" },
+                        has_ftr!(bitflag!(tmp.ecx, 28), "/64B"),
                     ));
                 }
                 if bitflag!(tmp.ecx, 29) { buff.push(format!("ENQCMD"));       }
@@ -177,10 +185,10 @@ fn feature_00_07h() {
                     buff.push(
                         format!("AVX512_{0}{1}{2}",
                             /*  Xeon Phi only */
-                            if bitflag!(tmp.edx,  2) && bitflag!(tmp.edx,  3) {
-                                "4VNNIW/4FMAPS/" } else { "" },
-                            if bitflag!(tmp.edx,  8) { "VP2INTERSECT/" } else { "" },
-                            if bitflag!(tmp.edx, 23) { "FP16/" }         else { "" },
+                            has_ftr!((bitflag!(tmp.edx, 2) && bitflag!(tmp.edx, 3)),
+                                "4VNNIW/4FMAPS/"),
+                            has_ftr!(bitflag!(tmp.edx,  8), "VP2INTERSECT/"),
+                            has_ftr!(bitflag!(tmp.edx, 23), "FP16/"),
                     ));
                 }
                 if bitflag!(tmp.edx,  4) { buff.push(format!("FSRM"));         }
@@ -217,7 +225,7 @@ fn feature_80_01h(ecx: u32, edx: u32) {
     // 0x8000_0001_EDX_x0
     if bitflag!(edx, 31) {
         buff.push(format!("3DNow!{}",
-            if bitflag!(edx, 30) { "/Ext" } else { "" }
+            has_ftr!(bitflag!(edx, 30), "/EXT"),
         ));
     }
 
@@ -233,7 +241,7 @@ fn feature_80_01h(ecx: u32, edx: u32) {
 
 fn cpu_name(tmp: CpuidResult) {
     let reg = [tmp.eax, tmp.ebx, tmp.ecx, tmp.edx];
-    let mut name: [u8; 16] = [0x20; 16];
+    let mut name = vec![0x20u8; 16];
 
     for j in 0..=3 as usize {
         name[(j*4)]    =  (reg[j] & 0xFF) as u8;
@@ -242,12 +250,12 @@ fn cpu_name(tmp: CpuidResult) {
         name[(j*4+3)]  = ((reg[j] >> 24) & 0xFF) as u8;
     }
 
-    print!(" [{}]", String::from_utf8(name.to_vec()).unwrap());
+    print!(" [{}]", String::from_utf8(name).unwrap());
 }
 
 fn cache_prop_intel_04h() {
-    for j in 0x0..=0x4 {
-        let tmp = cpuid!(0x4, j);
+    for ecx in 0x0..=0x4 {
+        let tmp = cpuid!(0x4, ecx);
     /* for debug
         match j {
             0 => {
@@ -286,13 +294,14 @@ fn cache_prop_intel_04h() {
                 1 => "D", // Data
                 2 => "I", // Instruction
                 3 => "U", // Unified
-                0 | _ => "",
+                0|
+                _ => "",
         };
         let cache_line = (tmp.ebx & 0xFFF) + 1;
         let cache_way  = (tmp.ebx >> 22) + 1;
         let cache_set  = tmp.ecx + 1;
         let cache_size = cache_line * cache_way * cache_set;
-        let cache_size_str =
+        let cache_size_unit =
             if cache_size < 1000_000 {
                 format!("{}K", cache_size / (1 << 10))
             } else if cache_size < 1000_000_000 {
@@ -305,9 +314,9 @@ fn cache_prop_intel_04h() {
             return;
         }
 
-        print_cpuid!(0x4, j, tmp);
+        print_cpuid!(0x4, ecx, tmp);
         print!(" [L{}{} {}] ",
-            cache_level, cache_type, cache_size_str);
+            cache_level, cache_type, cache_size_unit);
         println!();
     }
 }
@@ -315,27 +324,38 @@ fn cache_prop_intel_04h() {
 fn enum_amd_0dh() {
     let in_ecx: Vec<u32> = vec![0x0, 0x1, 0x2, 0x9, 0xB, 0xC];
 
-    for j in in_ecx {
-        let tmp = cpuid!(0xD, j);
-        print_cpuid!(0xD, j, tmp);
+    for ecx in in_ecx {
+        let tmp = cpuid!(0xD, ecx);
+        print_cpuid!(0xD, ecx, tmp);
 
-        match j {
+        match ecx {
             0x0 => {
-                let x87 = (tmp.eax & 0b1) == 1;
-                let sse = ((tmp.eax >> 1) & 0b1) == 1;
-                let avx = ((tmp.eax >> 2) & 0b1) == 1;
-                let pku = ((tmp.eax >> 9) & 0b1) == 1;
+                let x87 = bitflag!(tmp.eax, 0);
+                let sse = bitflag!(tmp.eax, 1);
+                let avx = bitflag!(tmp.eax, 2);
+                let pku = bitflag!(tmp.eax, 9);
 
-                let mut buff = String::new();
-
-                if x87 { buff.push_str("X87 ") }
-                if sse { buff.push_str("SSE ") }
-                if avx { buff.push_str("AVX ") }
-                if pku { buff.push_str("PKU ") }
+                let buff = format!("{0}{1}{2}{3}",
+                    has_ftr!(x87, "X87 "),
+                    has_ftr!(sse, "SSE "),
+                    has_ftr!(avx, "AVX "),
+                    has_ftr!(pku, "PKU "),
+                );
 
                 print!(" [{}]", buff.trim_end());
             },
-            0x2 => print!(" [XSTATE: size({})]", tmp.eax),
+            0x2 => if tmp.eax != 0 {
+                print!(" [XSTATE: size({})]",   tmp.eax);
+            },
+            0x9 => if tmp.eax != 0 {
+                print!(" [MPK: size({})]",      tmp.eax);
+            },
+            0xB => if tmp.eax != 0 {
+                print!(" [CET_U: size({})]",    tmp.eax);
+            },
+            0xC => if tmp.eax != 0 {
+                print!(" [CET_S: size({})]",    tmp.eax);
+            },
             _   => {},
         }
         println!();
@@ -343,11 +363,13 @@ fn enum_amd_0dh() {
 }
 
 fn intel_hybrid_1ah(eax: u32) {
-    let core_type = match eax >> 24 {
-        0x20    => format!("Atom"),
-        0x40    => format!("Core"),
-        _       => format!(""),
-    };
+    let core_type = format!("{}",
+        match eax >> 24 {
+            0x20 => "Atom",
+            0x40 => "Core",
+            _    => "",
+        }
+    );
 
     if core_type.len() != 0 {
         print!(" [{}]", core_type);
@@ -355,13 +377,13 @@ fn intel_hybrid_1ah(eax: u32) {
 }
 
 fn apmi_amd_80_07h(edx: u32) {
-    let cpb  = ((edx >> 9) & 0b1) == 1;
-    let rapl = ((edx >> 14) & 0b1) == 1;
+    let cpb  = bitflag!(edx, 9);
+    let rapl = bitflag!(edx, 14);
 
-    let mut buff = String::new();
-
-    if cpb  { buff.push_str("CPB "); }
-    if rapl { buff.push_str("RAPL "); }
+    let buff = format!("{0}{1}",
+        has_ftr!(cpb, "CPB "),
+        has_ftr!(rapl, "RAPL "),
+    );
 
     if buff.len() != 0 {
         print!(" [{}]", buff.trim_end());
@@ -369,17 +391,17 @@ fn apmi_amd_80_07h(edx: u32) {
 }
 
 fn spec_amd_80_08h(ebx: u32) {
-    let ibpb    = ((ebx >> 12) & 1) == 1;
-    let stibp   = ((ebx >> 15) & 1) == 1;
-    let ssbd    = ((ebx >> 24) & 1) == 1;
-    let psfd    = ((ebx >> 28) & 1) == 1;
+    let ibpb    = bitflag!(ebx, 12);
+    let stibp   = bitflag!(ebx, 15);
+    let ssbd    = bitflag!(ebx, 24);
+    let psfd    = bitflag!(ebx, 28);
 
-    let mut buff = String::new();
-
-    if ibpb  { buff.push_str("IBPB "); }
-    if stibp { buff.push_str("STIBP "); }
-    if ssbd  { buff.push_str("SSBD "); }
-    if psfd  { buff.push_str("PSFD "); }
+    let buff = format!("{0}{1}{2}{3}",
+        has_ftr!(ibpb,  "IBPB "),
+        has_ftr!(stibp, "STIBP "),
+        has_ftr!(ssbd,  "SSBD "),
+        has_ftr!(psfd,  "PSFD "),
+    );
 
     if buff.len() != 0 {
         print!(" [{}]", buff.trim_end());
@@ -387,18 +409,14 @@ fn spec_amd_80_08h(ebx: u32) {
 }
 
 fn fpu_width_amd_80_1ah(eax: u32) {
-    let fp256 = ((eax >> 3) & 0b1) == 1;
-    let movu  = ((eax >> 1) & 0b1) == 1;
-    let fp128 = (eax & 0b1) == 1;
+    let fp256 = bitflag!(eax, 3);
+    let movu  = bitflag!(eax, 1);
+    let fp128 = bitflag!(eax, 0);
 
-    let mut buff = String::new();
-            
-    if fp256 {
-        buff.push_str("FP256 ");
-    } else if fp128 {
-        buff.push_str("FP128 ");
-    }
-    if movu { buff.push_str("MOVU "); }
+    let buff = format!("{0}{1}",
+        has_ftr!(fp256, "FP256 ", fp128, "FP128 "),
+        has_ftr!(movu,  "MOVU "),
+    );
 
     if buff.len() != 0 {
         print!(" [{}]", buff.trim_end());
@@ -411,13 +429,12 @@ fn secure_amd_80_1fh(eax: u32) {
     let sev_es  = ((eax >> 3) & 1) == 1;
     let snp     = ((eax >> 4) & 1) == 1;
 
-    let mut buff = String::new();
-
-    if sme { buff.push_str("SME "); }
-    if sev { buff.push_str("SEV");
-        if sev_es { buff.push_str("(-ES) "); }
-        if snp    { buff.push_str("SNP "); }
-    }
+    let buff = format!("{0}{1}{2}{3}",
+        has_ftr!(sme, "SME "),
+        has_ftr!(sev, "SEV"),
+        has_ftr!(sev && sev_es, "(-ES) "),
+        has_ftr!(sev && snp,    "SNP "),
+    );
 
     if buff.len() != 0 {
         print!(" [{}]", buff.trim_end());
@@ -426,9 +443,8 @@ fn secure_amd_80_1fh(eax: u32) {
 
 fn dump() {
     println!("CPUID Dump");
-//    buff.push(format!(" (out)EAX"));
-    println!(" (in)EAX_xECX:  {:<9} {:<9} {:<9} {:<9}"
-        ,"(out)EAX", "(out)EBX", "(out)ECX", "(out)EDX");
+    println!(" (in)EAX_xECX:  {:<9} {:<9} {:<9} {:<9}",
+        "(out)EAX", "(out)EBX", "(out)ECX", "(out)EDX");
     
     let mut buff = String::new();
     for _i in 0..72 {
@@ -436,15 +452,15 @@ fn dump() {
     }
     println!("{}", buff);
 
-    let vendor_check = cpuid!(0, 0);
+    let ck = cpuid!(0, 0);
+    let vendor = Vendor {
+                    ebx: ck.ebx,
+                    ecx: ck.ecx,
+                    edx: ck.edx,
+                };
 
-    let vendor_amd   = vendor_check.ebx == 0x6874_7541
-                    && vendor_check.ecx == 0x444D_4163
-                    && vendor_check.edx == 0x6974_6E65;
-
-    let vendor_intel = vendor_check.ebx == 0x756E_6547
-                    && vendor_check.ecx == 0x4965_6E69
-                    && vendor_check.edx == 0x6C65_746E;
+    let vendor_amd   = (vendor == Vendor::amd());
+    let vendor_intel = (vendor == Vendor::intel());
 
     for i in 0..=0x20 {
         if (0x2 <= i && i <= 0x4)

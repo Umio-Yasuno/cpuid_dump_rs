@@ -1,10 +1,8 @@
 //  Copyright (c) 2021 Umio Yasuno
 //  SPDX-License-Identifier: MIT
 
-//  #![feature(asm)]
 #![allow(dead_code)]
 
-//  use x86::cpuid::{cpuid, CpuIdResult};
 use core::arch::x86_64::{__cpuid_count, CpuidResult};
 
 pub mod feature_detect;
@@ -22,7 +20,7 @@ macro_rules! cpuid {
 }
 
 pub fn get_processor_name() -> String {
-    let mut name: Vec<u8> = vec![0x20; 48];
+    let mut name = vec![0x20u8; 48];
 
     for i in 0..=2 as usize {
         let tmp = cpuid!(_AX + 0x2 + i as u32, 0);
@@ -70,27 +68,27 @@ pub struct CacheInfo {
 
 fn cache_info_intel() -> CacheInfo {
 
-    let sub00h = cpuid!(0x4, 0);
-    let sub01h = cpuid!(0x4, 0x1);
-    let sub02h = cpuid!(0x4, 0x2);
-    let sub03h = cpuid!(0x4, 0x3);
+    let sb00h = cpuid!(0x4, 0);
+    let sb01h = cpuid!(0x4, 0x1);
+    let sb02h = cpuid!(0x4, 0x2);
+    let sb03h = cpuid!(0x4, 0x3);
 
     return CacheInfo {
-        l1d_size:   ((sub00h.ebx >> 22) + 1) * ((sub00h.ebx & 0xfff) + 1) * (sub00h.ecx + 1),
-        l1d_line:   (sub00h.ebx & 0xfff) + 1,
-        l1d_way:    (sub00h.ebx >> 22) + 1,
+        l1d_size:   ((sb00h.ebx >> 22) + 1) * ((sb00h.ebx & 0xfff) + 1) * (sb00h.ecx + 1),
+        l1d_line:   (sb00h.ebx & 0xfff) + 1,
+        l1d_way:    (sb00h.ebx >> 22) + 1,
 
-        l1i_size:   ((sub01h.ebx >> 22) + 1) * ((sub01h.ebx & 0xfff) + 1) * (sub01h.ecx + 1),
-        l1i_line:   (sub01h.ebx & 0xfff) + 1,
-        l1i_way:    (sub01h.ebx >> 22) + 1,
+        l1i_size:   ((sb01h.ebx >> 22) + 1) * ((sb01h.ebx & 0xfff) + 1) * (sb01h.ecx + 1),
+        l1i_line:   (sb01h.ebx & 0xfff) + 1,
+        l1i_way:    (sb01h.ebx >> 22) + 1,
 
-        l2_size:    ((sub02h.ebx >> 22) + 1) * ((sub02h.ebx & 0xfff) + 1) * (sub02h.ecx + 1),
-        l2_line:    (sub02h.ebx & 0xfff) + 1,
-        l2_way:     (sub02h.ebx >> 22) + 1,
+        l2_size:    ((sb02h.ebx >> 22) + 1) * ((sb02h.ebx & 0xfff) + 1) * (sb02h.ecx + 1),
+        l2_line:    (sb02h.ebx & 0xfff) + 1,
+        l2_way:     (sb02h.ebx >> 22) + 1,
 
-        l3_size:    ((sub03h.ebx >> 22) + 1) * ((sub03h.ebx & 0xfff) + 1) * (sub03h.ecx + 1),
-        l3_line:    (sub03h.ebx & 0xfff) + 1,
-        l3_way:     (sub03h.ebx >> 22) + 1,
+        l3_size:    ((sb03h.ebx >> 22) + 1) * ((sb03h.ebx & 0xfff) + 1) * (sb03h.ecx + 1),
+        l3_line:    (sb03h.ebx & 0xfff) + 1,
+        l3_way:     (sb03h.ebx >> 22) + 1,
 
         clflush_size: get_clflush_size(),
     }
@@ -125,9 +123,9 @@ impl CacheInfo {
     pub fn get() -> CacheInfo {
         let fam = FamModStep::get().syn_fam;
         if fam == 0x6 {
-            return cache_info_intel();
+            cache_info_intel()
         } else if 0x15 <= fam && fam <= 0x19 {
-            return cache_info_amd();
+            cache_info_amd()
         } else {
             return CacheInfo {
                 l1d_size:   0,
@@ -212,23 +210,45 @@ impl CpuCoreCount {
     }
 }
 
-pub fn get_vendor_name() -> String {
+#[derive(PartialEq, PartialOrd)]
+pub struct Vendor {
+    pub ebx: u32,
+    pub ecx: u32,
+    pub edx: u32,
+}
 
+impl Vendor {
+    pub fn amd() -> Vendor {
+        Vendor {
+            ebx: 0x6874_7541,
+            ecx: 0x444D_4163,
+            edx: 0x6974_6E65,
+        }
+    }
+    pub fn intel() -> Vendor {
+        Vendor {
+            ebx: 0x756E_6547,
+            ecx: 0x4965_6E69,
+            edx: 0x6C65_746E,
+        }
+    }
+}
+
+pub fn get_vendor_name() -> String {
     let tmp = cpuid!(0, 0);
+    let vendor = Vendor {
+                    ebx: tmp.ebx,
+                    ecx: tmp.ecx,
+                    edx: tmp.edx,
+                };
 
     // TODO: add other vendor
-    let vendor_name =
-        if tmp.ebx == 0x6874_7541
-        && tmp.ecx == 0x444D_4163
-        && tmp.edx == 0x6974_6E65 {
-            format!("AuthenticAMD")
-        } else if tmp.ebx == 0x756E_6547
-        && tmp.ecx == 0x4965_6E69
-        && tmp.edx == 0x6C65_746E { 
-            format!("GenuineIntel")
-        } else {
-            format!("Unknown")
-        };
-
-    return vendor_name;
+    return if vendor == Vendor::amd() {
+        format!("AuthenticAMD")
+    } else if vendor == Vendor::intel() {
+        format!("GenuineIntel")
+    } else {
+        format!("Unknown")
+    };
 }
+
