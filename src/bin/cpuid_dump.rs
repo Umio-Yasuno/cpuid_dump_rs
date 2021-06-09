@@ -77,7 +77,7 @@ fn print_feature(buff: Vec<String>) {
 }
 
 fn feature_00_01h(ecx: u32, edx: u32) {
-    let mut buff: Vec<String> = vec![format!(""); 0];
+    let mut buff: Vec<String> = vec![String::new(); 0];
 
     // 0x0000_0007_EDX_x0
     if bitflag!(edx,  0) { buff.push(format!("FPU"));  }
@@ -112,7 +112,7 @@ fn feature_00_07h() {
         let tmp = cpuid!(0x7, j);
         print_cpuid!(0x7, j, tmp);
 
-        let mut buff: Vec<String> = vec![format!(""); 0];
+        let mut buff: Vec<String> = vec![String::new(); 0];
 
         match j {
             0 => {
@@ -220,7 +220,7 @@ fn feature_00_07h() {
 }
 
 fn feature_80_01h(ecx: u32, edx: u32) {
-    let mut buff: Vec<String> = vec![format!(""); 0];
+    let mut buff: Vec<String> = vec![String::new(); 0];
 
     // 0x8000_0001_EDX_x0
     if bitflag!(edx, 31) {
@@ -322,7 +322,7 @@ fn cache_prop_intel_04h() {
 }
 
 fn enum_amd_0dh() {
-    let in_ecx: Vec<u32> = vec![0x0, 0x1, 0x2, 0x9, 0xB, 0xC];
+    let in_ecx: [u32; 6] = [0x0, 0x1, 0x2, 0x9, 0xB, 0xC];
 
     for ecx in in_ecx {
         let tmp = cpuid!(0xD, ecx);
@@ -381,7 +381,7 @@ fn apmi_amd_80_07h(edx: u32) {
     let rapl = bitflag!(edx, 14);
 
     let buff = format!("{0}{1}",
-        has_ftr!(cpb, "CPB "),
+        has_ftr!(cpb,  "CPB "),
         has_ftr!(rapl, "RAPL "),
     );
 
@@ -447,7 +447,7 @@ fn dump() {
         "(out)EAX", "(out)EBX", "(out)ECX", "(out)EDX");
     
     let mut buff = String::new();
-    for _i in 0..72 {
+    for _i in 0..80 {
         buff.push_str("=");
     }
     println!("{}", buff);
@@ -523,7 +523,12 @@ fn dump() {
 
         if i == 0x1 {
             if vendor_amd {
-                print!(" [PkgType: {}]", tmp.ebx >> 28);
+                let pkg_type = tmp.ebx >> 28;
+                let pkg_dec = match pkg_type {
+                    0x2 => "AM4",
+                    _   => "Unknown",
+                };
+                print!(" [PkgType: {}({:#X})]", pkg_dec, pkg_type);
                 print!("\n{}", pad());
             }
             feature_80_01h(tmp.ecx, tmp.edx);
@@ -571,6 +576,7 @@ fn dump() {
     }
     println!();
 }
+
 fn dump_all() {
     let thread_count = cpuid_asm::CpuCoreCount::get().total_thread;
 
@@ -592,8 +598,7 @@ fn dump_all() {
             }
 
             let id = cpuid_asm::CpuCoreCount::get().core_id;
-            println!("Core ID: {:<3} / Thread: {:<3}",
-                id, i);
+            println!("Core ID: {:<3} / Thread: {:<3}", id, i);
 
             dump();
 

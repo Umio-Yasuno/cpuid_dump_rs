@@ -25,30 +25,24 @@ impl Bmi {
         let lf_07h    = cpuid!(0x7, 0);
         let lf_80_01h = cpuid!(_AX + 0x1, 0);
 
-        let _popcnt  = bitflag!(lf_01h.ecx, 23);
-
-        let _bmi1    = bitflag!(lf_07h.ebx,  3);
-        let _bmi2    = bitflag!(lf_07h.ebx,  8);
-
-        let _lzcnt   = bitflag!(lf_80_01h.ecx,  5);
-        let _tbm     = bitflag!(lf_80_01h.ecx, 21);
-
         return Bmi {
-            has_popcnt: _popcnt,
-            has_lzcnt:  _lzcnt,
-            has_bmi1:   _bmi1,
-            has_bmi2:   _bmi2,
-            has_tbm:    _tbm,
+            has_popcnt:     bitflag!(lf_01h.ecx, 23),
+
+            has_bmi1:       bitflag!(lf_07h.ebx,  3),
+            has_bmi2:       bitflag!(lf_07h.ebx,  8),
+
+            has_lzcnt:      bitflag!(lf_80_01h.ecx,  5),
+            has_tbm:        bitflag!(lf_80_01h.ecx, 21),
         }
     }
 }
 
 // https://gitlab.com/x86-psABIs/x86-64-ABI
 pub struct x86_64_abi {
-    pub v1:     bool,
-    pub v2:     bool,
-    pub v3:     bool,
-    pub v4:     bool,
+    pub v1: bool,
+    pub v2: bool,
+    pub v3: bool,
+    pub v4: bool,
 }
 
 impl x86_64_abi {
@@ -185,7 +179,7 @@ impl x86_64_abi {
     }
 }
 
-pub struct intel_avx512 {
+pub struct IntelAvx512 {
     pub skx_avx512: bool,   // Skylake server
     pub cnl_avx512: bool,   // Cannon Lake, Palm Cove
     pub clx_avx512: bool,   // Cascade Lake
@@ -195,8 +189,8 @@ pub struct intel_avx512 {
     pub spr_avx512: bool,   // Sapphire Rapids, Golden Cove
 }
 
-impl intel_avx512 {
-    pub fn get() -> intel_avx512 {
+impl IntelAvx512 {
+    pub fn get() -> IntelAvx512 {
         let lf_07h              = cpuid!(0x7, 0);
         let lf_07h_sub_01h      = cpuid!(0x7, 0x1);
 
@@ -241,7 +235,7 @@ impl intel_avx512 {
         let _spr_avx512     = _tgl_avx512 && _has_avx512_bf16 && _has_avx512_fp16
                             /* && _has_avx_vnni */;
 
-        return intel_avx512 {
+        return IntelAvx512 {
             skx_avx512:     _skx_avx512,
             cnl_avx512:     _cnl_avx512,
             clx_avx512:     _clx_avx512,
@@ -258,4 +252,18 @@ pub struct Crypt {
     pub sha:    bool,
     pub gfni:   bool,
     pub vaes:   bool,
+}
+
+impl Crypt {
+    pub fn get() -> Crypt {
+        let lf_01h = cpuid!(0x1, 0).ecx;
+        let lf_07h = cpuid!(0x7, 0);
+
+        return Crypt {
+            aes:    bitflag!(lf_01h, 25),
+            sha:    bitflag!(lf_07h.ebx, 29),
+            gfni:   bitflag!(lf_07h.ecx, 8),
+            vaes:   bitflag!(lf_07h.ecx, 9),
+        }
+    }
 }

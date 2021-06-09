@@ -3,8 +3,7 @@
 
 //  f: Family, m: Model, s: Stepping
 pub fn get_codename(f: u32, m: u32, s: u32) -> String {
-
-    return match f {
+    match f {
         0x6 => match m {
         //  https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/intel-family.h
             //  Core

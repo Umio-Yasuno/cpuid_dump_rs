@@ -37,10 +37,6 @@ pub fn get_processor_name() -> String {
     return String::from_utf8(name).unwrap();
 }
 
-fn amd_cache_way(ecx: u32) -> u32 {
-    (cpuid!(_AX + 0x1D, ecx).ebx >> 22) + 1
-}
-
 fn get_clflush_size() -> u32 {
     ((cpuid!(0x1, 0).ebx >> 8) & 0xFF) * 8
 }
@@ -73,30 +69,40 @@ fn cache_info_intel() -> CacheInfo {
     let sb02h = cpuid!(0x4, 0x2);
     let sb03h = cpuid!(0x4, 0x3);
 
+    let size_calc = |ebx: u32, ecx: u32| -> u32 {
+        ((ebx >> 22) + 1) * (((ebx >> 12) & 0x3FF) + 1) * ((ebx & 0xFFF) + 1) * (ecx + 1)
+    };
+    let line = |ebx: u32| -> u32 { (ebx & 0xFFF) + 1 };
+    let way  = |ebx: u32| -> u32 { (ebx >> 22) + 1 };
+
     return CacheInfo {
-        l1d_size:   ((sb00h.ebx >> 22) + 1) * ((sb00h.ebx & 0xfff) + 1) * (sb00h.ecx + 1),
-        l1d_line:   (sb00h.ebx & 0xfff) + 1,
-        l1d_way:    (sb00h.ebx >> 22) + 1,
+        l1d_size:   size_calc(sb00h.ebx, sb00h.ecx),
+        l1d_line:   line(sb00h.ebx),
+        l1d_way:    way(sb00h.ebx),
 
-        l1i_size:   ((sb01h.ebx >> 22) + 1) * ((sb01h.ebx & 0xfff) + 1) * (sb01h.ecx + 1),
-        l1i_line:   (sb01h.ebx & 0xfff) + 1,
-        l1i_way:    (sb01h.ebx >> 22) + 1,
+        l1i_size:   size_calc(sb01h.ebx, sb01h.ecx),
+        l1i_line:   line(sb01h.ebx),
+        l1i_way:    way(sb01h.ebx),
 
-        l2_size:    ((sb02h.ebx >> 22) + 1) * ((sb02h.ebx & 0xfff) + 1) * (sb02h.ecx + 1),
-        l2_line:    (sb02h.ebx & 0xfff) + 1,
-        l2_way:     (sb02h.ebx >> 22) + 1,
+        l2_size:    size_calc(sb02h.ebx, sb02h.ecx),
+        l2_line:    line(sb02h.ebx),
+        l2_way:     way(sb02h.ebx),
 
-        l3_size:    ((sb03h.ebx >> 22) + 1) * ((sb03h.ebx & 0xfff) + 1) * (sb03h.ecx + 1),
-        l3_line:    (sb03h.ebx & 0xfff) + 1,
-        l3_way:     (sb03h.ebx >> 22) + 1,
+        l3_size:    size_calc(sb03h.ebx, sb03h.ecx),
+        l3_line:    line(sb03h.ebx),
+        l3_way:     way(sb03h.ebx),
 
         clflush_size: get_clflush_size(),
-    }
+    };
 }
 
 fn cache_info_amd() -> CacheInfo {
     let lf_80_05h = cpuid!(_AX + 0x5, 0);
     let lf_80_06h = cpuid!(_AX + 0x6, 0);
+
+    let cache_way = |sub_lf: u32| -> u32 {
+        (cpuid!(_AX + 0x1D, sub_lf).ebx >> 22) + 1
+    };
 
     return CacheInfo {
         l1d_size:   (lf_80_05h.ecx >> 24),
@@ -109,17 +115,38 @@ fn cache_info_amd() -> CacheInfo {
 
         l2_size:    (lf_80_06h.ecx >> 16),
         l2_line:    lf_80_06h.ecx & 0xFF,
-        l2_way:     amd_cache_way(2),
+        l2_way:     cache_way(2),
 
         l3_size:    (lf_80_06h.edx >> 18) / 2,
         l3_line:    lf_80_06h.edx & 0xFF,
-        l3_way:     amd_cache_way(3),
+        l3_way:     cache_way(3),
 
         clflush_size: get_clflush_size(),
     };
 }
 
 impl CacheInfo {
+    fn zero() -> CacheInfo {
+        CacheInfo {
+            l1d_size:   0,
+            l1d_line:   0,
+            l1d_way:    0,
+
+            l1i_size:   0,
+            l1i_line:   0,
+            l1i_way:    0,
+
+            l2_size:    0,
+            l2_line:    0,
+            l2_way:     0,
+
+            l3_size:    0,
+            l3_line:    0,
+            l3_way:     0,
+
+            clflush_size: 0,
+        }
+    }
     pub fn get() -> CacheInfo {
         let fam = FamModStep::get().syn_fam;
         if fam == 0x6 {
@@ -127,25 +154,7 @@ impl CacheInfo {
         } else if 0x15 <= fam && fam <= 0x19 {
             cache_info_amd()
         } else {
-            return CacheInfo {
-                l1d_size:   0,
-                l1d_line:   0,
-                l1d_way:    0,
-
-                l1i_size:   0,
-                l1i_line:   0,
-                l1i_way:    0,
-
-                l2_size:    0,
-                l2_line:    0,
-                l2_way:     0,
-
-                l3_size:    0,
-                l3_line:    0,
-                l3_way:     0,
-
-                clflush_size: 0,
-            }
+            CacheInfo::zero()
         }
     }
 }
