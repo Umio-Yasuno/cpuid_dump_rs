@@ -196,13 +196,20 @@ impl CpuCoreCount {
 
         let _has_htt            = ((lf_01h.edx >> 28) & 0b1) == 1;
         let _total_thread       = (lf_01h.ebx >> 16) & 0xFF;
-        let _thread_per_core    = if _has_htt && 1 < ((lf_80_1eh.ebx >> 8) & 0xFF) + 1 {
-                                    ((lf_80_1eh.ebx >> 8) & 0xFF) + 1
-                                } else if _has_htt {
-                                    2
-                                } else {
-                                    1
-                                };
+
+        let amd_td_per_core = ((lf_80_1eh.ebx >> 8) & 0xFF) + 1;
+        let intel_shared_dc = ((lf_04h.eax >> 14) & 0xFFF) + 1;
+
+        let _thread_per_core    =
+            if _has_htt && 1 < amd_td_per_core {
+                amd_td_per_core
+            } else if _has_htt && 1 < intel_shared_dc {
+                intel_shared_dc
+            } else if _has_htt {
+                2
+            } else {
+                1
+            };
         let _phy_core           = _total_thread / _thread_per_core;
         let _apic_id            = (lf_01h.ebx >> 24) & 0xFF;
         //  TODO: CoreID for Intel CPU

@@ -1,5 +1,5 @@
 [package]
-name = "rust-cpuid-asm"
+name = "cpuid-dump-rs"
 version = "0.1.0"
 authors = ["Umio Yasuno <53935716+Umio-Yasuno@users.noreply.github.com>"]
 edition = "2018"

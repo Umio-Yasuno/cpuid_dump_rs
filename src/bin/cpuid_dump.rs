@@ -253,50 +253,21 @@ fn cpu_name(tmp: CpuidResult) {
     print!(" [{}]", String::from_utf8(name).unwrap());
 }
 
-fn cache_prop_intel_04h() {
-    for ecx in 0x0..=0x4 {
-        let tmp = cpuid!(0x4, ecx);
-    /* for debug
-        match j {
-            0 => {
-                tmp.eax = 0x1C004121;
-                tmp.ebx = 0x02C0003F;
-                tmp.ecx = 0x0000003F;
-                tmp.edx = 0;
-            },
-            1 => {
-                tmp.eax = 0x1C004122;
-                tmp.ebx = 0x01C0003F;
-                tmp.ecx = 0x0000003F;
-                tmp.edx = 0;
-            },
-            2 => {
-                tmp.eax = 0x1C004143;
-                tmp.ebx = 0x01C0003F;
-                tmp.ecx = 0x000003FF;
-                tmp.edx = 0;
-            },
-            3 => {
-                tmp.eax = 0x1C03C163;
-                tmp.ebx = 0x03C0003F;
-                tmp.ecx = 0x00003FFF;
-                tmp.edx = 0;
-            },
-            4 => {
-                a = [0; 4];
-            },
-            _ => {},
-        }
-    */
-        let cache_level = (tmp.eax >> 5) & 0b111;
-        let cache_type =
-            match tmp.eax & 0b11111 {
-                1 => "D", // Data
-                2 => "I", // Instruction
-                3 => "U", // Unified
-                0|
-                _ => "",
+fn cache_prop(in_eax: u32) {
+    for ecx in 0..=4 {
+        let tmp = cpuid!(in_eax, ecx);
+
+        let cache_type = match tmp.eax & 0b11111 {
+            0x1 => "Data",
+            0x2 => "Inst",
+            0x3 => "Unified",
+            0x0|
+            _   => "",
         };
+
+        let cache_level = (tmp.eax >> 5) & 0b111;
+        let cache_share_thread = ((tmp.eax >> 14) & 0xFFF) + 1;
+
         let cache_line = (tmp.ebx & 0xFFF) + 1;
         let cache_way  = (tmp.ebx >> 22) + 1;
         let cache_set  = tmp.ecx + 1;
@@ -310,15 +281,21 @@ fn cache_prop_intel_04h() {
                 format!("{}B", cache_size)
             };
 
-        if cache_level == 0 || cache_type == "" {
-            return;
+        if cache_level == 0 || cache_type.len() == 0 {
+            continue;
         }
+        print_cpuid!(in_eax, ecx, tmp);
+        print!(" [L{} {:>7}: {:>2}-way, {:>4}]",
+            cache_level, cache_type, cache_way, cache_size_unit);
+        print!("\n{} [shared {}T]", pad(), cache_share_thread);
 
-        print_cpuid!(0x4, ecx, tmp);
-        print!(" [L{}{} {}] ",
-            cache_level, cache_type, cache_size_unit);
+        let cache_inclusive = (tmp.edx >> 1) & 0b1;
+        if cache_inclusive == 1 {
+            print!("\n{} [inclusive]", pad());
+        }
         println!();
-    }
+    }    
+    
 }
 
 fn enum_amd_0dh() {
@@ -470,7 +447,7 @@ fn dump() {
         && vendor_amd {
             continue;
         } else if i == 0x4 && vendor_intel {
-            cache_prop_intel_04h();
+            cache_prop(0x4);
             continue;
         } else if i == 0x7 {
             feature_00_07h();
@@ -515,6 +492,9 @@ fn dump() {
 
     for i in 0x0..=0x21 {
         if (0xB <= i && i <= 0x18) && vendor_amd {
+            continue;
+        } else if i == 0x1D && vendor_amd {
+            cache_prop(_AX + 0x1D);
             continue;
         }
 
@@ -563,13 +543,13 @@ fn dump() {
                 (tmp.ebx >> 16) & 0xFFF, tmp.ebx & 0xFFF);
         } else if i == 0x1A && vendor_amd {
             fpu_width_amd_80_1ah(tmp.eax);
-        } else if i == 0x1e && vendor_amd {
+        } else if i == 0x1E && vendor_amd {
             print!(" [Core ID: {}]", tmp.ebx & 0xFF);
             print!("\n{} [{} thread per core]",
                 pad(), ((tmp.ebx >> 8) & 0xFF) + 1);
             print!("\n{} [Node ID: {}]",
                 pad(), tmp.ecx & 0xFF);
-        } else if i == 0x1f && vendor_amd {
+        } else if i == 0x1F && vendor_amd {
             secure_amd_80_1fh(tmp.eax);
         }
         println!();
