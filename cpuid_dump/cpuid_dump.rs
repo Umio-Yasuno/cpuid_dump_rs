@@ -299,9 +299,7 @@ fn cache_prop(in_eax: u32) {
 }
 
 fn enum_amd_0dh() {
-    let in_ecx: [u32; 6] = [0x0, 0x1, 0x2, 0x9, 0xB, 0xC];
-
-    for ecx in in_ecx {
+    for ecx in [0x0, 0x1, 0x2, 0x9, 0xB, 0xC] {
         let tmp = cpuid!(0xD, ecx);
         print_cpuid!(0xD, ecx, tmp);
 
@@ -505,6 +503,7 @@ fn dump() {
             if vendor_amd {
                 let pkg_type = tmp.ebx >> 28;
                 let pkg_dec = match pkg_type {
+                    0x0 => "FP5/FP6",
                     0x2 => "AM4",
                     _   => "Unknown",
                 };

@@ -7,13 +7,15 @@
 ## Usage
 ### cpuid_dump
 
-    $ cargo run --bin cpuid_dump
+    $ cd cpuid_dump
+    $ cargo run cpuid_dump
     // all thread
-    $ cargo run --bin cpuid_dump -- -a
+    $ cargo run -- -a
 
 ### c2clat (Original: [rigtorp/c2clat](https://github.com/rigtorp/c2clat))
 
-    $ cargo build --release --bin c2clat
+    $ cd c2clat_rs
+    $ cargo build --release
     $ ./target/release/c2clat
     // Output Markdown table
     $ ./target/release/c2clat -md

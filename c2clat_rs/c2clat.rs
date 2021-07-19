@@ -161,20 +161,18 @@ fn main() {
     
     // TODO: align for cache line
     #[derive(Clone)]
-    #[repr (C, align(64))]
     struct Seq {
         v: Arc<AtomicIsize>,
         _pad: Vec<Arc<AtomicIsize>>,
     }
     impl Seq {
         fn set() -> Seq {
-            let c = cpuid_asm::CacheInfo::get();
-            let line = c.l1d_line;
+            let line = cpuid_asm::CacheInfo::get().l1d_line;
 
             return Seq {
                 v: Arc::new(AtomicIsize::new(-1)),
                 _pad: vec![Arc::new(AtomicIsize::new(0));
-                            line as usize / mem::size_of::<isize>() - 1],
+                            (line as usize / mem::size_of::<isize>()) - 1],
             }
         }
     }
