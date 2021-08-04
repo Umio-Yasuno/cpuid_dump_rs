@@ -8,20 +8,28 @@ use cpuid_asm::{_AX, cpuid, bitflag, Vendor};
 /*
 #[cfg(target_os = "linux")]
 extern crate libc;
-*/
 #[cfg(target_os = "linux")]
 use libc::{cpu_set_t, CPU_SET, CPU_ZERO, sched_setaffinity};
 
 #[cfg(target_os = "windows")]
 use kernel32::{GetCurrentThread, SetThreadAffinityMask};
+*/
 
 use std::{mem, thread};
+use std::io::Write;
+use std::fmt::write;
 
 macro_rules! print_cpuid {
-    ($in_eax: expr, $in_ecx: expr, $out: expr) => {
-        print!(" {:08X}h_x{:X}:  {:08X}h {:08X}h {:08X}h {:08X}h ",
+    ($in_eax: expr, $in_ecx: expr, $cpuid: expr) => {
+        print!("  0x{:08X}_x{:1X}:  0x{:08X} 0x{:08X} 0x{:08X} 0x{:08X} ",
             $in_eax, $in_ecx,
-            $out.eax, $out.ebx, $out.ecx, $out.edx);
+            $cpuid.eax, $cpuid.ebx, $cpuid.ecx, $cpuid.edx)
+    };
+
+    ($out: expr, $in_eax: expr, $in_ecx: expr, $cpuid: expr) => {
+        write!($out, "    0x{:08X} 0x{:1X}: eax=0x{:08X} ebx=0x{:08X} ecx=0x{:08X} edx=0x{:08X} ",
+            $in_eax, $in_ecx,
+            $cpuid.eax, $cpuid.ebx, $cpuid.ecx, $cpuid.edx).unwrap()
     };
 }
 
@@ -40,36 +48,42 @@ macro_rules! pad { () => {
 */
 
 fn pad() -> String {
-    format!("{:56}", "")
+    format!("{:62}", "")
 }
 
 fn print_feature(buff: Vec<String>) {
+    let out = std::io::stdout();
+    let mut out = out.lock();
+
     let mut c: usize = 1;
     let len = buff.len();
 
     for v in buff {
         if 9 < v.len() {
-            print!("{} [{}]{}",
+            write!(out, "{0} [{1}]{2}",
+                // {0}
                 if (c % 3) != 1 {
                     format!("\n{}", pad())
                 } else {
                     format!("")
                 },
 
+                // {1}
                 v.trim_end_matches('/'),
 
+                // {2}
                 if (c % 3) != 0 && c != len {
                     format!("\n{}", pad())
                 } else {
                     format!("") 
                 },
-            );
+            ).unwrap();
         } else {
-            print!(" [{}]", v.trim_end_matches('/'));
+            write!(out, " [{}]", v.trim_end_matches('/')).unwrap();
         }
 
         if (c % 3) == 0 && c != len {
-            print!("\n{}", pad());
+            write!(out, "\n{}", pad()).unwrap();
         }
 
         c += 1;
@@ -468,10 +482,15 @@ fn dump() {
         if i == 0 {
             print!(" [{}]", cpuid_asm::get_vendor_name());
         } else if i == 0x1 {
-            print!(" [F: {:X}h, M: {:X}h, S: {:X}]",
-                ((tmp.eax >> 8) & 0xF) + ((tmp.eax >> 20) & 0xFF),
-                ((tmp.eax >> 4) & 0xF) + ((tmp.eax >> 12) & 0xF0),
-                tmp.eax & 0xF);
+            let x86_fam  = ((tmp.eax >> 8) & 0xF) + ((tmp.eax >> 20) & 0xFF);
+            let x86_mod  = ((tmp.eax >> 4) & 0xF) + ((tmp.eax >> 12) & 0xF0);
+            let x86_step = tmp.eax & 0xF;
+
+            print!(" [F: 0x{:X}, M: 0x{:X}, S: 0x{:X}]",
+                x86_fam, x86_mod, x86_step);
+            let codename = cpuid_asm::codename::get_codename(x86_fam, x86_mod, x86_step);
+            print!("\n{} [{}]", pad(), codename);
+            
             print!("\n{} [APIC ID: {}]", pad(), tmp.ebx >> 24);
             print!("\n{} [Total {} thread]", pad(), (tmp.ebx >> 16) & 0xFF);
             print!("\n{} [CLFlush: {}B]", pad(), ((tmp.ebx >> 8) & 0xFF) * 8);
@@ -561,23 +580,10 @@ fn dump_all() {
 
     for i in 0..(thread_count) as usize {
         thread::spawn(move || {
-            #[cfg(target_os = "linux")]
-            unsafe {
-                let mut set = mem::zeroed::<cpu_set_t>();
-                CPU_ZERO(&mut set);
-                CPU_SET(i, &mut set);
-
-                sched_setaffinity(0,
-                                  mem::size_of::<cpu_set_t>(),
-                                  &set);
-            }
-            #[cfg(target_os = "windows")]
-            unsafe {
-                SetThreadAffinityMask(GetCurrentThread(), 1 << i);
-            }
+            cpuid_asm::pin_thread!(i);
 
             let id = cpuid_asm::CpuCoreCount::get().core_id;
-            println!("Core ID: {:<3} / Thread: {:<3}", id, i);
+            println!("Core ID: {:>3} / Thread: {:>3}", id, i);
 
             dump();
 
@@ -585,12 +591,60 @@ fn dump_all() {
     }
 }
 
-fn main() {
-    println!();
+macro_rules! raw {
+    ($dst: expr, $in_eax: expr, $in_ecx: expr) => {
+        let tmp = cpuid!($in_eax, $in_ecx);
 
+        print_cpuid!($dst, $in_eax, $in_ecx, tmp);
+        writeln!($dst).unwrap();
+    };
+}
+
+fn raw_dump() {
+    let out = std::io::stdout();
+    let mut out = out.lock();
+
+    for i in 0x0..=0xD {
+        if i == 0xD {
+            for ecx in [0x0, 0x1, 0x2, 0x9, 0xB, 0xC] {
+                raw!(out, i, ecx);
+            }
+            continue;
+        }
+        raw!(out, i, 0x0);
+    }
+
+    for i in 0x0..=0x21 {
+        if i == 0x1D {
+            for ecx in 0x0..=0x4 {
+                raw!(out, _AX + i, ecx);
+            }
+            continue;
+        }
+        raw!(out, _AX + i, 0x0);
+    }
+}
+
+fn raw_dump_all() {
+    let thread_count = cpuid_asm::CpuCoreCount::get().total_thread;
+
+    for i in 0..(thread_count) as usize {
+        thread::spawn(move || {
+            cpuid_asm::pin_thread!(i);
+            println!("\nCPU {:>3}:",i);
+
+            raw_dump();
+        }).join().unwrap();
+    }
+}
+
+fn main() {
     for opt in std::env::args() {
         if opt == "-a" || opt == "--all" {
             dump_all();
+            return;
+        } else if opt == "-r" || opt == "--raw" {
+            raw_dump_all();
             return;
         }
     }

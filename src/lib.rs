@@ -19,6 +19,31 @@ macro_rules! cpuid {
     }
 }
 
+#[macro_export]
+macro_rules! pin_thread { ($cpu: expr) => {
+    #[cfg(target_os = "linux")]
+    use libc::{cpu_set_t, CPU_SET, CPU_ISSET, CPU_ZERO, sched_setaffinity, sched_getaffinity};
+    #[cfg(target_os = "windows")]
+    use kernel32::{GetCurrentThread, SetThreadAffinityMask};
+
+    #[cfg(target_os = "linux")]
+    unsafe {
+        let mut set = mem::zeroed::<cpu_set_t>();
+        CPU_ZERO(&mut set);
+        CPU_SET($cpu, &mut set);
+
+        let status = sched_setaffinity(0, mem::size_of::<cpu_set_t>(), &set);
+        if status == -1 {
+            eprintln!("sched_setaffinity failed");
+            return;
+        }
+    }
+    #[cfg(target_os = "windows")]
+    unsafe {
+        SetThreadAffinityMask(GetCurrentThread(), 1 << $cpu);
+    }
+}}
+
 pub fn get_processor_name() -> String {
     let mut name = vec![0x20u8; 48];
 

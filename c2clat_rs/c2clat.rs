@@ -17,29 +17,11 @@ use libc::{cpu_set_t, CPU_SET, CPU_ISSET, CPU_ZERO, sched_setaffinity, sched_get
 use kernel32::{GetCurrentThread, SetThreadAffinityMask};
 
 extern crate cpuid_asm;
+use cpuid_asm::pin_thread;
 
 use std::{mem, thread, time};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicIsize, Ordering};
-
-macro_rules! pin_thread { ($cpu: expr) => {
-        #[cfg(target_os = "linux")]
-        unsafe {
-            let mut set = mem::zeroed::<cpu_set_t>();
-            CPU_ZERO(&mut set);
-            CPU_SET($cpu, &mut set);
-
-            let status = sched_setaffinity(0, mem::size_of::<cpu_set_t>(), &set);
-            if status == -1 {
-                eprintln!("sched_setaffinity failed");
-                return;
-            }
-        }
-        #[cfg(target_os = "windows")]
-        unsafe {
-            SetThreadAffinityMask(GetCurrentThread(), 1 << $cpu);
-        }
-}}
 
 fn print_matrix  (title: &str, result: Vec<Vec<u128>>,
                 cpu_list: &Vec<usize>, ncpu: usize, opt: &Opt) {
