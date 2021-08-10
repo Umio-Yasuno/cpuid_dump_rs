@@ -251,7 +251,7 @@ impl CpuCoreCount {
     }
 }
 
-#[derive(PartialEq, PartialOrd)]
+#[derive(Copy, Clone, PartialEq, PartialOrd)]
 pub struct Vendor {
     pub ebx: u32,
     pub ecx: u32,
@@ -266,12 +266,18 @@ impl Vendor {
             edx: 0x6974_6E65,
         }
     }
+    pub fn check_amd(ven: Vendor) -> bool {
+        return ven == Vendor::amd();
+    }
     pub fn intel() -> Vendor {
         Vendor {
             ebx: 0x756E_6547,
             ecx: 0x4965_6E69,
             edx: 0x6C65_746E,
         }
+    }
+    pub fn check_intel(ven: Vendor) -> bool {
+        return ven == Vendor::intel();
     }
 }
 
