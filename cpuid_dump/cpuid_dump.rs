@@ -3,16 +3,12 @@
 
 use core::arch::x86_64::{__cpuid_count, CpuidResult};
 
-pub mod parse;
-pub mod parse_amd;
-pub mod parse_intel;
-
-pub use crate::parse::*;
-pub use crate::parse_amd::*;
-pub use crate::parse_intel::*;
-
 extern crate cpuid_asm;
 use cpuid_asm::{_AX, cpuid, bitflag, Vendor};
+
+mod parse;
+use crate::parse::*;
+
 /*
 #[cfg(target_os = "linux")]
 extern crate libc;
@@ -26,7 +22,6 @@ use kernel32::{GetCurrentThread, SetThreadAffinityMask};
 use std::{mem, thread};
 use std::io::Write;
 //  use std::fmt::write;
-
 
 fn dump() {
     println!("CPUID Dump");
