@@ -293,7 +293,7 @@ pub fn cache_prop(in_eax: u32) {
             continue;
         }
         print_cpuid!(in_eax, ecx, tmp);
-        print!(" [L{} {:>7}: {:>2}-way, {:>4}]",
+        print!(" [L{} {:>7}: {:>3}-way, {:>4}]",
             cache_level, cache_type, cache_way, cache_size_unit);
         print!("\n{} [shared {}T]", pad(), cache_share_thread);
 

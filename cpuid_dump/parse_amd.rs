@@ -11,11 +11,13 @@ pub fn pkgtype_amd_80_01h(ebx: u32) {
     print!("\n{}", pad());
 }
 
-pub fn l1_amd_80_05h(ebx: u32, ecx: u32, edx: u32) {
+pub fn l1_amd_80_05h(tmp: CpuidResult) {
     print!(" [L1D {}K/L1I {}K]",
-        ecx >> 24, (edx >> 24) & 0xFF);
-    print!("\n{} [L1TLB: {} entry]",
-        pad(), ebx & 0xFF);
+        tmp.ecx >> 24, (tmp.edx >> 24) & 0xFF);
+    print!("\n{} [L1dTLB: 4K {:>3}, 2M/4M {:>3}]",
+        pad(), (tmp.ebx >> 16) & 0xFF, (tmp.eax >> 16) & 0xFF);
+    print!("\n{} [L1iTLB: 4K {:>3}, 2M/4M {:>3}]",
+        pad(), tmp.ebx & 0xFF, tmp.eax & 0xFF);
 }
 
 pub fn l2_amd_80_06h(tmp: CpuidResult) {
@@ -33,14 +35,16 @@ pub fn l2_amd_80_06h(tmp: CpuidResult) {
         pad(), "", (tmp.eax & 0xFFF) / 2);
 }
 
-pub fn l2tlb_1g_amd_80_19h(ebx: u32) {
-    print!(" [L2TLB 1G: D {}, I {}]",
-        (ebx >> 16) & 0xFFF, ebx & 0xFFF);
+pub fn l1l2tlb_1g_amd_80_19h(eax: u32, ebx: u32) {
+    print!(" [L1TLB 1G: Data {:>3}, Inst {:>3}]",
+        (eax >> 16) & 0xFFF, eax & 0xFFF);
+    print!("\n{} [L2TLB 1G: Data {:>3}, Inst {:>3}]",
+        pad(), (ebx >> 16) & 0xFFF, ebx & 0xFFF);
 }
 
 pub fn cpu_topo_amd_80_1eh(ebx: u32, ecx: u32) {
     print!(" [Core ID: {}]", ebx & 0xFF);
-    print!("\n{} [{} thread per core]",
+    print!("\n{} [{} thread(s) per core]",
         pad(), ((ebx >> 8) & 0xFF) + 1);
     print!("\n{} [Node ID: {}]",
         pad(), ecx & 0xFF);

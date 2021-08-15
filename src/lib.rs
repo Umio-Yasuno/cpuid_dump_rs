@@ -259,6 +259,14 @@ pub struct Vendor {
 }
 
 impl Vendor {
+    pub fn get() -> Vendor {
+        let tmp = cpuid!(0, 0);
+        return Vendor {
+            ebx: tmp.ebx,
+            ecx: tmp.ecx,
+            edx: tmp.edx,
+        };
+    }
     pub fn amd() -> Vendor {
         Vendor {
             ebx: 0x6874_7541,
@@ -266,8 +274,8 @@ impl Vendor {
             edx: 0x6974_6E65,
         }
     }
-    pub fn check_amd(ven: Vendor) -> bool {
-        return ven == Vendor::amd();
+    pub fn check_amd() -> bool {
+        return Vendor::get() == Vendor::amd();
     }
     pub fn intel() -> Vendor {
         Vendor {
@@ -276,8 +284,8 @@ impl Vendor {
             edx: 0x6C65_746E,
         }
     }
-    pub fn check_intel(ven: Vendor) -> bool {
-        return ven == Vendor::intel();
+    pub fn check_intel() -> bool {
+        return Vendor::get() == Vendor::intel();
     }
 }
 

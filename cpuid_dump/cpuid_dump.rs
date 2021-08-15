@@ -34,24 +34,22 @@ fn dump() {
     }
     println!("{}", buff);
 
-    let ck = cpuid!(0, 0);
-    let vendor = Vendor {
-            ebx: ck.ebx,
-            ecx: ck.ecx,
-            edx: ck.edx,
-        };
-
-    let vendor_amd   = Vendor::check_amd(vendor);
-    let vendor_intel = Vendor::check_intel(vendor);
+    let vendor_amd   = Vendor::check_amd();
+    let vendor_intel = Vendor::check_intel();
 
     for i in 0..=0x20 {
-        if (0x2 <= i && i <= 0x4)
-        || (0x8 <= i && i <= 0xA)
-        || (0xC == i) || (0xE == i)
-        || (0x11 <= i)
-        && vendor_amd {
-            continue;
-        } else if i == 0x4 && vendor_intel {
+        if vendor_amd {
+            if (0x2 <= i && i <= 0x4)
+            || (0x8 <= i && i <= 0xA)
+            || (0xC == i) || (0xE == i)
+            || (0x11 <= i) {
+                continue;
+            } else if i == 0xD {
+                enum_amd_0dh();
+                continue;
+            }
+        }
+        if vendor_intel && i == 0x4 {
             cache_prop(0x4);
             continue;
         } else if i == 0x7 {
@@ -64,9 +62,6 @@ fn dump() {
                 println!();
             }
             continue;
-        } else if i == 0xD && vendor_amd {
-            enum_amd_0dh();
-            continue;
         }
 
         let tmp = cpuid!(i, 0);
@@ -77,9 +72,9 @@ fn dump() {
         } else if i == 0x1 {
             info_00_01h(tmp.eax, tmp.ebx);
             feature_00_01h(tmp.ecx, tmp.edx);
-        } else if i == 0x16 && vendor_intel {
+        } else if vendor_intel && i == 0x16 {
             clock_speed_intel_00_16h(tmp);
-        } else if i == 0x1A && vendor_intel {
+        } else if vendor_intel && i == 0x1A {
             intel_hybrid_1ah(tmp.eax);
         }
         println!();
@@ -88,11 +83,13 @@ fn dump() {
     println!();
 
     for i in 0x0..=0x21 {
-        if (0xB <= i && i <= 0x18) && vendor_amd {
-            continue;
-        } else if i == 0x1D && vendor_amd {
-            cache_prop(_AX + 0x1D);
-            continue;
+        if vendor_amd {
+            if 0xB <= i && i <= 0x18 {
+                continue;
+            } else if i == 0x1D {
+                cache_prop(_AX + 0x1D);
+                continue;
+            }
         }
 
         let tmp = cpuid!(_AX + i, 0);
@@ -105,22 +102,26 @@ fn dump() {
             feature_80_01h(tmp.ecx, tmp.edx);
         } else if 0x2 <= i && i <= 0x4 {
             cpu_name(tmp);
-        } else if i == 0x5 && vendor_amd {
-            l1_amd_80_05h(tmp.ebx, tmp.ecx, tmp.edx);
-        } else if i == 0x6 && vendor_amd {
-            l2_amd_80_06h(tmp);
-        } else if i == 0x7 && vendor_amd {
-            apmi_amd_80_07h(tmp.edx);
-        } else if i == 0x8 && vendor_amd {
-            spec_amd_80_08h(tmp.ebx);
-        } else if i == 0x19 && vendor_amd {
-            l2tlb_1g_amd_80_19h(tmp.ebx);
-        } else if i == 0x1A && vendor_amd {
-            fpu_width_amd_80_1ah(tmp.eax);
-        } else if i == 0x1E && vendor_amd {
-            cpu_topo_amd_80_1eh(tmp.ebx, tmp.ecx);
-        } else if i == 0x1F && vendor_amd {
-            secure_amd_80_1fh(tmp.eax);
+        }
+
+        if vendor_amd {
+            if i == 0x5 {
+                l1_amd_80_05h(tmp);
+            } else if i == 0x6 {
+                l2_amd_80_06h(tmp);
+            } else if i == 0x7 {
+                apmi_amd_80_07h(tmp.edx);
+            } else if i == 0x8 {
+                spec_amd_80_08h(tmp.ebx);
+            } else if i == 0x19 {
+                l1l2tlb_1g_amd_80_19h(tmp.eax, tmp.ebx);
+            } else if i == 0x1A {
+                fpu_width_amd_80_1ah(tmp.eax);
+            } else if i == 0x1E {
+                cpu_topo_amd_80_1eh(tmp.ebx, tmp.ecx);
+            } else if i == 0x1F {
+                secure_amd_80_1fh(tmp.eax);
+            }
         }
         println!();
     }
