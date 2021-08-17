@@ -57,7 +57,7 @@ fn print_feature(buff: Vec<String>) {
                 if (c % 3) != 1 {
                     format!("\n{}", pad())
                 } else {
-                    format!("")
+                    String::new()
                 },
 
                 // {1}
@@ -67,15 +67,17 @@ fn print_feature(buff: Vec<String>) {
                 if (c % 3) != 0 && c != len {
                     format!("\n{}", pad())
                 } else {
-                    format!("") 
+                    String::new()
                 },
             ).unwrap();
         } else {
-            write!(out, " [{}]", v.trim_end_matches('/')).unwrap();
+            write!(out, " [{}]", v.trim_end_matches('/'))
+                .unwrap();
         }
 
         if (c % 3) == 0 && c != len {
-            write!(out, "\n{}", pad()).unwrap();
+            write!(out, "\n{}", pad())
+                .unwrap();
         }
 
         c += 1;
@@ -99,7 +101,7 @@ pub fn info_00_01h(eax: u32, ebx: u32) {
 }
 
 pub fn feature_00_01h(ecx: u32, edx: u32) {
-    let mut buff: Vec<String> = vec![String::new(); 0];
+    let mut buff: Vec<String> = Vec::with_capacity(16);
 
     // 0x0000_0007_EDX_x0
     if bitflag!(edx,  0) { buff.push(format!("FPU"));  }
@@ -134,7 +136,7 @@ pub fn feature_00_07h() {
         let tmp = cpuid!(0x7, j);
         print_cpuid!(0x7, j, tmp);
 
-        let mut buff: Vec<String> = vec![String::new(); 0];
+        let mut buff: Vec<String> = Vec::with_capacity(48);
 
         match j {
             0 => {
@@ -242,7 +244,7 @@ pub fn feature_00_07h() {
 }
 
 pub fn feature_80_01h(ecx: u32, edx: u32) {
-    let mut buff: Vec<String> = vec![String::new(); 0];
+    let mut buff: Vec<String> = Vec::with_capacity(8);
 
     // 0x8000_0001_EDX_x0
     if bitflag!(edx, 31) {
