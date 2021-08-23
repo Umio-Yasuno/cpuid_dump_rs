@@ -142,6 +142,7 @@ fn main() {
 
     
     // TODO: align for cache line
+    #[repr(C)]
     #[derive(Clone)]
     struct Seq {
         v: Arc<AtomicIsize>,

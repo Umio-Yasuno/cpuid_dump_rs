@@ -39,11 +39,30 @@ macro_rules! has_ftr {
     };
 }
 
-pub fn pad() -> String {
-    format!("{:62}", "")
+macro_rules! push {
+    ($buff: expr, $str: expr) => {
+        $buff.push($str.to_string())
+    };
+}
+
+#[macro_export]
+macro_rules! pad {
+    () => { format!("{:62}", "") };
+}
+
+#[macro_export]
+macro_rules! padln {
+    () => { format!("\n{}", pad!()); };
 }
 
 fn print_feature(buff: Vec<String>) {
+
+    macro_rules! if_else {
+        ($expr:expr, $if:expr, $else:expr) => {
+            if $expr {$if} else {$else}
+        };
+    }
+
     let out = std::io::stdout();
     let mut out = out.lock();
 
@@ -54,30 +73,20 @@ fn print_feature(buff: Vec<String>) {
         if 9 < v.len() {
             write!(out, "{0} [{1}]{2}",
                 // {0}
-                if (c % 3) != 1 {
-                    format!("\n{}", pad())
-                } else {
-                    String::new()
-                },
+                if_else!((c%3) != 1, padln!(), format!("")),
 
                 // {1}
-                v.trim_end_matches('/'),
+                v,
 
                 // {2}
-                if (c % 3) != 0 && c != len {
-                    format!("\n{}", pad())
-                } else {
-                    String::new()
-                },
+                if_else!((c % 3) != 0 && c != len, padln!(), format!(""))
             ).unwrap();
         } else {
-            write!(out, " [{}]", v.trim_end_matches('/'))
-                .unwrap();
+            write!(out, " [{}]", v).unwrap();
         }
 
         if (c % 3) == 0 && c != len {
-            write!(out, "\n{}", pad())
-                .unwrap();
+            write!(out, "{}", padln!()).unwrap();
         }
 
         c += 1;
@@ -91,42 +100,45 @@ pub fn info_00_01h(eax: u32, ebx: u32) {
 
     print!(" [F: 0x{:X}, M: 0x{:X}, S: 0x{:X}]",
         x86_fam, x86_mod, x86_step);
-    let codename = cpuid_asm::codename::get_codename(x86_fam, x86_mod, x86_step);
-    print!("\n{} [{}]", pad(), codename);
+    let codename = cpuid_asm::get_codename(x86_fam, x86_mod, x86_step).codename;
+    print!("\n{} [{}]", pad!(), codename);
             
-    print!("\n{} [APIC ID: {}]", pad(), ebx >> 24);
-    print!("\n{} [Total {} thread]", pad(), (ebx >> 16) & 0xFF);
-    print!("\n{} [CLFlush: {}B]", pad(), ((ebx >> 8) & 0xFF) * 8);
-    print!("\n{}", pad());
+    print!("\n{} [APIC ID: {}]", pad!(), ebx >> 24);
+    print!("\n{} [Total {} thread]", pad!(), (ebx >> 16) & 0xFF);
+    print!("\n{} [CLFlush: {}B]", pad!(), ((ebx >> 8) & 0xFF) * 8);
+    //  print!("\n{}", pad!());
+    print!("{}", padln!());
 }
 
 pub fn feature_00_01h(ecx: u32, edx: u32) {
     let mut buff: Vec<String> = Vec::with_capacity(16);
 
     // 0x0000_0007_EDX_x0
-    if bitflag!(edx,  0) { buff.push(format!("FPU"));  }
-    if bitflag!(edx, 23) { buff.push(format!("MMX"));  }
-    if bitflag!(edx, 24) { buff.push(format!("FXSR")); }
-    if bitflag!(edx, 28) { buff.push(format!("HTT"));  }
+    if bitflag!(edx,  0) { push!(buff, "FPU");  }
+    if bitflag!(edx, 23) { push!(buff, "MMX");  }
+    if bitflag!(edx, 24) { push!(buff, "FXSR"); }
+    if bitflag!(edx, 28) { push!(buff, "HTT");  }
     if bitflag!(edx, 25) {
-        buff.push(format!("SSE{0}{1}{2}{3}",
-            has_ftr!(bitflag!(edx, 26), "/2"),
-            // 0x0000_0007_ECX_x0
-            has_ftr!(bitflag!(ecx,  0), "/3"),
-            has_ftr!(bitflag!(ecx, 19), "/4.1"),
-            has_ftr!(bitflag!(ecx, 20), "/4.2"),
-        ));
+        buff.push(
+            format!("SSE{0}{1}{2}{3}",
+                has_ftr!(bitflag!(edx, 26), "/2"),
+                // 0x0000_0007_ECX_x0
+                has_ftr!(bitflag!(ecx,  0), "/3"),
+                has_ftr!(bitflag!(ecx, 19), "/4.1"),
+                has_ftr!(bitflag!(ecx, 20), "/4.2"),
+            )
+        );
     }
     // 0x0000_0007_ECX_x0
-    if bitflag!(ecx, 12) { buff.push(format!("FMA"));      }
-    if bitflag!(ecx, 17) { buff.push(format!("PCID"));     }
-    if bitflag!(ecx, 23) { buff.push(format!("POPCNT"));   }
-    if bitflag!(ecx, 25) { buff.push(format!("AES"));      }
-    if bitflag!(ecx, 26) { buff.push(format!("XSAVE"));    }
-    if bitflag!(ecx, 27) { buff.push(format!("OSXSAVE"));  }
-    if bitflag!(ecx, 28) { buff.push(format!("AVX"));      }
-    if bitflag!(ecx, 29) { buff.push(format!("F16C"));     }
-    if bitflag!(ecx, 30) { buff.push(format!("RDRAND"));   }
+    if bitflag!(ecx, 12) { push!(buff, "FMA");      }
+    if bitflag!(ecx, 17) { push!(buff, "PCID");     }
+    if bitflag!(ecx, 23) { push!(buff, "POPCNT");   }
+    if bitflag!(ecx, 25) { push!(buff, "AES");      }
+    if bitflag!(ecx, 26) { push!(buff, "XSAVE");    }
+    if bitflag!(ecx, 27) { push!(buff, "OSXSAVE");  }
+    if bitflag!(ecx, 28) { push!(buff, "AVX");      }
+    if bitflag!(ecx, 29) { push!(buff, "F16C");     }
+    if bitflag!(ecx, 30) { push!(buff, "RDRAND");   }
 
     print_feature(buff);
 }
@@ -141,21 +153,21 @@ pub fn feature_00_07h() {
         match j {
             0 => {
                 // 0x00000007_EBX_x0
-                if bitflag!(tmp.ebx,  0) { buff.push(format!("FSGSBASE")); }
-                if bitflag!(tmp.ebx,  2) { buff.push(format!("SGX"));      }
+                if bitflag!(tmp.ebx,  0) { push!(buff, "FSGSBASE"); }
+                if bitflag!(tmp.ebx,  2) { push!(buff, "SGX");      }
                 if bitflag!(tmp.ebx,  3) {
                     buff.push(format!("BMI1{}",
                         has_ftr!(bitflag!(tmp.ebx, 8), "/2"),
                     ));
                 }
-                if bitflag!(tmp.ebx,  5) { buff.push(format!("AVX2"));         }
-                if bitflag!(tmp.ebx,  7) { buff.push(format!("SMEP"));         }
-                if bitflag!(tmp.ebx, 10) { buff.push(format!("INVPCID"));      }
-                if bitflag!(tmp.ebx, 18) { buff.push(format!("RDSEED"));       }
-                if bitflag!(tmp.ebx, 20) { buff.push(format!("SMAP"));         }
-                if bitflag!(tmp.ebx, 23) { buff.push(format!("CLFLUSHOPT"));   }
-                if bitflag!(tmp.ebx, 24) { buff.push(format!("CLWB"));         }
-                if bitflag!(tmp.ebx, 29) { buff.push(format!("SHA"));          }
+                if bitflag!(tmp.ebx,  5) { push!(buff, "AVX2");         }
+                if bitflag!(tmp.ebx,  7) { push!(buff, "SMEP");         }
+                if bitflag!(tmp.ebx, 10) { push!(buff, "INVPCID");      }
+                if bitflag!(tmp.ebx, 18) { push!(buff, "RDSEED");       }
+                if bitflag!(tmp.ebx, 20) { push!(buff, "SMAP");         }
+                if bitflag!(tmp.ebx, 23) { push!(buff, "CLFLUSHOPT");   }
+                if bitflag!(tmp.ebx, 24) { push!(buff, "CLWB");         }
+                if bitflag!(tmp.ebx, 29) { push!(buff, "SHA");          }
 
                 if bitflag!(tmp.ebx, 16) || bitflag!(tmp.ebx, 17) || bitflag!(tmp.ebx, 21)
                 || bitflag!(tmp.ebx, 28) || bitflag!(tmp.ebx, 30) || bitflag!(tmp.ebx, 31) {
@@ -166,13 +178,14 @@ pub fn feature_00_07h() {
                             has_ftr!(bitflag!(tmp.ebx, 21), "IFMA/"),
                             has_ftr!(bitflag!(tmp.ebx, 28), "CD/"),
                             has_ftr!(bitflag!(tmp.ebx, 30), "BW/"),
-                            has_ftr!(bitflag!(tmp.ebx, 31), "VL/"),
-                        )
+                            has_ftr!(bitflag!(tmp.ebx, 31), "VL/")
+                        ).trim_end_matches("/").to_string()
                     );
                 }
+
                 /*  Xeon Phi only */
                 if bitflag!(tmp.ebx, 26) && bitflag!(tmp.ebx, 27) {
-                    buff.push(format!("AVX512PF/ER"));
+                    push!(buff, "AVX512PF/ER");
                 }
 
                 // 0x00000007_ECX_x0
@@ -185,23 +198,24 @@ pub fn feature_00_07h() {
                             has_ftr!(bitflag!(tmp.ecx, 11), "VNNI/"),
                             has_ftr!(bitflag!(tmp.ecx, 12), "BITALG/"),
                             has_ftr!(bitflag!(tmp.ecx, 14), "VPOPCNTDQ/"),
-                    ));
+                        ).trim_end_matches("/").to_string()
+                    );
                 }
 
-                if bitflag!(tmp.ecx,  3) { buff.push(format!("PKU"));          }
-                if bitflag!(tmp.ecx,  7) { buff.push(format!("CET_SS"));       }
-                if bitflag!(tmp.ecx,  8) { buff.push(format!("Gpub fnI"));         }
-                if bitflag!(tmp.ecx,  9) { buff.push(format!("VAES"));         }
-                if bitflag!(tmp.ecx, 10) { buff.push(format!("VPCLMULQDQ"));   }
-                //  if bitflag!(tmp.ecx, 22) { buff.push(format!("RDPID"));        }
-                if bitflag!(tmp.ecx, 23) { buff.push(format!("KL"));           }
-                if bitflag!(tmp.ecx, 25) { buff.push(format!("CLDEMOTE"));     }
+                if bitflag!(tmp.ecx,  3) { push!(buff, "PKU");          }
+                if bitflag!(tmp.ecx,  7) { push!(buff, "CET_SS");       }
+                if bitflag!(tmp.ecx,  8) { push!(buff, "GFNI");         }
+                if bitflag!(tmp.ecx,  9) { push!(buff, "VAES");         }
+                if bitflag!(tmp.ecx, 10) { push!(buff, "VPCLMULQDQ");   }
+                //  if bitflag!(tmp.ecx, 22) { push!(buff, "RDPID");        }
+                if bitflag!(tmp.ecx, 23) { push!(buff, "KL");           }
+                if bitflag!(tmp.ecx, 25) { push!(buff, "CLDEMOTE");     }
                 if bitflag!(tmp.ecx, 27) {
                     buff.push(format!("MOVDIRI{}",
                         has_ftr!(bitflag!(tmp.ecx, 28), "/64B"),
                     ));
                 }
-                if bitflag!(tmp.ecx, 29) { buff.push(format!("ENQCMD"));       }
+                if bitflag!(tmp.ecx, 29) { push!(buff, "ENQCMD");   }
 
                 // 0x00000007_EDX_x0
                 if bitflag!(tmp.edx,  2) || bitflag!(tmp.edx,  3) || bitflag!(tmp.edx, 8)
@@ -213,28 +227,29 @@ pub fn feature_00_07h() {
                                 "4VNNIW/4FMAPS/"),
                             has_ftr!(bitflag!(tmp.edx,  8), "VP2INTERSECT/"),
                             has_ftr!(bitflag!(tmp.edx, 23), "FP16/"),
-                    ));
+                        ).trim_end_matches("/").to_string()
+                    );
                 }
-                if bitflag!(tmp.edx,  4) { buff.push(format!("FSRM"));         }
-                if bitflag!(tmp.edx,  5) { buff.push(format!("UINTR"));        }
-                //  if bitflag!(tmp.edx,  8) { buff.push(format!("AVX512_VP2INTERSECT"));  }
-                if bitflag!(tmp.edx, 10) { buff.push(format!("MD_CLEAR"));     }
-                if bitflag!(tmp.edx, 14) { buff.push(format!("SERIALIZE"));    }
-                /*  Currently Sapphire Rapids only */
+                if bitflag!(tmp.edx,  4) { push!(buff, "FSRM");         }
+                if bitflag!(tmp.edx,  5) { push!(buff, "UINTR");        }
+                //  if bitflag!(tmp.edx,  8) { push!(buff, "AVX512_VP2INTERSECT");  }
+                if bitflag!(tmp.edx, 10) { push!(buff, "MD_CLEAR");     }
+                if bitflag!(tmp.edx, 14) { push!(buff, "SERIALIZE");    }
+                /*  Currently Intel Sapphire Rapids only */
                 if bitflag!(tmp.edx, 22) && bitflag!(tmp.edx, 24) && bitflag!(tmp.edx, 25) {
-                    buff.push(format!("AMX-BF16/TILE/INT8"));
+                    push!(buff, format!("AMX-BF16/TILE/INT8"));
                 }
-                //  if bitflag!(tmp.edx, 23) { buff.push(format!("AVX512_FP16"));  }
-                if bitflag!(tmp.edx, 26) { buff.push(format!("IBPB"));         }
-                if bitflag!(tmp.edx, 27) { buff.push(format!("STIBP"));        }
-                if bitflag!(tmp.edx, 28) { buff.push(format!("L1D_FLUSH"));    }
-                if bitflag!(tmp.edx, 31) { buff.push(format!("SSBD"));         }
+                //  if bitflag!(tmp.edx, 23) { push!(buff, format!("AVX512_FP16"));  }
+                if bitflag!(tmp.edx, 26) { push!(buff, "IBPB");         }
+                if bitflag!(tmp.edx, 27) { push!(buff, "STIBP");        }
+                if bitflag!(tmp.edx, 28) { push!(buff, "L1D_FLUSH");    }
+                if bitflag!(tmp.edx, 31) { push!(buff, "SSBD");         }
             },
             1 => {
-                if bitflag!(tmp.eax,  4) { buff.push(format!("AVX_VNNI"));     }
-                if bitflag!(tmp.eax,  5) { buff.push(format!("AVX512_BF16"));  }
-                if bitflag!(tmp.eax, 22) { buff.push(format!("HRESET"));       }
-                if bitflag!(tmp.eax, 26) { buff.push(format!("LAM"));          }
+                if bitflag!(tmp.eax,  4) { push!(buff, "AVX_VNNI");     }
+                if bitflag!(tmp.eax,  5) { push!(buff, "AVX512_BF16");  }
+                if bitflag!(tmp.eax, 22) { push!(buff, "HRESET");       }
+                if bitflag!(tmp.eax, 26) { push!(buff, "LAM");          }
             },
             _ => unreachable!(),
         }
@@ -254,11 +269,11 @@ pub fn feature_80_01h(ecx: u32, edx: u32) {
     }
 
     // 0x8000_0001_ECX_x0
-    if bitflag!(ecx,  0) { buff.push(format!("LAHF/SAHF"));            }
-    if bitflag!(ecx,  5) { buff.push(format!("LZCNT"));                }
-    if bitflag!(ecx,  6) { buff.push(format!("SSE4A"));                }
-    if bitflag!(ecx,  8) { buff.push(format!("3DNow!Prefetch"));       }
-    if bitflag!(ecx, 16) { buff.push(format!("FMA4"));                 }
+    if bitflag!(ecx,  0) { push!(buff, "LAHF/SAHF");        }
+    if bitflag!(ecx,  5) { push!(buff, "LZCNT");            }
+    if bitflag!(ecx,  6) { push!(buff, "SSE4A");            }
+    if bitflag!(ecx,  8) { push!(buff, "3DNow!Prefetch");   }
+    if bitflag!(ecx, 16) { push!(buff, "FMA4");             }
 
     print_feature(buff);
 }
@@ -297,11 +312,11 @@ pub fn cache_prop(in_eax: u32) {
         print_cpuid!(in_eax, ecx, tmp);
         print!(" [L{} {:>7}: {:>3}-way, {:>4}]",
             cache_level, cache_type, cache_way, cache_size_unit);
-        print!("\n{} [shared {}T]", pad(), cache_share_thread);
+        print!("\n{} [shared {}T]", pad!(), cache_share_thread);
 
         let cache_inclusive = (tmp.edx >> 1) & 0b1;
         if cache_inclusive == 1 {
-            print!("\n{} [inclusive]", pad());
+            print!("\n{} [inclusive]", pad!());
         }
         println!();
     }    

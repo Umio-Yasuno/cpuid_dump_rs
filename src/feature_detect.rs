@@ -38,15 +38,15 @@ impl Bmi {
 }
 
 // https://gitlab.com/x86-psABIs/x86-64-ABI
-pub struct x86_64_abi {
+pub struct X86_64Abi {
     pub v1: bool,
     pub v2: bool,
     pub v3: bool,
     pub v4: bool,
 }
 
-impl x86_64_abi {
-    pub fn get() -> x86_64_abi {
+impl X86_64Abi {
+    pub fn get() -> X86_64Abi {
         let lf_01h      = cpuid!(0x1, 0);
         let lf_07h      = cpuid!(0x7, 0);
         let lf_80_01h   = cpuid!(_AX + 0x1, 0);
@@ -133,7 +133,7 @@ impl x86_64_abi {
         let _x86_64_v4  = _x86_64_v3 && _has_avx512_f && _has_avx512_bw
                         && _has_avx512_cd && _has_avx512_dq && _has_avx512_vl;
 
-        return x86_64_abi {
+        return X86_64Abi {
             v1:     _x86_64_v1,
             v2:     _x86_64_v2,
             v3:     _x86_64_v3,
