@@ -11,7 +11,7 @@
 extern crate libc;
 */
 #[cfg(target_os = "linux")]
-use libc::{cpu_set_t, CPU_SET, CPU_ISSET, CPU_ZERO, sched_setaffinity, sched_getaffinity};
+use libc::{cpu_set_t, CPU_SET, CPU_ISSET, CPU_ZERO, CPU_SETSIZE, sched_setaffinity, sched_getaffinity};
 
 #[cfg(target_os = "windows")]
 use kernel32::{GetCurrentThread, SetThreadAffinityMask};
@@ -23,11 +23,11 @@ use std::{mem, thread, time};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicIsize, Ordering};
 
-fn print_matrix  (title: &str, result: Vec<Vec<u128>>,
+fn print_matrix (title: &str, result: Vec<Vec<u128>>,
                 cpu_list: &Vec<usize>, ncpu: usize, opt: &Opt) {
 
     macro_rules! md_table { ($opt: expr) => {
-        if $opt { " |" } else { "" };
+            if $opt { " |" } else { "" }
         }
     }
 
@@ -38,7 +38,10 @@ fn print_matrix  (title: &str, result: Vec<Vec<u128>>,
         println!("set cblabel \"Latency (ns)\"");
         println!("$data << EOD");
     } else {
-        println!("\n{}[{} (ns)]", if opt.md { "#### " } else { "" }, title );
+        println!("\n{}[{} (ns)]",
+            if opt.md { "#### " } else { "" },
+            title
+        );
     }
 
     print!(" CPU{}", md_table!(opt.md));
@@ -110,7 +113,6 @@ fn main() {
         i += 1;
     }
 
-    let ncpu = cpuid_asm::CpuCoreCount::get();
     let mut cpus: Vec<usize> = Vec::new();
 
     #[cfg(target_os = "linux")]
@@ -124,14 +126,14 @@ fn main() {
             return;
         }
 
-        for i in 0..(ncpu.total_thread) as usize {
+        for i in 0..CPU_SETSIZE as usize {
             if CPU_ISSET(i, &set) {
                 cpus.push(i);
             }
         }
     }
     #[cfg(target_os = "windows")]
-    for i in 0..(ncpu.total_thread) as usize {
+    for i in 0..CPU_SETSIZE as usize {
         cpus.push(i);
     }
 
@@ -142,8 +144,7 @@ fn main() {
 
     
     // TODO: align for cache line
-    #[repr(C)]
-    #[derive(Clone)]
+    #[repr(C)]  #[derive(Clone)]
     struct Seq {
         v: Arc<AtomicIsize>,
         _pad: Vec<Arc<AtomicIsize>>,
@@ -159,11 +160,12 @@ fn main() {
             }
         }
     }
-    let seq1 = Seq::set();
-    let seq2 = Seq::set();
 
     for i in 0..(ncpu) {
         for j in (i+1)..(ncpu) {
+
+            let seq1 = Seq::set();
+            let seq2 = Seq::set();
 
             let _seq1 = seq1.clone();
             let _seq2 = seq2.clone();
@@ -180,7 +182,7 @@ fn main() {
                 }
             });
 
-            let mut perf: u128;
+            //  let mut perf: u128;
             let mut tmp: u128 = u128::MAX;
             let mut avg: u128 = 0;
 
@@ -196,7 +198,7 @@ fn main() {
                     while seq2.v.load(Ordering::Acquire) != n {}
                 }
 
-                perf = start.elapsed().as_nanos();
+                let perf: u128 = start.elapsed().as_nanos();
 
                 tmp = std::cmp::min(tmp, perf);
                 if _m != 0 {  // pin_thread cost
