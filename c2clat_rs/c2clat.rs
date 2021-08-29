@@ -23,20 +23,33 @@ use std::{mem, thread, time};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicIsize, Ordering};
 
+fn help_txt() {
+    print!("\
+        Original:\n\
+        \x20    c2clat 1.0.0 © 2020 Erik Rigtorp <erik@rigtorp.se>\n\
+        \x20    https://github.com/rigtorp/c2clat\n\
+        \n\
+        usage: c2clat [-p] [-s number_of_samples]\n\
+        Plot results using gnuplot:\n\
+        c2clat -p | gnuplot -p\n\
+    \n");
+}
+
 fn print_matrix (title: &str, result: Vec<Vec<u128>>,
                 cpu_list: &Vec<usize>, ncpu: usize, opt: &Opt) {
 
-    macro_rules! md_table { ($opt: expr) => {
-            if $opt { " |" } else { "" }
-        }
+    macro_rules! md_table {
+        ($opt: expr) => { if $opt { " |" } else { "" } }
     }
 
     if opt.plot {
         println!("set title \"Inter-core one-way data latency between CPU cores [{}]\"", title);
-        println!("set xlabel \"CPU\"");
-        println!("set ylabel \"CPU\"");
-        println!("set cblabel \"Latency (ns)\"");
-        println!("$data << EOD");
+        print!("\
+            set xlabel \"CPU\"\n\
+            set ylabel \"CPU\"\n\
+            set cblabel \"Latency (ns)\"\n\
+            $data << EOD\n\
+        ");
     } else {
         println!("\n{}[{} (ns)]",
             if opt.md { "#### " } else { "" },
@@ -65,9 +78,11 @@ fn print_matrix (title: &str, result: Vec<Vec<u128>>,
     }
 
     if opt.plot {
-        println!("EOD");
-        print!("plot '$data' matrix rowheaders columnheaders using 2:1:3 ");
-        println!("with image");
+        print!("\
+            EOD\n\
+            plot '$data' matrix rowheaders columnheaders using 2:1:3 \n\
+            with image\n\
+        ");
     }
     println!();
 }
@@ -78,9 +93,9 @@ struct Opt {
 }
 
 fn main() {
-    let mut NSAMPLES: isize= 1_000;
+    let mut nsamples: isize= 1_000;
 
-    let mut opt = Opt { md: false, plot: false, };
+    let mut opt = Opt { md: false, plot: false };
 
     let opt_args: Vec<String> = std::env::args().collect();
 
@@ -99,15 +114,16 @@ fn main() {
             opt.md   = false;
             opt.plot = true;
         } else if v == "-n" {
-            NSAMPLES = opt_args[i+1].parse::<isize>()
+            nsamples = opt_args[i+1].parse::<isize>()
                 .expect("Please number");
 
-            if NSAMPLES <= 1 {
+            if nsamples <= 1 {
                 return;
             }
             i += 2;
             continue;
         } else {
+            help_txt();
             return;
         }
         i += 1;
@@ -175,7 +191,7 @@ fn main() {
             let t = thread::spawn(move || {
                 pin_thread!(c);
                 for _m in 0..100 {
-                    for n in 0..NSAMPLES {
+                    for n in 0..nsamples {
                         while _seq1.v.load(Ordering::Acquire) != n {}
                         _seq2.v.store(n, Ordering::Release);
                     }
@@ -193,7 +209,7 @@ fn main() {
 
                 let start = time::Instant::now();
 
-                for n in 0..NSAMPLES {
+                for n in 0..nsamples {
                     seq1.v.store(n, Ordering::Release);
                     while seq2.v.load(Ordering::Acquire) != n {}
                 }
@@ -208,21 +224,23 @@ fn main() {
 
             t.join().unwrap();
 
-            min_result[i][j] = tmp / NSAMPLES as u128 / 2;
-            min_result[j][i] = tmp / NSAMPLES as u128 / 2;
+            min_result[i][j] = tmp / nsamples as u128 / 2;
+            min_result[j][i] = tmp / nsamples as u128 / 2;
 
-            avg_result[i][j] = avg / NSAMPLES as u128 / (100-1) / 2;
-            avg_result[j][i] = avg / NSAMPLES as u128 / (100-1) / 2;
+            avg_result[i][j] = avg / nsamples as u128 / (100-1) / 2;
+            avg_result[j][i] = avg / nsamples as u128 / (100-1) / 2;
         }
     }
 
     if opt.plot {
-        println!("reset");
-        println!("unset key");
-        println!("set auto noextend");
-        println!("set multiplot layout 2,1");
-        println!("set size ratio 1");
-        println!("set palette color negative");
+        print!("\
+            reset\n\
+            unset key\n\
+            set auto noextend\n\
+            set multiplot layout 2,1\n\
+            set size ratio 1\n\
+            set palette color negative\n\
+        ");
     }
     
     print_matrix("min", min_result, &cpus, ncpu, &opt);
