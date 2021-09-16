@@ -1,8 +1,6 @@
 //  Copyright (c) 2021 Umio Yasuno
 //  SPDX-License-Identifier: MIT
 
-#![allow(dead_code)]
-
 use core::arch::x86_64::{__cpuid_count, CpuidResult};
 
 pub mod feature_detect;

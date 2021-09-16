@@ -7,7 +7,7 @@ use core::arch::x86_64::{__cpuid_count, CpuidResult};
 #[macro_export]
 macro_rules! bitflag {
     ($x: expr, $pos: expr) => {
-        (($x >> $pos) & 1) == 1;
+        (($x >> $pos) & 1) == 1
     }
 }
 
