@@ -199,8 +199,8 @@ fn main() {
             });
 
             //  let mut perf: u128;
-            let mut tmp: u128 = u128::MAX;
-            let mut avg: u128 = 0;
+            let mut tmp = u128::MAX;
+            let mut avg = 0u128;
 
             pin_thread!(cpus[j]);
             for _m in 0..100 {
@@ -214,7 +214,8 @@ fn main() {
                     while seq2.v.load(Ordering::Acquire) != n {}
                 }
 
-                let perf: u128 = start.elapsed().as_nanos();
+                let perf = start.elapsed();
+                let perf = perf.as_nanos();
 
                 tmp = std::cmp::min(tmp, perf);
                 if _m != 0 {  // pin_thread cost
