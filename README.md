@@ -1,9 +1,3 @@
-## ToDo
-
- * [x] Cache info of Intel CPU 
- * [x] Core Affinity
-    * [ ] Support for Windows OS
-
 ## Usage
 ### cpuid_dump
 
