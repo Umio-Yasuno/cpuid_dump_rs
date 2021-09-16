@@ -8,9 +8,9 @@ use cpuid_asm::{cpuid, bitflag};
 
 use std::io::Write;
 
-#[path = "./parse_amd.rs"]
+#[path = "./_parse/parse_amd.rs"]
     mod parse_amd;  pub use parse_amd::*;
-#[path = "./parse_intel.rs"]
+#[path = "./_parse/parse_intel.rs"]
     mod parse_intel;  pub use parse_intel::*;
 
 #[macro_export]
@@ -52,7 +52,7 @@ macro_rules! pad {
 
 #[macro_export]
 macro_rules! padln {
-    () => { format!("\n{}", pad!()); };
+    () => { format!("\n{}", pad!()) };
 }
 
 fn print_feature(buff: Vec<String>) {

@@ -122,7 +122,7 @@ pub fn spec_amd_80_08h(ebx: u32) {
 }
 
 pub fn fpu_width_amd_80_1ah(eax: u32) {
-    let fp256 = bitflag!(eax, 3);
+    let fp256 = bitflag!(eax, 2);
     let movu  = bitflag!(eax, 1);
     let fp128 = bitflag!(eax, 0);
 
