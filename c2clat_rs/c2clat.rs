@@ -160,7 +160,8 @@ fn main() {
 
     
     // TODO: align for cache line
-    #[repr(C)]  #[derive(Clone)]
+    #[derive(Clone)]
+    #[repr(C, packed)]
     struct Seq {
         v: Arc<AtomicIsize>,
         _pad: Vec<Arc<AtomicIsize>>,
@@ -204,8 +205,8 @@ fn main() {
 
             pin_thread!(cpus[j]);
             for _m in 0..100 {
-                seq1.v.store(-1, Ordering::Release);
-                seq2.v.store(-1, Ordering::Release);
+                //  seq1.v.store(-1, Ordering::Release);
+                //  seq2.v.vstore(-1, Ordering::Release);
 
                 let start = time::Instant::now();
 

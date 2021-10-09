@@ -53,7 +53,10 @@ fn dump() {
             cache_prop(0x4);
             continue;
         } else if i == 0x7 {
-            feature_00_07h();
+            feature_00_07h_x0();
+            if vendor_intel {
+                feature_00_07h_x1();
+            }
             continue;
         } else if i == 0xB {
             for j in 0..=1 {
@@ -105,22 +108,16 @@ fn dump() {
         }
 
         if vendor_amd {
-            if i == 0x5 {
-                l1_amd_80_05h(tmp);
-            } else if i == 0x6 {
-                l2_amd_80_06h(tmp);
-            } else if i == 0x7 {
-                apmi_amd_80_07h(tmp.edx);
-            } else if i == 0x8 {
-                spec_amd_80_08h(tmp.ebx);
-            } else if i == 0x19 {
-                l1l2tlb_1g_amd_80_19h(tmp.eax, tmp.ebx);
-            } else if i == 0x1A {
-                fpu_width_amd_80_1ah(tmp.eax);
-            } else if i == 0x1E {
-                cpu_topo_amd_80_1eh(tmp.ebx, tmp.ecx);
-            } else if i == 0x1F {
-                secure_amd_80_1fh(tmp.eax);
+            match i {
+                0x5     =>  l1_amd_80_05h(tmp),
+                0x6     =>  l2_amd_80_06h(tmp),
+                0x7     =>  apmi_amd_80_07h(tmp.edx),
+                0x8     =>  spec_amd_80_08h(tmp.ebx),
+                0x19    =>  l1l2tlb_1g_amd_80_19h(tmp.eax, tmp.ebx),
+                0x1A    =>  fpu_width_amd_80_1ah(tmp.eax),
+                0x1E    =>  cpu_topo_amd_80_1eh(tmp.ebx, tmp.ecx),
+                0x1F    =>  secure_amd_80_1fh(tmp.eax),
+                _   => {},
             }
         }
         println!();

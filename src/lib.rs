@@ -5,6 +5,7 @@ use core::arch::x86_64::{__cpuid_count, CpuidResult};
 
 pub mod feature_detect;
 mod codename;   pub use codename::*;
+pub mod cpuid_macro;
 
 pub const _AX: u32 = 0x8000_0000;
 

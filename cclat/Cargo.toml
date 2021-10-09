@@ -1,5 +1,5 @@
 [package]
-name = "stream_bench"
+name = "cclat"
 version = "0.1.0"
 edition = "2018"
 
@@ -8,10 +8,5 @@ edition = "2018"
 [dependencies]
 
 [[bin]]
-name = "stream_bench"
-path = "stream_bench.rs"
-
-[profile.release]
-panic = "abort"
-opt-level = 3
-debug = 0
+name = "cclat"
+path = "./cclat.rs"

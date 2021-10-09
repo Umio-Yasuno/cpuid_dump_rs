@@ -18,7 +18,8 @@ fn main() {
 for _i in 0..10 {
     let start = time::Instant::now();
         stream_copy(&src, &mut _dst);
-    let end = start.elapsed().as_secs_f64();
+    let end = start.elapsed();
+    let end = end.as_secs_f64();
 
     print!("\t{} MiB\n", mem::size_of::<usize>() * array / (1 << 20) );
     let mbw: f64 = mem::size_of::<f64>() as f64 * array as f64 / (1 << 20) as f64;
@@ -36,20 +37,10 @@ for _i in 0..10 {
 
 #[inline(always)]
 fn stream_copy(src: &Vec<f64>, _dst: &mut Vec<f64>) {
+/*
     unsafe {
         ptr::copy_nonoverlapping(src.as_ptr(), _dst.as_mut_ptr(), src.len());
     }
-        return;
-/*
-    for j in 0..(src.len()) {
-        _dst[j] = src[j];
-        /*
-        unsafe {
-            asm!("mov {}, {}",
-                lateout(reg) _dst[j],
-                in(reg) src[j],
-            );
-        }*/
-    }
 */
+    _dst.copy_from_slice(&src[..]);
 }

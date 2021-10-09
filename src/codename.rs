@@ -2,9 +2,9 @@
 //  SPDX-License-Identifier: MIT
 
 #[path = "./_codename/codename_amd.rs"]
-    mod codename_amd;       use codename_amd::*;
+    mod codename_amd;   use codename_amd::*;
 #[path = "./_codename/codename_intel.rs"]
-    mod codename_intel;     use codename_intel::*;
+    mod codename_intel; use codename_intel::*;
 
 pub struct ProcInfo {
     pub codename:   String,
