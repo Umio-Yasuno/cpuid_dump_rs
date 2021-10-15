@@ -80,8 +80,7 @@ fn print_matrix (title: &str, result: Vec<Vec<u128>>,
     if opt.plot {
         print!("\
             EOD\n\
-            plot '$data' matrix rowheaders columnheaders using 2:1:3 \n\
-            with image\n\
+            plot '$data' matrix rowheaders columnheaders using 2:1:3 with image\n\
         ");
     }
     println!();
@@ -161,7 +160,6 @@ fn main() {
     
     // TODO: align for cache line
     #[derive(Clone)]
-    #[repr(C, packed)]
     struct Seq {
         v: Arc<AtomicIsize>,
         _pad: Vec<Arc<AtomicIsize>>,
@@ -172,17 +170,17 @@ fn main() {
 
             return Seq {
                 v: Arc::new(AtomicIsize::new(-1)),
-                _pad: vec![Arc::new(AtomicIsize::new(0));
-                            (line as usize / mem::size_of::<isize>()) - 1],
+                _pad: vec![Arc::new(AtomicIsize::new(-1));
+                            (line as usize / mem::size_of::<isize>()) * 3],
             }
         }
     }
 
     for i in 0..(ncpu) {
-        for j in (i+1)..(ncpu) {
+        let seq1 = Seq::set();
+        let seq2 = Seq::set();
 
-            let seq1 = Seq::set();
-            let seq2 = Seq::set();
+        for j in (i+1)..(ncpu) {
 
             let _seq1 = seq1.clone();
             let _seq2 = seq2.clone();
@@ -199,15 +197,11 @@ fn main() {
                 }
             });
 
-            //  let mut perf: u128;
             let mut tmp = u128::MAX;
             let mut avg = 0u128;
 
             pin_thread!(cpus[j]);
             for _m in 0..100 {
-                //  seq1.v.store(-1, Ordering::Release);
-                //  seq2.v.vstore(-1, Ordering::Release);
-
                 let start = time::Instant::now();
 
                 for n in 0..nsamples {
@@ -219,7 +213,7 @@ fn main() {
                 let perf = perf.as_nanos();
 
                 tmp = std::cmp::min(tmp, perf);
-                if _m != 0 {  // pin_thread cost
+                if _m != 0 {    // pin_thread cost
                     avg += perf;
                 }
             }
@@ -227,10 +221,10 @@ fn main() {
             t.join().unwrap();
 
             min_result[i][j] = tmp / nsamples as u128 / 2;
-            min_result[j][i] = tmp / nsamples as u128 / 2;
+            min_result[j][i] = min_result[i][j];
 
             avg_result[i][j] = avg / nsamples as u128 / (100-1) / 2;
-            avg_result[j][i] = avg / nsamples as u128 / (100-1) / 2;
+            avg_result[j][i] = avg_result[i][j];
         }
     }
 
