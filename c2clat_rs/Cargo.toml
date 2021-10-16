@@ -25,5 +25,5 @@ path = "c2clat.rs"
 
 [profile.release]
 panic = "abort"
-opt-level = 3
+opt-level = 2
 debug = 0

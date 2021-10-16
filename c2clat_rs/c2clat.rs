@@ -35,7 +35,7 @@ fn help_txt() {
     \n");
 }
 
-fn print_matrix (title: &str, result: Vec<Vec<u128>>,
+fn print_matrix(title: &str, result: Vec<Vec<u128>>,
                 cpu_list: &Vec<usize>, ncpu: usize, opt: &Opt) {
 
     macro_rules! md_table {
@@ -45,10 +45,10 @@ fn print_matrix (title: &str, result: Vec<Vec<u128>>,
     if opt.plot {
         println!("set title \"Inter-core one-way data latency between CPU cores [{}]\"", title);
         print!("\
-            set xlabel \"CPU\"\n\
-            set ylabel \"CPU\"\n\
-            set cblabel \"Latency (ns)\"\n\
-            $data << EOD\n\
+            set x2label \"CPU\"          \n\
+            set ylabel \"CPU\"           \n\
+            set cblabel \"Latency (ns)\" \n\
+            $data << EOD                 \n\
         ");
     } else {
         println!("\n{}[{} (ns)]",
@@ -76,19 +76,21 @@ fn print_matrix (title: &str, result: Vec<Vec<u128>>,
         }
         println!();
     }
-
+    
     if opt.plot {
         print!("\
             EOD\n\
-            plot '$data' matrix rowheaders columnheaders using 2:1:3 with image\n\
-        ");
+            plot \
+            '$data' matrix rowheaders columnheaders using 2:1:3 with image, \
+            '' matrix rowheaders columnheaders using 2:1:( sprintf(\"%g\",$3) ) with labels \
+        \n");
     }
     println!();
 }
 
 struct Opt {
-    md:     bool,
-    plot:   bool,
+    md:   bool,
+    plot: bool,
 }
 
 fn main() {
@@ -166,12 +168,12 @@ fn main() {
     }
     impl Seq {
         fn set() -> Seq {
-            let line = cpuid_asm::CacheInfo::get().l1d_line;
+            let line = cpuid_asm::CacheInfo::get().l1d_line as usize;
 
             return Seq {
                 v: Arc::new(AtomicIsize::new(-1)),
                 _pad: vec![Arc::new(AtomicIsize::new(-1));
-                            (line as usize / mem::size_of::<isize>()) * 3],
+                            (line / mem::size_of::<isize>()) - 1],
             }
         }
     }
@@ -230,12 +232,12 @@ fn main() {
 
     if opt.plot {
         print!("\
-            reset\n\
-            unset key\n\
-            set auto noextend\n\
-            set multiplot layout 2,1\n\
-            set size ratio 1\n\
-            set palette color negative\n\
+            reset                                       \n\
+            unset key                                   \n\
+            set auto noextend                           \n\
+            set autoscale fix                           \n\
+            set multiplot layout 2,1                    \n\
+            set palette defined (0 'white', 1 'orange') \n\
         ");
     }
     
