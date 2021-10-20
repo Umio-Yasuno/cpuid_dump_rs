@@ -1,10 +1,10 @@
 //  Copyright (c) 2021 Umio Yasuno
 //  SPDX-License-Identifier: MIT
 
-use core::arch::x86_64::{__cpuid_count, CpuidResult};
+use core::arch::x86_64::{CpuidResult, __cpuid_count};
 
 extern crate cpuid_asm;
-use cpuid_asm::{_AX, cpuid, bitflag, Vendor};
+use cpuid_asm::{bitflag, cpuid, Vendor, _AX};
 
 mod parse;
 use crate::parse::*;
@@ -19,30 +19,33 @@ use libc::{cpu_set_t, CPU_SET, CPU_ZERO, sched_setaffinity};
 use kernel32::{GetCurrentThread, SetThreadAffinityMask};
 */
 
-use std::{mem, thread};
 use std::io::Write;
+use std::{mem, thread};
 //  use std::fmt::write;
 
 fn dump() {
-    println!("CPUID Dump");
-    println!(" (in)EAX_xECX:  {:<9} {:<9} {:<9} {:<9}",
-        "(out)EAX", "(out)EBX", "(out)ECX", "(out)EDX");
-    
+    println!(
+        " (in)EAX_xECX:  {:<9} {:<9} {:<9} {:<9}",
+        "(out)EAX", "(out)EBX", "(out)ECX", "(out)EDX"
+    );
+
     let mut buff = String::new();
     for _i in 0..80 {
         buff.push_str("=");
     }
     println!("{}", buff);
 
-    let vendor_amd   = Vendor::check_amd();
+    let vendor_amd = Vendor::check_amd();
     let vendor_intel = Vendor::check_intel();
 
     for i in 0..=0x20 {
         if vendor_amd {
             if (0x2 <= i && i <= 0x4)
-            || (0x8 <= i && i <= 0xA)
-            || (0xC == i) || (0xE == i)
-            || (0x11 <= i) {
+                || (0x8 <= i && i <= 0xA)
+                || (0xC == i)
+                || (0xE == i)
+                || (0x11 <= i)
+            {
                 continue;
             } else if i == 0xD {
                 enum_amd_0dh();
@@ -109,15 +112,15 @@ fn dump() {
 
         if vendor_amd {
             match i {
-                0x5     =>  l1_amd_80_05h(tmp),
-                0x6     =>  l2_amd_80_06h(tmp),
-                0x7     =>  apmi_amd_80_07h(tmp.edx),
-                0x8     =>  spec_amd_80_08h(tmp.ebx),
-                0x19    =>  l1l2tlb_1g_amd_80_19h(tmp.eax, tmp.ebx),
-                0x1A    =>  fpu_width_amd_80_1ah(tmp.eax),
-                0x1E    =>  cpu_topo_amd_80_1eh(tmp.ebx, tmp.ecx),
-                0x1F    =>  secure_amd_80_1fh(tmp.eax),
-                _   => {},
+                0x5 => l1_amd_80_05h(tmp),
+                0x6 => l2_amd_80_06h(tmp),
+                0x7 => apmi_amd_80_07h(tmp.edx),
+                0x8 => spec_amd_80_08h(tmp.ebx),
+                0x19 => l1l2tlb_1g_amd_80_19h(tmp.eax, tmp.ebx),
+                0x1A => fpu_width_amd_80_1ah(tmp.eax),
+                0x1E => cpu_topo_amd_80_1eh(tmp.ebx, tmp.ecx),
+                0x1F => secure_amd_80_1fh(tmp.eax),
+                _ => {}
             }
         }
         println!();
@@ -136,8 +139,9 @@ fn dump_all() {
             println!("Core ID: {:>3} / Thread: {:>3}", id, i);
 
             dump();
-
-        }).join().unwrap();
+        })
+        .join()
+        .unwrap();
     }
 }
 
@@ -181,16 +185,19 @@ fn raw_dump_all() {
     for i in 0..(thread_count) as usize {
         thread::spawn(move || {
             cpuid_asm::pin_thread!(i);
-            println!("\nCPU {:>3}:",i);
-
+            println!("\nCPU {:>3}:", i);
             raw_dump();
-        }).join().unwrap();
+        })
+        .join()
+        .unwrap();
     }
 }
 
 fn main() {
     for opt in std::env::args() {
+        println!("{}", opt);
         if opt == "-a" || opt == "--all" {
+            println!("CPUID Dump");
             dump_all();
             return;
         } else if opt == "-r" || opt == "--raw" {
@@ -198,5 +205,6 @@ fn main() {
             return;
         }
     }
+    println!("CPUID Dump");
     dump();
 }
