@@ -91,7 +91,7 @@ pub fn fam06h(m: u32, s: u32) -> ProcInfo {
                 "Golden Cove/Gracemont", "Intel 7 /10 nm eSF"
             ),
         },
-        0xBE => info!("Alder Lake-N", "Gracemont", "Intel 7 /10 nm eSF")
+        0xBE => info!("Alder Lake-N", "Gracemont", "Intel 7 /10 nm eSF"),
 
         0x8F => info!("Sapphire Rapids (Server)", "Golden Cove", "10nm eSF"),
         /*
