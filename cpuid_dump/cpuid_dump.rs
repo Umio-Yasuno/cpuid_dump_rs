@@ -25,7 +25,7 @@ use std::{mem, thread};
 
 fn dump() {
     println!(
-        " (in)EAX_xECX:  {:<9} {:<9} {:<9} {:<9}",
+        "   (in)EAX_xECX:  {:<10} {:<10} {:<10} {:<10}",
         "(out)EAX", "(out)EBX", "(out)ECX", "(out)EDX"
     );
 
@@ -35,7 +35,7 @@ fn dump() {
     }
     println!("{}", buff);
 
-    let vendor_amd = Vendor::check_amd();
+    let vendor_amd   = Vendor::check_amd();
     let vendor_intel = Vendor::check_intel();
 
     for i in 0..=0x20 {
@@ -112,10 +112,10 @@ fn dump() {
 
         if vendor_amd {
             match i {
-                0x5 => l1_amd_80_05h(tmp),
-                0x6 => l2_amd_80_06h(tmp),
-                0x7 => apmi_amd_80_07h(tmp.edx),
-                0x8 => spec_amd_80_08h(tmp.ebx),
+                0x5  => l1_amd_80_05h(tmp),
+                0x6  => l2_amd_80_06h(tmp),
+                0x7  => apmi_amd_80_07h(tmp.edx),
+                0x8  => spec_amd_80_08h(tmp.ebx),
                 0x19 => l1l2tlb_1g_amd_80_19h(tmp.eax, tmp.ebx),
                 0x1A => fpu_width_amd_80_1ah(tmp.eax),
                 0x1E => cpu_topo_amd_80_1eh(tmp.ebx, tmp.ecx),
@@ -140,8 +140,7 @@ fn dump_all() {
 
             dump();
         })
-        .join()
-        .unwrap();
+        .join().unwrap();
     }
 }
 
@@ -151,7 +150,7 @@ macro_rules! raw {
 
         print_cpuid!($dst, $in_eax, $in_ecx, tmp);
         writeln!($dst).unwrap();
-    };
+    }
 }
 
 fn raw_dump() {
@@ -177,6 +176,7 @@ fn raw_dump() {
         }
         raw!(out, _AX + i, 0x0);
     }
+    out.flush().unwrap();
 }
 
 fn raw_dump_all() {
@@ -188,8 +188,7 @@ fn raw_dump_all() {
             println!("\nCPU {:>3}:", i);
             raw_dump();
         })
-        .join()
-        .unwrap();
+        .join().unwrap();
     }
 }
 

@@ -2,31 +2,32 @@
 //  SPDX-License-Identifier: MIT
 
 #[path = "./_codename/codename_amd.rs"]
-    mod codename_amd;   use codename_amd::*;
+mod codename_amd;
+use codename_amd::*;
 #[path = "./_codename/codename_intel.rs"]
-    mod codename_intel; use codename_intel::*;
+mod codename_intel;
+use codename_intel::*;
 
 pub struct ProcInfo {
-    pub codename:   String,
-    pub archname:   String,
-    pub process:    String,
+    pub codename: String,
+    pub archname: String,
+    pub process: String,
 }
 
 #[macro_export]
 macro_rules! info {
     ($codename: expr, $arch: expr, $process: expr) => {
         ProcInfo {
-            codename:   $codename.to_string(),
-            archname:   $arch.to_string(),
-            process:    $process.to_string(),
+            codename: $codename.to_string(),
+            archname: $arch.to_string(),
+            process: $process.to_string(),
         }
-    }
+    };
 }
 
 //  f: Family, m: Model, s: Stepping
 //  pub fn get_codename(f: u32, m: u32, s: u32) -> String {
 pub fn get_codename(f: u32, m: u32, s: u32) -> ProcInfo {
-
     match f {
         _ => format!("Unknown"),
     };
@@ -37,10 +38,9 @@ pub fn get_codename(f: u32, m: u32, s: u32) -> ProcInfo {
         0x17 => fam17h(m, s),
         0x19 => fam19h(m, s),
         _ => ProcInfo {
-                codename: format!("F{}h_M{}h_S{}h", f, m, s),
-                archname: "Unknown".to_string(),
-                process:  "".to_string(),
-            },
+            codename: format!("F{}h_M{}h_S{}h", f, m, s),
+            archname: "Unknown".to_string(),
+            process: "".to_string(),
+        },
     };
 }
-

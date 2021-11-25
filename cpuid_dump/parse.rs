@@ -29,8 +29,7 @@ macro_rules! print_cpuid {
             $out,
             "    0x{:08X} 0x{:1X}: eax=0x{:08X} ebx=0x{:08X} ecx=0x{:08X} edx=0x{:08X} ",
             $in_eax, $in_ecx, $cpuid.eax, $cpuid.ebx, $cpuid.ecx, $cpuid.edx
-        )
-        .unwrap()
+        ).unwrap()
     };
 }
 
@@ -82,7 +81,6 @@ macro_rules! padln {
 }
 
 struct Reg { reg: u32 }
-
 impl Reg {
     fn new(reg: u32) -> Reg {
         Reg { reg }
@@ -129,6 +127,7 @@ fn print_feature(buff: Vec<String>) {
             write!(out, "{}", padln!()).unwrap();
         }
     }
+    out.flush().unwrap();
 }
 
 pub fn info_00_01h(eax: u32, ebx: u32) {
