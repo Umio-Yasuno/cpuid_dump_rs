@@ -45,18 +45,13 @@ macro_rules! pin_thread {
 }
 
 pub fn get_processor_name() -> String {
-    let mut name = vec![0x20u8; 48];
+    let mut name: Vec<u8> = Vec::with_capacity(20);
 
     for i in 0..=2 as usize {
         let tmp = cpuid!(_AX + 0x2 + i as u32, 0);
         let reg = [tmp.eax, tmp.ebx, tmp.ecx, tmp.edx];
 
-        for j in 0..=3 {
-            name[(i * 16 + j * 4)] = (reg[j] & 0xff) as u8;
-            name[(i * 16 + j * 4 + 1)] = ((reg[j] >> 8) & 0xff) as u8;
-            name[(i * 16 + j * 4 + 2)] = ((reg[j] >> 16) & 0xff) as u8;
-            name[(i * 16 + j * 4 + 3)] = ((reg[j] >> 24) & 0xff) as u8;
-        }
+        reg.iter().for_each( |&val| name.extend(&val.to_le_bytes()) );
     }
 
     return String::from_utf8(name).unwrap();
@@ -222,15 +217,16 @@ impl CpuCoreCount {
         let amd_td_per_core = ((lf_80_1eh.ebx >> 8) & 0xFF) + 1;
         let intel_shared_dc = ((lf_04h.eax >> 14) & 0xFFF) + 1;
 
-        let _thread_per_core = if _has_htt && 1 < amd_td_per_core {
-            amd_td_per_core
-        } else if _has_htt && 1 < intel_shared_dc {
-            intel_shared_dc
-        } else if _has_htt {
-            2
-        } else {
-            1
-        };
+        let _thread_per_core =
+            if _has_htt && 1 < amd_td_per_core {
+                amd_td_per_core
+            } else if _has_htt && 1 < intel_shared_dc {
+                intel_shared_dc
+            } else if _has_htt {
+                2
+            } else {
+                1
+            };
         let _phy_core = _total_thread / _thread_per_core;
         let _apic_id = (lf_01h.ebx >> 24) & 0xFF;
         //  TODO: CoreID for Intel CPU
