@@ -100,10 +100,6 @@ impl Reg {
 }
 
 fn print_feature(buff: Vec<String>) {
-    macro_rules! if_else { ($expr:expr, $if:expr, $else:expr) => {
-        if $expr { $if } else { $else }
-    }}
-
     let out = std::io::stdout();
     let mut out = out.lock();
 
@@ -111,21 +107,19 @@ fn print_feature(buff: Vec<String>) {
 
     for (c, v) in buff.iter().enumerate() {
         let c = c + 1;
+        let line = if (c % 3) == 0 && c != len {
+            padln!()
+        } else {
+            format!("")
+        };
 
         if 9 < v.len() {
-            write!(out,
-                "{0} [{1}]{2}",
-                if_else!((c % 3) != 1, padln!(), format!("")),
-                v,
-                if_else!((c % 3) != 0 && c != len, padln!(), format!(""))
-            ).unwrap();
+            write!(out, " [{}]{}", v, line).unwrap();
         } else {
             write!(out, " [{}]", v).unwrap();
         }
 
-        if (c % 3) == 0 && c != len {
-            write!(out, "{}", padln!()).unwrap();
-        }
+        write!(out, "{}", line).unwrap();
     }
     out.flush().unwrap();
 }
@@ -242,11 +236,11 @@ pub fn feature_00_07h_x0() {
     }
 
     // 0x00000007_ECX_x0
-    let avx512_vbmi1     = ebx[ 1];
-    let avx512_vbmi2     = ebx[ 6];
-    let avx512_vnni      = ebx[11];
-    let avx512_bitalg    = ebx[12];
-    let avx512_vpopcntdq = ebx[14];
+    let avx512_vbmi1     = ecx[ 1];
+    let avx512_vbmi2     = ecx[ 6];
+    let avx512_vnni      = ecx[11];
+    let avx512_bitalg    = ecx[12];
+    let avx512_vpopcntdq = ecx[14];
 
     if avx512_vbmi1 || avx512_vbmi2 || avx512_vnni
     || avx512_bitalg || avx512_vpopcntdq {
@@ -407,16 +401,13 @@ pub fn cache_prop(in_eax: u32) {
     }
 }
 
-pub fn cpu_name(tmp: CpuidResult) {
-    let reg = vec![tmp.eax, tmp.ebx, tmp.ecx, tmp.edx];
-    let mut name = vec![0x20u8; 16];
+pub fn cpu_name(tmp: CpuidResult) -> String {
+    let mut name = Vec::with_capacity(16);
+    let reg = [tmp.eax, tmp.ebx, tmp.ecx, tmp.edx];
 
-    for j in 0..4usize {
-        name[(j * 4)] = (reg[j] & 0xFF) as u8;
-        name[(j * 4 + 1)] = ((reg[j] >> 8) & 0xFF) as u8;
-        name[(j * 4 + 2)] = ((reg[j] >> 16) & 0xFF) as u8;
-        name[(j * 4 + 3)] = ((reg[j] >> 24) & 0xFF) as u8;
-    }
+    reg.iter().for_each(
+        |&val| name.extend(&val.to_le_bytes())
+    );
 
-    print!(" [{}]", String::from_utf8(name).unwrap());
+    return String::from_utf8(name).unwrap();
 }

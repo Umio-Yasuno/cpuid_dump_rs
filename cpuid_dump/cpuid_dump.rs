@@ -107,7 +107,7 @@ fn dump() {
             }
             feature_80_01h(tmp.ecx, tmp.edx);
         } else if 0x2 <= i && i <= 0x4 {
-            cpu_name(tmp);
+            print!(" [{}]", cpu_name(tmp));
         }
 
         if vendor_amd {
