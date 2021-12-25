@@ -9,6 +9,18 @@ use std::sync::atomic::{AtomicIsize, Ordering};
 fn main() {
     //  println!("NOP");
 
+    unsafe {
+        let x = 0;
+        let start: u64 = core::arch::x86_64::__rdtscp(&mut 0);
+        asm!("mov {} {}",
+            out(reg) _,
+            in(reg) x,
+        );
+        println!("{}", start);
+    }
+    return;
+
+
 for _ in 0..10 {
     unsafe {
         asm!("nop", "nop");

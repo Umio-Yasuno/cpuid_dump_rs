@@ -23,7 +23,7 @@ macro_rules! pin_thread {
         #[cfg(target_os = "windows")]
         use kernel32::{GetCurrentThread, SetThreadAffinityMask};
         #[cfg(target_os = "linux")]
-        use libc::{cpu_set_t, sched_getaffinity, sched_setaffinity, CPU_ISSET, CPU_SET, CPU_ZERO};
+        use libc::{cpu_set_t, sched_getaffinity, sched_setaffinity, CPU_ALLOC_SIZE, CPU_SET, CPU_ZERO};
 
         #[cfg(target_os = "linux")]
         unsafe {
@@ -33,7 +33,7 @@ macro_rules! pin_thread {
 
             let status = sched_setaffinity(0, mem::size_of::<cpu_set_t>(), &set);
             if status == -1 {
-                eprintln!("sched_setaffinity failed");
+                eprintln!("sched_setaffinity failed.");
                 return;
             }
         }
@@ -45,20 +45,27 @@ macro_rules! pin_thread {
 }
 
 pub fn get_processor_name() -> String {
-    let mut name: Vec<u8> = Vec::with_capacity(20);
+    let mut name: Vec<u8> = Vec::with_capacity(48);
 
-    for i in 0..=2 as usize {
+    for i in 0..3usize {
         let tmp = cpuid!(_AX + 0x2 + i as u32, 0);
         let reg = [tmp.eax, tmp.ebx, tmp.ecx, tmp.edx];
 
-        reg.iter().for_each( |&val| name.extend(&val.to_le_bytes()) );
+        reg.iter().for_each(
+            |&val| name.extend( &val.to_le_bytes() )
+        );
     }
 
-    return String::from_utf8(name).unwrap();
+    String::from_utf8(name).unwrap()
 }
 
 fn get_clflush_size() -> u32 {
-    ((cpuid!(0x1, 0).ebx >> 8) & 0xFF) * 8
+    ((cpuid!(0x1, 0).ebx >> 8) & 0xff) * 8
+}
+
+enum CoreType {
+    Core = 0x20,    // big
+    Atom = 0x40,    // small
 }
 
 pub struct CacheInfo {
@@ -88,13 +95,17 @@ fn cache_info_intel() -> CacheInfo {
     let sb02h = cpuid!(0x4, 0x2);
     let sb03h = cpuid!(0x4, 0x3);
 
-    let size_calc = |ebx: u32, ecx: u32| -> u32 {
-        ((ebx >> 22) + 1) * (((ebx >> 12) & 0x3FF) + 1) * ((ebx & 0xFFF) + 1) * (ecx + 1)
+    let line = |ebx: u32| -> u32 {
+        (ebx & 0xFFF) + 1
     };
-    let line = |ebx: u32| -> u32 { (ebx & 0xFFF) + 1 };
-    let way = |ebx: u32| -> u32 { (ebx >> 22) + 1 };
+    let way = |ebx: u32| -> u32 {
+        (ebx >> 22) + 1
+    };
+    let size_calc = |ebx: u32, ecx: u32| -> u32 {
+        way(ebx) * (((ebx >> 12) & 0x3FF) + 1) * line(ebx) * (ecx + 1)
+    };
 
-    return CacheInfo {
+    CacheInfo {
         l1d_size: size_calc(sb00h.ebx, sb00h.ecx),
         l1d_line: line(sb00h.ebx),
         l1d_way: way(sb00h.ebx),
@@ -112,16 +123,18 @@ fn cache_info_intel() -> CacheInfo {
         l3_way: way(sb03h.ebx),
 
         clflush_size: get_clflush_size(),
-    };
+    }
 }
 
 fn cache_info_amd() -> CacheInfo {
     let lf_80_05h = cpuid!(_AX + 0x5, 0);
     let lf_80_06h = cpuid!(_AX + 0x6, 0);
 
-    let cache_way = |sub_lf: u32| -> u32 { (cpuid!(_AX + 0x1D, sub_lf).ebx >> 22) + 1 };
+    let cache_way = |sub_lf: u32| -> u32 {
+        (cpuid!(_AX + 0x1D, sub_lf).ebx >> 22) + 1
+    };
 
-    return CacheInfo {
+    CacheInfo {
         l1d_size: (lf_80_05h.ecx >> 24),
         l1d_line: (lf_80_05h.ecx & 0xFF),
         l1d_way: (lf_80_05h.ecx >> 16) & 0xFF,
@@ -139,7 +152,7 @@ fn cache_info_amd() -> CacheInfo {
         l3_way: cache_way(3),
 
         clflush_size: get_clflush_size(),
-    };
+    }
 }
 
 impl CacheInfo {
@@ -164,6 +177,7 @@ impl CacheInfo {
             clflush_size: 0,
         }
     }
+
     pub fn get() -> CacheInfo {
         let fam = FamModStep::get().syn_fam;
         if fam == 0x6 {
@@ -186,22 +200,72 @@ pub struct FamModStep {
 impl FamModStep {
     pub fn get() -> FamModStep {
         let eax = cpuid!(0x1, 0).eax;
-        return FamModStep {
+
+        FamModStep {
             syn_fam: ((eax >> 8) & 0xf) + ((eax >> 20) & 0xff),
             syn_mod: ((eax >> 4) & 0xf) + ((eax >> 12) & 0xf0),
             step: eax & 0xf,
             raw_eax: eax,
-        };
+        }
+    }
+}
+
+pub struct CpuInfo {
+    pub is_hybrid: bool,
+    pub total_phy_core: u32,
+    pub total_thread: u32,
+    pub big_topo: CpuTopoInfo,
+    pub small_topo: CpuTopoInfo,
+}
+
+impl CpuInfo {
+    pub fn get() -> CpuInfo {
+        let lf_01h = cpuid!(0x1, 0);
+        let is_hybrid = ((cpuid!(0x7, 0).edx >> 15) & 0b1) == 1;
+
+        let big_topo = CpuTopoInfo::zero();
+        let small_topo = CpuTopoInfo::zero();
+
+        /* LogicalProcessorCount */
+        let total_thread = (lf_01h.ebx >> 16) & 0xFF;
+        let total_phy_core = total_thread;
+
+        CpuInfo {
+            is_hybrid,
+            total_phy_core,
+            total_thread,
+            big_topo,
+            small_topo,
+        }
+    }
+}
+
+pub struct CpuTopoInfo {
+    pub topo_core_count: u32,
+    pub topo_thread_count: u32,
+    pub thread_per_core: u32,
+    pub topo_cache_info: CacheInfo,
+
+}
+
+impl CpuTopoInfo {
+    fn zero() -> CpuTopoInfo {
+        CpuTopoInfo {
+            topo_core_count: 0,
+            topo_thread_count: 0,
+            thread_per_core: 0,
+            topo_cache_info: CacheInfo::zero(),
+        }
     }
 }
 
 pub struct CpuCoreCount {
     pub has_htt: bool,
-    pub phy_core: u32,
     pub total_thread: u32,
     pub thread_per_core: u32,
-    pub core_id: u32,
+    pub phy_core: u32,
     pub apic_id: u32,
+    pub core_id: u32,
 }
 
 impl CpuCoreCount {
@@ -211,35 +275,36 @@ impl CpuCoreCount {
         //  let lf_0bh = cpuid!(0xB, 0);
         let lf_80_1eh = cpuid!(_AX + 0x1E, 0);
 
-        let _has_htt = ((lf_01h.edx >> 28) & 0b1) == 1;
-        let _total_thread = (lf_01h.ebx >> 16) & 0xFF;
+        let has_htt = ((lf_01h.edx >> 28) & 0b1) == 1;
+
+        let total_thread = (lf_01h.ebx >> 16) & 0xFF;
 
         let amd_td_per_core = ((lf_80_1eh.ebx >> 8) & 0xFF) + 1;
         let intel_shared_dc = ((lf_04h.eax >> 14) & 0xFFF) + 1;
 
         let _thread_per_core =
-            if _has_htt && 1 < amd_td_per_core {
+            if has_htt && 1 < amd_td_per_core {
                 amd_td_per_core
-            } else if _has_htt && 1 < intel_shared_dc {
+            } else if has_htt && 1 < intel_shared_dc {
                 intel_shared_dc
-            } else if _has_htt {
+            } else if has_htt {
                 2
             } else {
                 1
             };
-        let _phy_core = _total_thread / _thread_per_core;
+        let _phy_core = total_thread / _thread_per_core;
         let _apic_id = (lf_01h.ebx >> 24) & 0xFF;
         //  TODO: CoreID for Intel CPU
         let _core_id = lf_80_1eh.ebx & 0xFF;
 
-        return CpuCoreCount {
-            has_htt: _has_htt,
-            total_thread: _total_thread,
+        CpuCoreCount {
+            has_htt,
+            total_thread,
             thread_per_core: _thread_per_core,
             phy_core: _phy_core,
             apic_id: _apic_id,
             core_id: _core_id,
-        };
+        }
     }
 }
 
@@ -253,11 +318,12 @@ pub struct Vendor {
 impl Vendor {
     pub fn get() -> Vendor {
         let tmp = cpuid!(0, 0);
-        return Vendor {
+
+        Vendor {
             ebx: tmp.ebx,
             ecx: tmp.ecx,
             edx: tmp.edx,
-        };
+        }
     }
     pub fn amd() -> Vendor {
         Vendor {
@@ -266,9 +332,6 @@ impl Vendor {
             edx: 0x6974_6E65,
         }
     }
-    pub fn check_amd() -> bool {
-        return Vendor::get() == Vendor::amd();
-    }
     pub fn intel() -> Vendor {
         Vendor {
             ebx: 0x756E_6547,
@@ -276,8 +339,11 @@ impl Vendor {
             edx: 0x6C65_746E,
         }
     }
+    pub fn check_amd() -> bool {
+        Vendor::get() == Vendor::amd()
+    }
     pub fn check_intel() -> bool {
-        return Vendor::get() == Vendor::intel();
+        Vendor::get() == Vendor::intel()
     }
 }
 
@@ -290,11 +356,11 @@ pub fn get_vendor_name() -> String {
     };
 
     // TODO: add other vendor
-    return if vendor == Vendor::amd() {
+    if vendor == Vendor::amd() {
         format!("AuthenticAMD")
     } else if vendor == Vendor::intel() {
         format!("GenuineIntel")
     } else {
         format!("Unknown")
-    };
+    }
 }

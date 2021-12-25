@@ -5,13 +5,14 @@ edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[dependencies]
-
 [[bin]]
 name = "stream_bench"
 path = "stream_bench.rs"
 
 [profile.release]
-panic = "abort"
 opt-level = 3
-debug = 0
+debug = false
+lto = false
+overflow-checks = false
+panic = "unwind"
+incremental = true

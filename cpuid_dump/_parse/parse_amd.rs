@@ -7,8 +7,8 @@ pub fn pkgtype_amd_80_01h(ebx: u32) {
         0x2 => "AM4",
         _   => "Unknown",
     };
-    print!(" [PkgType: {}({:#X})]", pkg_dec, pkg_type);
-    print!("{}", padln!());
+    print!(" [PkgType: {}({:#X})]{}",
+        pkg_dec, pkg_type, padln!());
 }
 
 pub fn l1_amd_80_05h(tmp: CpuidResult) {
@@ -81,40 +81,27 @@ pub fn cpu_topo_amd_80_1eh(ebx: u32, ecx: u32) {
 
 pub fn enum_amd_0dh() {
     let x0 = |eax: u32| -> _ {
-        let x87 = flag!(eax, 1 << 0);
-        let sse = flag!(eax, 1 << 1);
-        let avx = flag!(eax, 1 << 2);
-        let pku = flag!(eax, 1 << 9);
+        let ftr = vec![
+            "X87", "SSE", "AVX", "",
+            "", "", "", "",
+            "", "MPK",
+            /* Reserved Bit10-31 */
+        ];
 
-        let buff = format!(
-            "{0}{1}{2}{3}",
-            has_ftr!(x87, "X87 "),
-            has_ftr!(sse, "SSE "),
-            has_ftr!(avx, "AVX "),
-            has_ftr!(pku, "PKU "),
-        );
+        let ftr = to_vstring(ftr);
+        let buff = detect_ftr(eax, ftr);
 
-        if buff.len() != 0 {
-            print!(" [{}]", buff.trim_end());
-        }
+        print_feature(buff);
     };
     let x1 = |eax: u32| -> _ {
-        let xsaves   = flag!(eax, 1 << 3);
-        let xgetbv   = flag!(eax, 1 << 2);
-        let xsavec   = flag!(eax, 1 << 1);
-        let xsaveopt = flag!(eax, 1);
+        let ftr = vec![
+            "XSAVEOPT", "XSAVEC", "XGETBV", "XSAVES",
+            /* "Reserved Bit4-31" */
+        ];
+        let ftr = to_vstring(ftr);
+        let buff = detect_ftr(eax, ftr);
 
-        let buff = format!(
-            "{0}{1}{2}{3}",
-            has_ftr!(xsaves,   "XSAVES "),
-            has_ftr!(xgetbv,   "XGETBV "),
-            has_ftr!(xsavec,   "XSAVEC "),
-            has_ftr!(xsaveopt, "XSAVEOPT"),
-        );
-
-        if buff.len() != 0 {
-            print!(" [{}]", buff.trim_end());
-        }
+        print_feature(buff);
     };
 
     macro_rules! size {
@@ -128,6 +115,7 @@ pub fn enum_amd_0dh() {
     for ecx in [0x0, 0x1, 0x2, 0x9, 0xB, 0xC] {
         let tmp = cpuid!(0xD, ecx);
         print_cpuid!(0xD, ecx, tmp);
+
         let eax = tmp.eax;
 
         match ecx {
@@ -144,67 +132,57 @@ pub fn enum_amd_0dh() {
 }
 
 pub fn apmi_amd_80_07h(edx: u32) {
-    let cpb = flag!(edx, 1 << 9);
-    let rapl = flag!(edx, 1 << 14);
+    let ftr = vec![
+        "TS", "", "", "TTP",
+        "TM", "", "OneHundredMHzSteps", "HwPstate",
+        "TscInvariant", "CPB", "EffFreqRO", "ProcFeedbackInterface",
+        "ProcPowerReporting", "ConnectedStandbyl", "RAPL",
+        /* "Reserved Bit15-31" */
+    ];
+    let ftr = to_vstring(ftr);
 
-    let buff = format!("{0}{1}",
-        has_ftr!(cpb, "CPB "),
-        has_ftr!(rapl, "RAPL ")
-    );
-
-    if buff.len() != 0 {
-        print!(" [{}]", buff.trim_end());
-    }
+    let buff = detect_ftr(edx, ftr);
+    print_feature(buff);
 }
 
 pub fn spec_amd_80_08h(ebx: u32) {
-    let ibpb  = flag!(ebx, 1 << 12);
-    let stibp = flag!(ebx, 1 << 15);
-    let ssbd  = flag!(ebx, 1 << 24);
-    let psfd  = flag!(ebx, 1 << 28);
+    let ftr = vec![
+        "CLZERO", "InstRetCntMsr", "RstrFpErrPtrs", "INVLPGB",
+        "RDPRU", "", "MBE", "",
+        "MCOMMIT", "WBNOINVD", "", "",
+        "IBPB", "INT_WBINVD", "IBRS", "STIBP",
+        "", "StibpAlwaysOn", "IbrsPreferred", "IbrsProvidesSameModeProtection",
+        "EferLmsleUnsupported", "", "", "PPIN",
+        "SSBD", "", "", "CPPC",
+        "PSFD",
+        /* "Reserved Bit29-31", */
+    ];
+    let ftr = to_vstring(ftr);
+    let buff = detect_ftr(ebx, ftr);
 
-    let buff = format!(
-        "{0}{1}{2}{3}",
-        has_ftr!(ibpb,  "IBPB "),
-        has_ftr!(stibp, "STIBP "),
-        has_ftr!(ssbd,  "SSBD "),
-        has_ftr!(psfd,  "PSFD "),
-    );
-
-    if buff.len() != 0 {
-        print!(" [{}]", buff.trim_end());
-    }
+    print_feature(buff);
 }
 
 pub fn fpu_width_amd_80_1ah(eax: u32) {
-    let fp256 = flag!(eax, 1 << 2);
-    let movu  = flag!(eax, 1 << 1);
-    let fp128 = flag!(eax, 1 << 0);
+    let ftr = vec![
+        "FP128", "MOVU", "FP256",
+    ];
+    let ftr = to_vstring(ftr);
 
-    let buff = format!("{0}{1}",
-        has_ftr!(fp256, "FP256 ", fp128, "FP128 "),
-        has_ftr!(movu, "MOVU "),
-    );
-
-    if buff.len() != 0 {
-        print!(" [{}]", buff.trim_end());
-    }
+    let buff = detect_ftr(eax, ftr);
+    print_feature(buff);
 }
 
 pub fn secure_amd_80_1fh(eax: u32) {
-    let sme    = flag!(eax, 1 << 0);
-    let sev    = flag!(eax, 1 << 1);
-    let sev_es = flag!(eax, 1 << 3);
-    let snp    = flag!(eax, 1 << 4);
+    let ftr = vec![
+        "SME", "SEV", "VmPgFlush", "SevEs",
+        "SNP", "VMPL", "", "",
+        "", "", "CoherencyEnforced", "Req64BitHypervisor",
+        "RestrictInjection", "AlternateInjection", "DebugStateSwap", "PreventHostIBS",
+        "VTE", /* "Reserved Bit17-31" */
+    ];
+    let ftr = to_vstring(ftr);
 
-    let buff = format!("{0}{1}{2}{3}",
-        has_ftr!(sme, "SME "),
-        has_ftr!(sev, "SEV"),
-        has_ftr!(sev && sev_es, "(-ES) "),
-        has_ftr!(sev && snp,    "SNP "),
-    );
-
-    if buff.len() != 0 {
-        print!(" [{}]", buff.trim_end());
-    }
+    let buff = detect_ftr(eax, ftr);
+    print_feature(buff);
 }
