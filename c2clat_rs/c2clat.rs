@@ -89,46 +89,52 @@ fn print_matrix(title: &str, result: Vec<Vec<u128>>,
 }
 
 struct Opt {
-    md:   bool,
+    md: bool,
     plot: bool,
+    nsamples: isize,
+}
+
+impl Opt {
+    fn default() -> Opt {
+        Opt {
+            md: false,
+            plot: false,
+            nsamples: 1_000,
+        }
+    }
+    fn parse() -> Opt {
+        let mut opt = Opt::default();
+        let args: Vec<String> = std::env::args().collect();
+
+        for i in 1..args.len() {
+            let trim_val = args[i].trim_start_matches("-");
+
+            match trim_val {
+                "md" => {
+                    opt.md = true;
+                    opt.plot = false;
+                },
+                "p" | "plot" => {
+                    opt.md = false;
+                    opt.plot = true;
+                },
+                "n" => {
+                    let n = match args.get(i+1) {
+                        Some(v) => v.parse::<isize>().expect("Please number"),
+                        None => opt.nsamples,
+                    };
+                    opt.nsamples = n;
+                },
+                _ => {},
+            }
+        }
+        return opt;
+    }
 }
 
 fn main() {
-    let mut nsamples: isize= 1_000;
-
-    let mut opt = Opt { md: false, plot: false };
-
-    let opt_args: Vec<String> = std::env::args().collect();
-
-    let mut i = 1;
-    for _ in 1..opt_args.len() {
-        if opt_args.len() <= i {
-            break;
-        }
-
-        let v = &opt_args[i];
-
-        if v == "-md" {
-            opt.md   = true;
-            opt.plot = false;
-        } else if v == "-p" {
-            opt.md   = false;
-            opt.plot = true;
-        } else if v == "-n" {
-            nsamples = opt_args[i+1].parse::<isize>()
-                .expect("Please number");
-
-            if nsamples <= 1 {
-                return;
-            }
-            i += 2;
-            continue;
-        } else {
-            help_txt();
-            return;
-        }
-        i += 1;
-    }
+    let opt = Opt::parse();
+    let nsamples = opt.nsamples;
 
     let mut cpus: Vec<usize> = Vec::new();
 
