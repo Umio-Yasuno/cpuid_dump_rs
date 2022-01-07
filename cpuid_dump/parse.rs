@@ -1,12 +1,14 @@
 //  Copyright (c) 2021 Umio Yasuno
 //  SPDX-License-Identifier: MIT
 
-use core::arch::x86_64::{CpuidResult, __cpuid_count};
+use core::arch::x86_64::{CpuidResult};
 
+/*
 extern crate cpuid_asm;
 use cpuid_asm::{cpuid};
 
 use std::io::Write;
+*/
 
 #[path = "./_parse/parse_amd.rs"]
 mod parse_amd;
@@ -14,138 +16,37 @@ pub use parse_amd::*;
 #[path = "./_parse/parse_intel.rs"]
 mod parse_intel;
 pub use parse_intel::*;
+#[path = "./parse_util.rs"]
+#[macro_use]
+mod parse_util;
+pub use parse_util::*;
 
-#[macro_export]
-macro_rules! print_cpuid {
-    ($in_eax: expr, $in_ecx: expr, $cpuid: expr) => {
-        print!(
-            "  0x{:08X}_x{:1X}:  0x{:08X} 0x{:08X} 0x{:08X} 0x{:08X} ",
-            $in_eax, $in_ecx, $cpuid.eax, $cpuid.ebx, $cpuid.ecx, $cpuid.edx
-        )
-    };
+pub fn info_00_01h(cpuid: &CpuidResult) -> String {
+    use cpuid_asm::*;
+    let mut buff: Vec<String> = Vec::new();
 
-    ($out: expr, $in_eax: expr, $in_ecx: expr, $cpuid: expr) => {
-        write!(
-            $out,
-            "    0x{:08X} 0x{:1X}: eax=0x{:08X} ebx=0x{:08X} ecx=0x{:08X} edx=0x{:08X} ",
-            $in_eax, $in_ecx, $cpuid.eax, $cpuid.ebx, $cpuid.ecx, $cpuid.edx
-        ).unwrap()
-    };
+    let [eax, ebx] = [
+        cpuid.eax,
+        cpuid.ebx,
+    ];
+
+    let fms = FamModStep::dec(eax);
+    let codename = get_codename(&fms).codename;
+
+    buff.push(
+        format!(" [F: 0x{:X}, M: 0x{:X}, S: 0x{:X}]", fms.syn_fam, fms.syn_mod, fms.step)
+    );
+    buff.push(format!("{} [{}]", padln!(), codename));
+
+    buff.push(format!("{} [APIC ID: {}]", padln!(), ebx >> 24));
+    buff.push(format!("{} [Total {} thread(s)]", padln!(), (ebx >> 16) & 0xFF));
+    buff.push(format!("{} [CLFlush: {}B]", padln!(), ((ebx >> 8) & 0xFF) * 8));
+
+    return concat_string(buff);
 }
 
-#[macro_export]
-macro_rules! has_ftr {
-    ($ftr_bool: expr, $name_str: expr) => {
-        if $ftr_bool {
-            $name_str
-        } else {
-            ""
-        }
-    };
-    ($ftr_bool: expr, $name_str: expr, $else_ftr: expr, $else_name: expr) => {
-        if $ftr_bool {
-            $name_str
-        } else if $else_ftr {
-            $else_name
-        } else {
-            ""
-        }
-    };
-}
-
-#[macro_export]
-macro_rules! push {
-    ($buff: expr, $str: expr) => {
-        $buff.push($str.to_string())
-    };
-}
-
-#[macro_export]
-macro_rules! flag {
-    ($pos: expr, $reg: expr) => {
-        $pos & $reg != 0
-    };
-}
-
-#[macro_export]
-macro_rules! pad {
-    () => {
-        format!("{:62}", "")
-    };
-}
-
-#[macro_export]
-macro_rules! padln {
-    () => {
-        format!("\n{}", pad!())
-    };
-}
-
-pub struct Reg { reg: u32 }
-impl Reg {
-    pub fn new(reg: u32) -> Reg {
-        Reg { reg }
-    }
-
-    pub fn to_bitvec(self) -> Vec<u8> {
-        let mut bit_vec = vec![0u8; 32];
-        for i in 0..32 {
-            bit_vec[i] = ((self.reg >> i) & 1) as u8;
-        }
-        return bit_vec;
-    }
-
-    pub fn to_boolvec(self) -> Vec<bool> {
-        self.to_bitvec().iter().map(|&x| x == 1 ).collect()
-    }
-}
-
-pub fn print_feature(buff: Vec<String>) {
-    let out = std::io::stdout();
-    let mut out = out.lock();
-
-    let len = buff.len();
-
-    for (c, v) in buff.iter().enumerate() {
-        let c = c + 1;
-        let line =
-            if (c % 3) == 0 && c != len && !(9 < v.len()) {
-                padln!()
-            } else {
-                format!("")
-            };
-
-        if 9 < v.len() {
-            write!(out, " [{}]{}", v, padln!()).unwrap();
-        } else {
-            write!(out, " [{}]", v).unwrap();
-        }
-
-        write!(out, "{}", line).unwrap();
-    }
-    //  out.flush().unwrap();
-}
-
-pub fn info_00_01h(eax: u32, ebx: u32) {
-    let x86_fam = ((eax >> 8) & 0xF) + ((eax >> 20) & 0xFF);
-    let x86_mod = ((eax >> 4) & 0xF) + ((eax >> 12) & 0xF0);
-    let x86_step = eax & 0xF;
-
-    print!(" [F: 0x{:X}, M: 0x{:X}, S: 0x{:X}]",
-        x86_fam, x86_mod, x86_step);
-    let codename = cpuid_asm::get_codename(x86_fam, x86_mod, x86_step).codename;
-    print!("{} [{}]", padln!(), codename);
-
-    print!("{} [APIC ID: {}]", padln!(), ebx >> 24);
-    print!("{} [Total {} thread(s)]", padln!(), (ebx >> 16) & 0xFF);
-    print!("{} [CLFlush: {}B]", padln!(), ((ebx >> 8) & 0xFF) * 8);
-    //  print!("\n{}", pad!());
-    print!("{}", padln!());
-}
-
-pub fn feature_00_01h(ecx: u32, edx: u32) {
+pub fn feature_00_01h(cpuid: &CpuidResult) -> String {
     let mut buff: Vec<String> = Vec::with_capacity(64);
-
     //  0x0000_0007_EDX_x0
     let ftr_edx = vec![
         "FPU", "VME", "DebugExt", "PSE",
@@ -169,14 +70,23 @@ pub fn feature_00_01h(ecx: u32, edx: u32) {
         "AVX", "F16C", "RDRAND", "",
     ];
 
-    let ftr_edx = to_vstring(ftr_edx);
-    let ftr_ecx = to_vstring(ftr_ecx);
+    let [ftr_edx, ftr_ecx] = [
+        to_vstring(ftr_edx),
+        to_vstring(ftr_ecx),
+    ];
+
+    let [edx, ecx] = [
+        cpuid.edx,
+        cpuid.ecx,
+    ];
 
     buff.extend(detect_ftr(edx, ftr_edx));
     buff.extend(detect_ftr(ecx, ftr_ecx));
 
-    let edx = Reg::new(edx).to_boolvec();
-    let ecx = Reg::new(ecx).to_boolvec();
+    let [edx, ecx] = [
+        Reg::new(edx).to_boolvec(),
+        Reg::new(ecx).to_boolvec(),
+    ];
 
     if edx[25] { buff.push(format!(
         "SSE{0}{1}{2}{3}",
@@ -188,16 +98,18 @@ pub fn feature_00_01h(ecx: u32, edx: u32) {
     )}
     if ecx[9] { push!(buff, "SSSE3"); }
 
-    print_feature(buff);
+    return mold_ftr(buff);
 }
 
-pub fn feature_00_07h_x0() {
-    let tmp = cpuid!(0x7, 0x0);
-    print_cpuid!(0x7, 0x0, tmp);
+pub fn feature_00_07h_x0(cpuid: &CpuidResult) -> String {
+    //  let tmp = cpuid!(0x7, 0x0);
+    //  print_cpuid!(0x7, 0x0, tmp);
 
     let mut buff: Vec<String> = Vec::with_capacity(96);
     let [ebx, ecx, edx] = [
-        tmp.ebx, tmp.ecx, tmp.edx,
+        cpuid.ebx,
+        cpuid.ecx,
+        cpuid.edx,
     ];
 
     // 0x00000007_EBX_x0
@@ -229,19 +141,20 @@ pub fn feature_00_07h_x0() {
         /* */
     ];
 
-    let ftr_ebx = to_vstring(ftr_ebx);
-    let ftr_ecx = to_vstring(ftr_ecx);
-    let ftr_edx = to_vstring(ftr_edx);
+    let [ftr_ebx, ftr_ecx, ftr_edx] = [
+        to_vstring(ftr_ebx),
+        to_vstring(ftr_ecx),
+        to_vstring(ftr_edx),
+    ];
     
     buff.extend(detect_ftr(ebx, ftr_ebx));
     buff.extend(detect_ftr(ecx, ftr_ecx));
     buff.extend(detect_ftr(edx, ftr_edx));
 
-
     let [ebx, ecx, edx] = [
-        Reg::new(tmp.ebx).to_boolvec(),
-        Reg::new(tmp.ecx).to_boolvec(),
-        Reg::new(tmp.edx).to_boolvec(),
+        Reg::new(ebx).to_boolvec(),
+        Reg::new(ecx).to_boolvec(),
+        Reg::new(edx).to_boolvec(),
     ];
 
     let avx512_f    = ebx[16];
@@ -322,22 +235,15 @@ pub fn feature_00_07h_x0() {
         push!(buff, format!("AMX-BF16/TILE/INT8"));
     }
 
-    /*  Intel CPU only
-        if flag!(edx, CPUID_IBPB)      { push!(buff, "IBPB");      }
-        if flag!(edx, CPUID_STIBP)     { push!(buff, "STIBP");     }
-        if flag!(edx, CPUID_L1D_FLUSH) { push!(buff, "L1D_FLUSH"); }
-        if flag!(edx, CPUID_SSBD)      { push!(buff, "SSBD");      }
-    */
-
-    print_feature(buff);
-    println!();
+    return mold_ftr(buff);
 }
 
-pub fn feature_00_07h_x1() {
+pub fn feature_00_07h_x1(eax: &u32) -> String {
+    /*
     let tmp = cpuid!(0x7, 0x1);
     print_cpuid!(0x7, 0x1, tmp);
-
-    let eax = Reg::new(tmp.eax).to_boolvec();
+    */
+    let eax = Reg::new(*eax).to_boolvec();
     let mut buff: Vec<String> = Vec::with_capacity(4);
 
     // https://github.com/torvalds/linux/commit/b85a0425d8056f3bd8d0a94ecdddf2a39d32a801
@@ -346,11 +252,14 @@ pub fn feature_00_07h_x1() {
     if eax[22] { push!(buff, "HRESET")      }
     if eax[26] { push!(buff, "LAM")         }
 
-    print_feature(buff);
-    println!();
+    return mold_ftr(buff);
 }
 
-pub fn feature_80_01h(ecx: u32, edx: u32) {
+pub fn feature_80_01h(cpuid: &CpuidResult) -> String {
+    let [ecx, edx] = [
+        cpuid.ecx,
+        cpuid.edx,
+    ];
     // 0x8000_0001_ECX_x0
     let ftr = vec![
         "LAHF/SAHF", "CmpLegacy", "SVM", "ExtApicSpace",
@@ -372,9 +281,10 @@ pub fn feature_80_01h(ecx: u32, edx: u32) {
         format!("3DNow!{}", has_ftr!(edx[30], "/EXT"))
     )}
 
-    print_feature(buff);
+    return mold_ftr(buff);
 }
 
+#[allow(dead_code)]
 struct CacheProp {
     cache_type: String,
     level: u32,
@@ -389,7 +299,7 @@ struct CacheProp {
 }
 
 impl CacheProp {
-    fn dec(tmp: CpuidResult) -> CacheProp {
+    fn dec(tmp: &CpuidResult) -> CacheProp {
         let [eax, ebx, ecx, edx] = [tmp.eax, tmp.ebx, tmp.ecx, tmp.edx];
 
         let cache_type = match eax & 0b11111 {
@@ -437,56 +347,24 @@ impl CacheProp {
     }
 }
 
-pub fn cache_prop(in_eax: u32) {
-    for in_ecx in 0..=4 {
-        let tmp = cpuid!(in_eax, in_ecx);
-        let cache = CacheProp::dec(tmp);
+pub fn cache_prop(cpuid: &CpuidResult) -> String {
+    let cache = CacheProp::dec(cpuid);
 
-        if cache.level == 0 || cache.cache_type.len() == 0 {
-            continue;
-        }
+    if cache.level == 0 || cache.cache_type.len() == 0 {
+        return "".to_string();
+    }
 
-        print_cpuid!(in_eax, in_ecx, tmp);
-        print!(" [L{} {:<7} {:>3}-way, {:>4}{}]",
+    let mut v = vec![
+        format!(" [L{} {:<7} {:>3}-way, {:>4}{}]",
             cache.level, cache.cache_type, cache.way,
-            cache.size / cache.size_unit, cache.size_unit_string);
-        print!("{} [Shared {}T]",
-            padln!(), cache.share_thread);
+            cache.size / cache.size_unit, cache.size_unit_string),
+        format!("{} [Shared {}T]",
+            padln!(), cache.share_thread),
+    ];
 
-        if cache.inclusive {
-            print!("{} [Inclusive]", padln!());
-        }
-
-        println!();
+    if cache.inclusive {
+        v.push(format!("{} [Inclusive]", padln!()));
     }
-}
-
-pub fn cpu_name(tmp: CpuidResult) -> String {
-    let mut name = Vec::with_capacity(48);
-    let reg = [tmp.eax, tmp.ebx, tmp.ecx, tmp.edx];
-
-    reg.iter().for_each(
-        |&val| name.extend(&val.to_le_bytes())
-    );
-
-    return String::from_utf8(name).unwrap();
-}
-
-pub fn to_vstring(src: Vec<&str>) -> Vec<String> {
-    src.iter().map( |v| v.to_string() ).collect::<Vec<String>>()
-}
-
-pub fn detect_ftr(reg: u32, ftr_str: Vec<String>) -> Vec<String> {
-    let mut buff: Vec<String> = Vec::with_capacity(32);
-
-    let reg = Reg::new(reg).to_boolvec();
-
-    for id in 0..(ftr_str.len()) {
-        if !reg[id] || ftr_str[id].len() < 1 {
-            continue;
-        }
-        push!(buff, ftr_str[id]);
-    }
-
-    return buff;
+   
+    return concat_string(v);
 }
