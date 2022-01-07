@@ -9,60 +9,9 @@ use cpuid_asm::{cpuid, Vendor, _AX};
 mod parse;
 use crate::parse::*;
 
-use std::io::Write;
 use std::{mem, thread};
-//  use std::fmt::write;
-
-/*
-struct Opt {
-    long: bool,
-}
-
-impl Opt {
-    fn default() -> Opt {
-        Opt {
-            long: false,
-        }
-    }
-    fn parse() -> Opt {
-        let mut opt = Opt::default();
-        let args: Vec<String> = std::env::args().collect();
-
-        for v in &args[1..] {
-            match v.as_str() {
-                "-l" |
-                "--long" => opt.long = true,
-                _ => {},
-            }
-        }
-        return opt;
-    }
-}
-*/
-
-struct VendorFlag {
-    amd: bool,
-    intel: bool,
-}
-
-impl VendorFlag {
-    fn check() -> VendorFlag {
-        let vendor = Vendor::get();
-        let amd = vendor.check_amd();
-        let intel = vendor.check_intel() && !amd;
-
-        VendorFlag {
-            amd,
-            intel,
-        }
-    }
-}
 
 fn dump() {
-    //  let opt = Opt::parse();
-    use std::io::{BufWriter, Write, stdout};
-
-
     let mut parse_pool: Vec<u8> = Vec::new();
 
     parse_pool.extend(
@@ -72,7 +21,6 @@ fn dump() {
     parse_pool.extend(
         format!("{}\n", "=".repeat(80)).into_bytes()
     );
-
 
     let cpuid_pool = cpuid_pool();
     
@@ -84,6 +32,7 @@ fn dump() {
     }
     parse_pool.extend(b"\n");
 
+    use std::io::{BufWriter, Write, stdout};
     let out = stdout();
     let mut out = BufWriter::new(out.lock());
 
@@ -103,6 +52,24 @@ fn dump_all() {
             dump();
         })
         .join().unwrap();
+    }
+}
+
+struct VendorFlag {
+    amd: bool,
+    intel: bool,
+}
+
+impl VendorFlag {
+    fn check() -> VendorFlag {
+        let vendor = Vendor::get();
+        let amd = vendor.check_amd();
+        let intel = vendor.check_intel() && !amd;
+
+        VendorFlag {
+            amd,
+            intel,
+        }
     }
 }
 
