@@ -3,13 +3,6 @@
 
 use core::arch::x86_64::{CpuidResult};
 
-/*
-extern crate cpuid_asm;
-use cpuid_asm::{cpuid};
-
-use std::io::Write;
-*/
-
 #[path = "./_parse/parse_amd.rs"]
 mod parse_amd;
 pub use parse_amd::*;
@@ -30,8 +23,8 @@ pub fn info_00_01h(cpuid: &CpuidResult) -> String {
         cpuid.ebx,
     ];
 
-    let fms = FamModStep::dec(eax);
-    let codename = get_codename(&fms).codename;
+    let fms = FamModStep::from_cpuid(&eax);
+    let codename = fms.codename();
 
     buff.push(
         format!(" [F: 0x{:X}, M: 0x{:X}, S: 0x{:X}]", fms.syn_fam, fms.syn_mod, fms.step)
@@ -277,9 +270,9 @@ pub fn feature_80_01h(cpuid: &CpuidResult) -> String {
 
     // 0x8000_0001_EDX_x0
     let edx = Reg::new(edx).to_boolvec();
-    if edx[31] { buff.push(
-        format!("3DNow!{}", has_ftr!(edx[30], "/EXT"))
-    )}
+    if edx[31] {
+        buff.push(format!("3DNow!{}", has_ftr!(edx[30], "/EXT")))
+    }
 
     return mold_ftr(buff);
 }
@@ -363,7 +356,7 @@ pub fn cache_prop(cpuid: &CpuidResult) -> String {
     ];
 
     if cache.inclusive {
-        v.push(format!("{} [Inclusive]", padln!()));
+        v.push(" [Inclusive]".to_string());
     }
    
     return concat_string(v);

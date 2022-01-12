@@ -24,15 +24,17 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicIsize, Ordering};
 
 fn help_txt() {
-    print!("\
+    print!("\n\
         Original:\n\
         \x20    c2clat 1.0.0 © 2020 Erik Rigtorp <erik@rigtorp.se>\n\
         \x20    https://github.com/rigtorp/c2clat\n\
         \n\
-        usage: c2clat [-p] [-s number_of_samples]\n\
+        usage: c2clat [-md|-p] [-n number_of_samples]\n\
         Plot results using gnuplot:\n\
         c2clat -p | gnuplot -p\n\
     \n");
+
+    std::process::exit(-1);
 }
 
 fn print_matrix(title: &str, result: Vec<Vec<u128>>,
@@ -95,7 +97,7 @@ struct Opt {
 }
 
 impl Opt {
-    fn default() -> Opt {
+    fn init() -> Opt {
         Opt {
             md: false,
             plot: false,
@@ -103,7 +105,7 @@ impl Opt {
         }
     }
     fn parse() -> Opt {
-        let mut opt = Opt::default();
+        let mut opt = Opt::init();
         let args: Vec<String> = std::env::args().collect();
 
         for i in 1..args.len() {
@@ -123,6 +125,8 @@ impl Opt {
                         Some(v) => v.parse::<isize>().expect("Please number"),
                         None => opt.nsamples,
                     };
+
+                    if n < 0 { help_txt() }
                     opt.nsamples = n;
                 },
                 _ => {},

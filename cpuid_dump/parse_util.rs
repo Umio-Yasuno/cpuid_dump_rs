@@ -1,5 +1,6 @@
 use crate::*;
 
+/*
 #[macro_export]
 macro_rules! print_cpuid {
     ($in_eax: expr, $in_ecx: expr, $cpuid: expr) => {
@@ -17,7 +18,7 @@ macro_rules! print_cpuid {
         ).unwrap()
     };
 }
-
+*/
 #[macro_export]
 macro_rules! has_ftr {
     ($ftr_bool: expr, $name_str: expr) => {
@@ -71,7 +72,6 @@ impl Reg {
     pub fn new(reg: u32) -> Reg {
         Reg(reg)
     }
-
     pub fn to_bitvec(&self) -> Vec<u8> {
         let mut bit = [0u8; 32];
         for i in 0..32 {
@@ -79,7 +79,6 @@ impl Reg {
         }
         return bit.to_vec();
     }
-
     pub fn to_boolvec(&self) -> Vec<bool> {
         self.to_bitvec().iter().map(|&x| x == 1 ).collect()
     }
@@ -87,11 +86,12 @@ impl Reg {
 
 pub fn cpu_name(tmp: &CpuidResult) -> String {
     let mut name = Vec::with_capacity(48);
-    let reg = [tmp.eax, tmp.ebx, tmp.ecx, tmp.edx];
 
-    reg.iter().for_each(
-        |&val| name.extend(&val.to_le_bytes())
-    );
+    [tmp.eax, tmp.ebx, tmp.ecx, tmp.edx]
+        .iter()
+        .for_each(|&val|
+            name.extend(&val.to_le_bytes())
+        );
 
     return String::from_utf8(name).unwrap();
 }
@@ -101,11 +101,13 @@ pub fn to_vstring(src: Vec<&str>) -> Vec<String> {
 }
 
 pub fn detect_ftr(reg: u32, ftr_str: Vec<String>) -> Vec<String> {
-    let len = if 32 < ftr_str.len() {
+    let len = ftr_str.len();
+    let len = if 32 < len {
         32
     } else {
-        ftr_str.len()
+        len
     };
+
     let reg = Reg::new(reg).to_boolvec();
     let mut buff: Vec<String> = Vec::with_capacity(32);
 

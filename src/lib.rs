@@ -1,11 +1,18 @@
 //  Copyright (c) 2021 Umio Yasuno
 //  SPDX-License-Identifier: MIT
+#[allow(unused_imports)]
+#[allow(dead_code)]
 
 use core::arch::x86_64::{CpuidResult, __cpuid_count};
 
+//  pub mod feature_detect;
+#[path = "./codename.rs"]
 mod codename;
-pub mod feature_detect;
 pub use codename::*;
+#[path = "./vendor.rs"]
+mod vendor;
+pub use vendor::*;
+
 pub mod cpuid_macro;
 
 pub const _AX: u32 = 0x8000_0000;
@@ -44,29 +51,109 @@ macro_rules! pin_thread {
     };
 }
 
-pub fn get_processor_name() -> String {
+pub fn get_proc_name() -> String {
+    let mut reg: Vec<u32> = Vec::with_capacity(12);
     let mut name: Vec<u8> = Vec::with_capacity(48);
 
-    for i in 0..3usize {
+    for i in 0..=2 {
         let tmp = cpuid!(_AX + 0x2 + i as u32, 0);
-        let reg = [tmp.eax, tmp.ebx, tmp.ecx, tmp.edx];
-
-        reg.iter().for_each(
-            |&val| name.extend( &val.to_le_bytes() )
-        );
+        reg.extend(vec![tmp.eax, tmp.ebx, tmp.ecx, tmp.edx]);
     }
 
-    String::from_utf8(name).unwrap()
+    reg.iter().for_each(
+        |&val| name.extend( &val.to_le_bytes() )
+    );
+
+    return String::from_utf8(name).unwrap();
+}
+
+pub fn get_trim_proc_name() -> String {
+    let pat = ('\u{00}' ..= '\u{20}').collect::<Vec<char>>();
+
+    return get_proc_name()
+        .trim_end_matches(&pat[..])
+        .to_string();
 }
 
 fn get_clflush_size() -> u32 {
     ((cpuid!(0x1, 0).ebx >> 8) & 0xff) * 8
 }
 
+/*
 enum CoreType {
-    Core = 0x20,    // big
-    Atom = 0x40,    // small
+    Core = 0x20, // big
+    Atom = 0x40, // small
 }
+
+enum CacheType {
+    Null = 0,
+    Data = 1,
+    Inst = 2,
+    Unified = 3,
+}
+
+struct CacheProp {
+    cache_type: String,
+    level: u32,
+    line_size: u32,
+    way: u32,
+    set: u32,
+    size: u32,
+    share_thread: u32,
+    size_unit: u32,
+    size_unit_string: String,
+    inclusive: bool,
+}
+
+impl CacheProp {
+    fn dec(tmp: CpuidResult) -> CacheProp {
+        let [eax, ebx, ecx, edx] = [tmp.eax, tmp.ebx, tmp.ecx, tmp.edx];
+
+        let cache_type = match eax & 0b11111 {
+            0x1 => "Data",
+            0x2 => "Inst",
+            0x3 => "Unified",
+            0x0 | _ => "",
+        }.to_string();
+
+        let level = (eax >> 5) & 0b111;
+        let line_size = (ebx & 0xFFF) + 1;
+        let way = (ebx >> 22) + 1;
+        let set = ecx + 1;
+        let size = line_size * way * set;
+
+        let share_thread = ((eax >> 14) & 0xFFF) + 1;
+
+        let mut size_unit = 1;
+        let mut size_unit_string = "B";
+
+        if size < 1000_000 {
+            size_unit = 1 << 10;
+            size_unit_string = "KiB";
+        } else if size < 1000_000_000 {
+            size_unit = 1 << 20;
+            size_unit_string = "MiB";
+        };
+
+        let size_unit_string = size_unit_string.to_string();
+
+        let inclusive = (edx & 0b10) != 0;
+
+        CacheProp {
+            cache_type,
+            level,
+            line_size,
+            way,
+            set,
+            size,
+            share_thread,
+            size_unit,
+            size_unit_string,
+            inclusive,
+        }
+    }
+}
+*/
 
 pub struct CacheInfo {
     pub l1d_size: u32, // KiB
@@ -190,26 +277,6 @@ impl CacheInfo {
     }
 }
 
-pub struct FamModStep {
-    pub syn_fam: u32,
-    pub syn_mod: u32,
-    pub step: u32,
-    pub raw_eax: u32,
-}
-
-impl FamModStep {
-    pub fn get() -> FamModStep {
-        let eax = cpuid!(0x1, 0).eax;
-
-        FamModStep {
-            syn_fam: ((eax >> 8) & 0xf) + ((eax >> 20) & 0xff),
-            syn_mod: ((eax >> 4) & 0xf) + ((eax >> 12) & 0xf0),
-            step: eax & 0xf,
-            raw_eax: eax,
-        }
-    }
-}
-
 pub struct CpuInfo {
     pub is_hybrid: bool,
     pub total_phy_core: u32,
@@ -259,108 +326,63 @@ impl CpuTopoInfo {
     }
 }
 
+/*
+struct IntelExtTopo {
+    
+}
+*/
+
 pub struct CpuCoreCount {
     pub has_htt: bool,
     pub total_thread: u32,
     pub thread_per_core: u32,
     pub phy_core: u32,
     pub apic_id: u32,
-    pub core_id: u32,
+    //  pub core_id: u32,
 }
 
 impl CpuCoreCount {
     pub fn get() -> CpuCoreCount {
-        let lf_01h = cpuid!(0x1, 0);
-        let lf_04h = cpuid!(0x4, 0);
+        //  let lf_04h = cpuid!(0x4, 0x0);
         //  let lf_0bh = cpuid!(0xB, 0);
-        let lf_80_1eh = cpuid!(_AX + 0x1E, 0);
+        //  let lf_80_1eh = cpuid!(_AX + 0x1E, 0x0);
+        //  let lf_08h = cpuid!(0x4, 0x1);
 
+        let vendor = VendorFlag::check();
+
+        let lf_01h = cpuid!(0x1, 0x0);
         let has_htt = ((lf_01h.edx >> 28) & 0b1) == 1;
 
-        let total_thread = (lf_01h.ebx >> 16) & 0xFF;
+        // TODO: Use Leaf: 0xB, Sub-leaf: 0x2 if Intel CPU
+        //  Topology type: Core, for Alder Lake
+        let total_thread = if vendor.intel {
+            cpuid!(0xB, 0x1).ebx & 0xFFFF
+        } else {
+            (lf_01h.ebx >> 16) & 0xFF
+        };
 
-        let amd_td_per_core = ((lf_80_1eh.ebx >> 8) & 0xFF) + 1;
-        let intel_shared_dc = ((lf_04h.eax >> 14) & 0xFFF) + 1;
+        let thread_per_core = if vendor.intel {
+            (cpuid!(0x4, 0x0).eax & 0xFFF) + 1
+        } else if vendor.amd {
+            (cpuid!(_AX + 0x1E, 0x0).ebx & 0xFF) + 1
+        } else if has_htt {
+            2
+        } else {
+            1
+        };
 
-        let _thread_per_core =
-            if has_htt && 1 < amd_td_per_core {
-                amd_td_per_core
-            } else if has_htt && 1 < intel_shared_dc {
-                intel_shared_dc
-            } else if has_htt {
-                2
-            } else {
-                1
-            };
-        let _phy_core = total_thread / _thread_per_core;
-        let _apic_id = (lf_01h.ebx >> 24) & 0xFF;
+        let phy_core = total_thread / thread_per_core;
+        let apic_id = (lf_01h.ebx >> 24) & 0xFF;
         //  TODO: CoreID for Intel CPU
-        let _core_id = lf_80_1eh.ebx & 0xFF;
+        //  let core_id = lf_80_1eh.ebx & 0xFF;
 
         CpuCoreCount {
             has_htt,
             total_thread,
-            thread_per_core: _thread_per_core,
-            phy_core: _phy_core,
-            apic_id: _apic_id,
-            core_id: _core_id,
+            thread_per_core,
+            phy_core,
+            apic_id,
+            //  core_id,
         }
-    }
-}
-
-#[derive(Copy, Clone, PartialEq, PartialOrd)]
-pub struct Vendor {
-    pub ebx: u32,
-    pub ecx: u32,
-    pub edx: u32,
-}
-
-impl Vendor {
-    pub fn get() -> Vendor {
-        let tmp = cpuid!(0, 0);
-
-        Vendor {
-            ebx: tmp.ebx,
-            ecx: tmp.ecx,
-            edx: tmp.edx,
-        }
-    }
-    pub fn amd() -> Vendor {
-        Vendor {
-            ebx: 0x6874_7541,
-            ecx: 0x444D_4163,
-            edx: 0x6974_6E65,
-        }
-    }
-    pub fn intel() -> Vendor {
-        Vendor {
-            ebx: 0x756E_6547,
-            ecx: 0x4965_6E69,
-            edx: 0x6C65_746E,
-        }
-    }
-    pub fn check_amd() -> bool {
-        Vendor::get() == Vendor::amd()
-    }
-    pub fn check_intel() -> bool {
-        Vendor::get() == Vendor::intel()
-    }
-}
-
-pub fn get_vendor_name() -> String {
-    let tmp = cpuid!(0, 0);
-    let vendor = Vendor {
-        ebx: tmp.ebx,
-        ecx: tmp.ecx,
-        edx: tmp.edx,
-    };
-
-    // TODO: add other vendor
-    if vendor == Vendor::amd() {
-        format!("AuthenticAMD")
-    } else if vendor == Vendor::intel() {
-        format!("GenuineIntel")
-    } else {
-        format!("Unknown")
     }
 }

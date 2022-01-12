@@ -1,17 +1,73 @@
 //  Copyright (c) 2021 Umio Yasuno
 //  SPDX-License-Identifier: MIT
 
+use crate::*;
+
 #[path = "./_codename/codename_amd.rs"]
 mod codename_amd;
-use codename_amd::*;
+pub use codename_amd::*;
 #[path = "./_codename/codename_intel.rs"]
 mod codename_intel;
-use codename_intel::*;
+pub use codename_intel::*;
 
 pub struct ProcInfo {
     pub codename: String,
     pub archname: String,
     pub process: String,
+}
+
+pub struct FamModStep {
+    pub syn_fam: u32,
+    pub syn_mod: u32,
+    pub step: u32,
+    pub raw_eax: u32,
+}
+
+impl FamModStep {
+    pub fn dec(eax: u32) -> FamModStep {
+         FamModStep {
+            syn_fam: ((eax >> 8) & 0xF) + ((eax >> 20) & 0xFF),
+            syn_mod: ((eax >> 4) & 0xF) + ((eax >> 12) & 0xF0),
+            step: eax & 0xF,
+            raw_eax: eax,
+        }
+    }
+    pub fn from_cpuid(eax: &u32) -> FamModStep {
+         FamModStep {
+            syn_fam: ((*eax >> 8) & 0xF) + ((*eax >> 20) & 0xFF),
+            syn_mod: ((*eax >> 4) & 0xF) + ((*eax >> 12) & 0xF0),
+            step: *eax & 0xF,
+            raw_eax: *eax,
+        }
+    }
+    pub fn get() -> FamModStep {
+        FamModStep::from_cpuid(&cpuid!(0x1, 0).eax)
+    }
+    pub fn proc_info(&self) -> ProcInfo {
+        let [f, m, s] = [self.syn_fam, self.syn_mod, self.step];
+
+        return match f {
+            0x5 => info!("Quark X1000", "P5C", "32 nm"),
+            0x6 => fam06h(m, s),
+
+            0x17 => fam17h(m, s),
+            0x19 => fam19h(m, s),
+            _ => ProcInfo {
+                codename: format!("F{}h_M{}h_S{}h", f, m, s),
+                archname: "Unknown".to_string(),
+                process: "".to_string(),
+            },
+        };
+    }
+    pub fn codename(&self) -> String {
+        self.proc_info().codename
+    }
+    pub fn archname(&self) -> String {
+        self.proc_info().archname
+    }
+    pub fn process(&self) -> String {
+        self.proc_info().process
+    }
 }
 
 #[macro_export]
@@ -27,10 +83,10 @@ macro_rules! info {
 
 //  f: Family, m: Model, s: Stepping
 //  pub fn get_codename(f: u32, m: u32, s: u32) -> String {
-pub fn get_codename(f: u32, m: u32, s: u32) -> ProcInfo {
-    match f {
-        _ => format!("Unknown"),
-    };
+/*
+pub fn get_codename(fms: &FamModStep) -> ProcInfo {
+    let [f, m, s] = [fms.syn_fam, fms.syn_mod, fms.step];
+
     return match f {
         0x5 => info!("Quark X1000", "P5C", "32 nm"),
         0x6 => fam06h(m, s),
@@ -44,3 +100,4 @@ pub fn get_codename(f: u32, m: u32, s: u32) -> ProcInfo {
         },
     };
 }
+*/
