@@ -16,6 +16,16 @@ pub struct ProcInfo {
     pub process: String,
 }
 
+impl ProcInfo {
+    pub fn info(code: &str, arch: &str, process: &str) -> ProcInfo {
+        ProcInfo {
+            codename: code.to_string(),
+            archname: arch.to_string(),
+            process: process.to_string(),
+        }
+    }
+}
+
 pub struct FamModStep {
     pub syn_fam: u32,
     pub syn_mod: u32,
@@ -24,6 +34,9 @@ pub struct FamModStep {
 }
 
 impl FamModStep {
+    pub fn get() -> FamModStep {
+        FamModStep::from_cpuid(&cpuid!(0x1, 0).eax)
+    }
     pub fn dec(eax: u32) -> FamModStep {
          FamModStep {
             syn_fam: ((eax >> 8) & 0xF) + ((eax >> 20) & 0xFF),
@@ -40,14 +53,11 @@ impl FamModStep {
             raw_eax: *eax,
         }
     }
-    pub fn get() -> FamModStep {
-        FamModStep::from_cpuid(&cpuid!(0x1, 0).eax)
-    }
     pub fn proc_info(&self) -> ProcInfo {
         let [f, m, s] = [self.syn_fam, self.syn_mod, self.step];
 
         return match f {
-            0x5 => info!("Quark X1000", "P5C", "32 nm"),
+            0x5 => ProcInfo::info("Quark X1000", "P5C", "32 nm"),
             0x6 => fam06h(m, s),
 
             0x17 => fam17h(m, s),
@@ -69,35 +79,3 @@ impl FamModStep {
         self.proc_info().process
     }
 }
-
-#[macro_export]
-macro_rules! info {
-    ($codename: expr, $arch: expr, $process: expr) => {
-        ProcInfo {
-            codename: $codename.to_string(),
-            archname: $arch.to_string(),
-            process: $process.to_string(),
-        }
-    };
-}
-
-//  f: Family, m: Model, s: Stepping
-//  pub fn get_codename(f: u32, m: u32, s: u32) -> String {
-/*
-pub fn get_codename(fms: &FamModStep) -> ProcInfo {
-    let [f, m, s] = [fms.syn_fam, fms.syn_mod, fms.step];
-
-    return match f {
-        0x5 => info!("Quark X1000", "P5C", "32 nm"),
-        0x6 => fam06h(m, s),
-
-        0x17 => fam17h(m, s),
-        0x19 => fam19h(m, s),
-        _ => ProcInfo {
-            codename: format!("F{}h_M{}h_S{}h", f, m, s),
-            archname: "Unknown".to_string(),
-            process: "".to_string(),
-        },
-    };
-}
-*/

@@ -4,7 +4,7 @@
 use core::arch::x86_64::{CpuidResult, __cpuid_count};
 
 extern crate cpuid_asm;
-use cpuid_asm::{cpuid, Vendor, _AX};
+use cpuid_asm::{cpuid, Vendor, VendorFlag, _AX};
 
 #[path = "./parse.rs"]
 mod parse;
@@ -13,23 +13,17 @@ pub use crate::parse::*;
 mod raw_cpuid;
 pub use crate::raw_cpuid::*;
 
-use std::{mem, thread};
-
 fn cpuid_pool() -> Vec<RawCpuid> {
     let mut pool: Vec<RawCpuid> = Vec::new();
 
     // Base
     for leaf in 0x0..=0xC {
         match leaf {
-            0x4 => {
-                for sub_leaf in 0..=4 {
-                    pool.push(RawCpuid::exe(leaf, sub_leaf));
-                }
+            0x4 => for sub_leaf in 0..=4 {
+                pool.push(RawCpuid::exe(leaf, sub_leaf));
             },
-            0x7 => {
-                for sub_leaf in 0..=1 {
-                    pool.push(RawCpuid::exe(leaf, sub_leaf));
-                }
+            0x7 => for sub_leaf in 0..=1 {
+                pool.push(RawCpuid::exe(leaf, sub_leaf));
             },
             _ => pool.push(RawCpuid::exe(leaf, 0x0)),
         }
@@ -47,13 +41,13 @@ fn cpuid_pool() -> Vec<RawCpuid> {
 
     // Ext
     for leaf in _AX+0x0..=_AX+0x21 {
+        pool.push(RawCpuid::exe(leaf, 0x0));
+
         if leaf == _AX+0x1D {
-            for sub_leaf in 0x0..=0x4 {
+            for sub_leaf in 0x1..=0x4 {
                 pool.push(RawCpuid::exe(leaf, sub_leaf));
             }
-            continue;
         }
-        pool.push(RawCpuid::exe(leaf, 0x0));
     }
 
     return pool;
@@ -62,11 +56,14 @@ fn cpuid_pool() -> Vec<RawCpuid> {
 fn parse_pool() -> Vec<u8> {
     let mut parse_pool: Vec<u8> = Vec::new();
     let cpuid_pool = cpuid_pool();
+    let vendor = VendorFlag::check();
     
     for cpuid in cpuid_pool {
-        let v = cpuid.parse();
+        if cpuid.check_result_zero() {
+            continue;
+        }
         parse_pool.extend(
-            cpuid.parse_fmt(v).into_bytes()
+            cpuid.parse_fmt(&vendor).into_bytes()
         );
     }
 
@@ -78,8 +75,9 @@ fn raw_pool() -> Vec<u8> {
     let cpuid_pool = cpuid_pool();
 
     for cpuid in cpuid_pool {
-        let tmp = cpuid.raw_fmt().into_bytes();
-        pool.extend(tmp);
+        pool.extend(
+            cpuid.raw_fmt().into_bytes()
+        );
     }
 
     return pool;
@@ -106,8 +104,10 @@ fn raw_dump() {
     dump_write(&pool);
 }
 
+use std::thread;
 fn dump_all() {
     let thread_count = cpuid_asm::CpuCoreCount::get().total_thread;
+
     println!("   (in)EAX_xECX:  {:<10} {:<10} {:<10} {:<10}\n{}",
             "(out)EAX", "(out)EBX", "(out)ECX", "(out)EDX",
             "=".repeat(80));

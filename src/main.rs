@@ -16,7 +16,6 @@ fn main() {
         (tmp >> 19) & 1,
         (tmp >> 23) & 1,
     );
-*/
     println!("Test Leaf: 0xB");
 
     let cpuid_0bh = CpuidResult {
@@ -36,4 +35,18 @@ fn main() {
     println!("Level num (same ecx): {}", cpuid_0bh.ecx & 0xFF);
     println!("Level type: {}", (cpuid_0bh.ecx >> 8) & 0xFF);
     println!("x2APIC ID: {}", cpuid_0bh.edx);
+
+    let cache = CpuidResult {
+        eax: 0x1c01c143,
+        ebx: 0x0240003F,
+        ecx: 0x000007FF,
+        edx: 0x0,
+    };
+
+    println!("Share th: {}", (cache.eax >> 26));
+
+    let cppc = (0x68006400 >> 27) & 1;
+    println!("CPPC: {}", cppc);
+*/
+    println!("[{}]", get_vendor_name());
 }

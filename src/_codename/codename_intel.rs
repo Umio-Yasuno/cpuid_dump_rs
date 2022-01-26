@@ -1,4 +1,4 @@
-use crate::{info, ProcInfo};
+use crate::*;
 
 pub fn fam06h(m: u32, s: u32) -> ProcInfo {
     match m {
@@ -38,62 +38,62 @@ pub fn fam06h(m: u32, s: u32) -> ProcInfo {
 
             //  Broadwell
         */
-        0x3D => info!("Broadwell (Desktop)", "Broadwell", "14 nm"),
-        0x47 => info!("Broadwell (Iris Pro)", "Broadwell", "14 nm"),
-        0x4F => info!("Broadwell (Server)", "Broadwell", "14 nm"),
-        0x56 => info!("Broadwell (Micro Server)", "Broadwell", "14 nm"),
+        0x3D => ProcInfo::info("Broadwell (Desktop)", "Broadwell", "14 nm"),
+        0x47 => ProcInfo::info("Broadwell (Iris Pro)", "Broadwell", "14 nm"),
+        0x4F => ProcInfo::info("Broadwell (Server)", "Broadwell", "14 nm"),
+        0x56 => ProcInfo::info("Broadwell (Micro Server)", "Broadwell", "14 nm"),
 
-        0x4E => info!("Skylake (Mobile)", "Skylake", "14 nm"),
-        0x5E => info!("Skylake (Desktop)", "Skylake", "14 nm"),
+        0x4E => ProcInfo::info("Skylake (Mobile)", "Skylake", "14 nm"),
+        0x5E => ProcInfo::info("Skylake (Desktop)", "Skylake", "14 nm"),
         0x55 => match s {
-            0x9 => info!("Cascade Lake (Server)", "Skylake AVX512/VNNI", "14 nm"),
-            0xB => info!("Cooper Lake (Server)", "Skylake AVX512/VNNI/BF16", "14 nm"),
-            _ => info!("Skylake (Server)", "Skylake AVX512", "14 nm"),
+            0x9 => ProcInfo::info("Cascade Lake (Server)", "Skylake AVX512/VNNI", "14 nm"),
+            0xB => ProcInfo::info("Cooper Lake (Server)", "Skylake AVX512/VNNI/BF16", "14 nm"),
+            _ => ProcInfo::info("Skylake (Server)", "Skylake AVX512", "14 nm"),
         },
         0x8E => match s {
-            0x9 => info!("Amber Lake (Mobile)", "Skylake", "14 nm"),
-            0xA => info!("Coffee Lake (Mobile)", "Skylake", "14 nm"),
-            0xB | 0xC => info!("Whiskey Lake (Mobile)", "Skylake", "14 nm"),
-            _ => info!("Kaby Lake (Mobile)", "Skylake", "14 nm"),
+            0x9 => ProcInfo::info("Amber Lake (Mobile)", "Skylake", "14 nm"),
+            0xA => ProcInfo::info("Coffee Lake (Mobile)", "Skylake", "14 nm"),
+            0xB | 0xC => ProcInfo::info("Whiskey Lake (Mobile)", "Skylake", "14 nm"),
+            _ => ProcInfo::info("Kaby Lake (Mobile)", "Skylake", "14 nm"),
         },
         0x9E => match s {
-            0xA | 0xB | 0xC => info!("Coffee Lake (Desktop)", "Skylake", "14 nm"),
-            _ => info!("Kaby Lake (Desktop)", "Skylake", "14 nm"),
+            0xA | 0xB | 0xC => ProcInfo::info("Coffee Lake (Desktop)", "Skylake", "14 nm"),
+            _ => ProcInfo::info("Kaby Lake (Desktop)", "Skylake", "14 nm"),
         },
 
-        0xA5 => info!("Comet Lake (Desktop)", "Skylake", "14 nm"),
-        0xA6 => info!("Comet Lake (Mobile)", "Skylake", "14 nm"),
+        0xA5 => ProcInfo::info("Comet Lake (Desktop)", "Skylake", "14 nm"),
+        0xA6 => ProcInfo::info("Comet Lake (Mobile)", "Skylake", "14 nm"),
 
-        0x66 => info!("Cannon Lake (Mobile)", "Palm Cove", "10 nm"),
+        0x66 => ProcInfo::info("Cannon Lake (Mobile)", "Palm Cove", "10 nm"),
 
-        0x6A => info!("Ice Lake (Server)", "Sunny Cove", "10nm"),
-        0x6C => info!("Ice Lake (Micro Server)", "Sunny Cove", "10nm"),
-        0x7D => info!("Ice Lake (Desktop)", "Sunny Cove", "10nm"),
-        0x7E => info!("Ice Lake (Mobile)", "Sunny Cove", "10nm"),
-        0x9D => info!("Ice Lake (NNPI)", "Sunny Cove", "10nm"),
+        0x6A => ProcInfo::info("Ice Lake (Server)", "Sunny Cove", "10nm"),
+        0x6C => ProcInfo::info("Ice Lake (Micro Server)", "Sunny Cove", "10nm"),
+        0x7D => ProcInfo::info("Ice Lake (Desktop)", "Sunny Cove", "10nm"),
+        0x7E => ProcInfo::info("Ice Lake (Mobile)", "Sunny Cove", "10nm"),
+        0x9D => ProcInfo::info("Ice Lake (NNPI)", "Sunny Cove", "10nm"),
 
-        0xA7 => info!("Rocket Lake (Desktop)", "Cypress Cove", "14 nm"),
+        0xA7 => ProcInfo::info("Rocket Lake (Desktop)", "Cypress Cove", "14 nm"),
 
-        0x8C => info!("Tiger Lake (Mobile)", "Willow Cove", "10 nm SF"),
-        0x8D => info!("Tiger Lake (Desktop)", "Willow Cove", "10 nm SF"),
+        0x8C => ProcInfo::info("Tiger Lake (Mobile)", "Willow Cove", "10 nm SF"),
+        0x8D => ProcInfo::info("Tiger Lake (Desktop)", "Willow Cove", "10 nm SF"),
 
         //  Hybrid
-        0x8A => info!("Lakefield", "Sunny Cove/Tremont", "10 nm"),
+        0x8A => ProcInfo::info("Lakefield", "Sunny Cove/Tremont", "10 nm"),
 
-        0x97 => info!("Alder Lake", "Golden Cove/Gracemont", "Intel 7 /10 nm eSF"),
+        0x97 => ProcInfo::info("Alder Lake", "Golden Cove/Gracemont", "Intel 7 /10 nm eSF"),
         0x9A => match s {
-            0x1 => info!(
+            0x1 => ProcInfo::info(
                 "Alder Lake-M (Mobile)",
                 "Golden Cove/Gracemont", "Intel 7 /10 nm eSF"
             ),
-            _ => info!(
+            _ => ProcInfo::info(
                 "Alder Lake-P (Mobile)",
                 "Golden Cove/Gracemont", "Intel 7 /10 nm eSF"
             ),
         },
-        0xBE => info!("Alder Lake-N", "Gracemont", "Intel 7 /10 nm eSF"),
+        0xBE => ProcInfo::info("Alder Lake-N", "Gracemont ?", "Intel 7 /10 nm eSF"),
 
-        0x8F => info!("Sapphire Rapids (Server)", "Golden Cove", "10nm eSF"),
+        0x8F => ProcInfo::info("Sapphire Rapids (Server)", "Golden Cove", "10nm eSF"),
         /*
                 //  Atom
                 //  Bonnell

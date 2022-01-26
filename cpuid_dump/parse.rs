@@ -16,32 +16,27 @@ pub use parse_util::*;
 
 pub fn info_00_01h(cpuid: &CpuidResult) -> String {
     use cpuid_asm::*;
-    let mut buff: Vec<String> = Vec::new();
 
-    let [eax, ebx] = [
-        cpuid.eax,
-        cpuid.ebx,
-    ];
+    let [eax, ebx] = [ cpuid.eax, cpuid.ebx, ];
 
     let fms = FamModStep::from_cpuid(&eax);
     let codename = fms.codename();
 
-    buff.push(
-        format!(" [F: 0x{:X}, M: 0x{:X}, S: 0x{:X}]", fms.syn_fam, fms.syn_mod, fms.step)
-    );
-    buff.push(format!("{} [{}]", padln!(), codename));
+    let buff = &[
+        format!(" [F: 0x{:X}, M: 0x{:X}, S: 0x{:X}]", fms.syn_fam, fms.syn_mod, fms.step),
+        format!("{} [{}]", padln!(), codename),
+        format!("{} [APIC ID: {}]", padln!(), ebx >> 24),
+        format!("{} [Total {} thread(s)]", padln!(), (ebx >> 16) & 0xFF),
+        format!("{} [CLFlush: {}B]", padln!(), ((ebx >> 8) & 0xFF) * 8),
+    ];
 
-    buff.push(format!("{} [APIC ID: {}]", padln!(), ebx >> 24));
-    buff.push(format!("{} [Total {} thread(s)]", padln!(), (ebx >> 16) & 0xFF));
-    buff.push(format!("{} [CLFlush: {}B]", padln!(), ((ebx >> 8) & 0xFF) * 8));
-
-    return concat_string(buff);
+    return concat_string_from_slice(buff);
 }
 
 pub fn feature_00_01h(cpuid: &CpuidResult) -> String {
     let mut buff: Vec<String> = Vec::with_capacity(64);
     //  0x0000_0007_EDX_x0
-    let ftr_edx = vec![
+    let ftr_edx = &[
         "FPU", "VME", "DebugExt", "PSE",
         "TSC", "MSR", "PAE", "MCE",
         "CMPXCHG8B", "APIC", "", "SysCallSysRet",
@@ -52,7 +47,7 @@ pub fn feature_00_01h(cpuid: &CpuidResult) -> String {
         "HTT", /* */
     ];
     //  0x0000_0007_ECX_x0
-    let ftr_ecx = vec![
+    let ftr_ecx = &[
         "", "PCLMULQDQ", "", "Monitor/Mwait", /* Bit0: SSE3 */
         "", "", "", "",
         "", "", "", "", /* Bit9: SSSE3 */
@@ -63,35 +58,29 @@ pub fn feature_00_01h(cpuid: &CpuidResult) -> String {
         "AVX", "F16C", "RDRAND", "",
     ];
 
-    let [ftr_edx, ftr_ecx] = [
-        to_vstring(ftr_edx),
-        to_vstring(ftr_ecx),
-    ];
-
     let [edx, ecx] = [
         cpuid.edx,
         cpuid.ecx,
     ];
 
-    buff.extend(detect_ftr(edx, ftr_edx));
-    buff.extend(detect_ftr(ecx, ftr_ecx));
+    buff.extend(str_detect_ftr(edx, ftr_edx));
+    buff.extend(str_detect_ftr(ecx, ftr_ecx));
 
-    let [edx, ecx] = [
-        Reg::new(edx).to_boolvec(),
-        Reg::new(ecx).to_boolvec(),
-    ];
+    let [edx, ecx] = [edx, ecx]
+        .map(|reg| Reg::new(reg).to_bool_array());
 
-    if edx[25] { buff.push(format!(
-        "SSE{0}{1}{2}{3}",
-            has_ftr!(edx[26], "/2"),
-            has_ftr!(ecx[ 0], "/3"),
-            has_ftr!(ecx[19], "/4.1"),
-            has_ftr!(ecx[20], "/4.2"),
-        )
-    )}
-    if ecx[9] { push!(buff, "SSSE3"); }
+    if edx[25] {
+        let mut sse = "SSE".to_string();
+        if edx[26] { sse.push_str("/2") }
+        if ecx[ 0] { sse.push_str("/3") }
+        if ecx[19] { sse.push_str("/4.1") }
+        if ecx[20] { sse.push_str("/4.2") }
 
-    return mold_ftr(buff);
+        buff.push(sse.to_string());
+    }
+    if ecx[9] { buff.push("SSSE3".to_string()); }
+
+    return align_mold_ftr(&buff);
 }
 
 pub fn feature_00_07h_x0(cpuid: &CpuidResult) -> String {
@@ -106,7 +95,7 @@ pub fn feature_00_07h_x0(cpuid: &CpuidResult) -> String {
     ];
 
     // 0x00000007_EBX_x0
-    let ftr_ebx = vec![
+    let ftr_ebx = &[
         "FSGSBASE", "", "SGX", "", /* Bit3: BMI1 */
         "", "", "", "SMEP", /* Bit5: AVX2 */
         "", "ERMS", "INVPCID", "", /* Bit8: BMI2 */
@@ -116,7 +105,7 @@ pub fn feature_00_07h_x0(cpuid: &CpuidResult) -> String {
         "CLWB", "", "", "",
         "", "SHA", "", "",
     ];
-    let ftr_ecx = vec![
+    let ftr_ecx = &[
         "", "", "UMIP", "PKU",
         "OSPKE", "", "", "CET_SS",
         "GFNI", "VAES", "VPCLMULQDQ", "",
@@ -126,7 +115,7 @@ pub fn feature_00_07h_x0(cpuid: &CpuidResult) -> String {
         "", "CLDEMOTE", "", "MOVDIRI",
         "MOVDIRI64B", "ENQCMD", /* */
     ];
-    let ftr_edx = vec![
+    let ftr_edx = &[
         "", "", "", "",
         "FSRM", "UINTR", "", "",
         "", "", "MD_CLEAR", "",
@@ -134,21 +123,12 @@ pub fn feature_00_07h_x0(cpuid: &CpuidResult) -> String {
         /* */
     ];
 
-    let [ftr_ebx, ftr_ecx, ftr_edx] = [
-        to_vstring(ftr_ebx),
-        to_vstring(ftr_ecx),
-        to_vstring(ftr_edx),
-    ];
-    
-    buff.extend(detect_ftr(ebx, ftr_ebx));
-    buff.extend(detect_ftr(ecx, ftr_ecx));
-    buff.extend(detect_ftr(edx, ftr_edx));
+    buff.extend(str_detect_ftr(ebx, ftr_ebx));
+    buff.extend(str_detect_ftr(ecx, ftr_ecx));
+    buff.extend(str_detect_ftr(edx, ftr_edx));
 
-    let [ebx, ecx, edx] = [
-        Reg::new(ebx).to_boolvec(),
-        Reg::new(ecx).to_boolvec(),
-        Reg::new(edx).to_boolvec(),
-    ];
+    let [ebx, ecx, edx] = [ebx, ecx, edx]
+        .map(|reg| Reg::new(reg).to_bool_array());
 
     let avx512_f    = ebx[16];
     let avx512_dq   = ebx[17];
@@ -159,23 +139,21 @@ pub fn feature_00_07h_x0(cpuid: &CpuidResult) -> String {
 
     if avx512_f || avx512_dq || avx512_ifma || avx512_cd
     || avx512_bw || avx512_vl {
-        buff.push(
-            format!("AVX512_{0}{1}{2}{3}{4}{5}",
-                has_ftr!(avx512_f, "F/"),
-                has_ftr!(avx512_dq, "DQ/"),
-                has_ftr!(avx512_ifma, "IFMA/"),
-                has_ftr!(avx512_cd, "CD/"),
-                has_ftr!(avx512_bw, "BW/"),
-                has_ftr!(avx512_vl, "VL/")
-            )
-            .trim_end_matches("/")
-            .to_string(),
-        )
+        let mut avx512: String = "AVX512".to_string();
+
+        if avx512_f    { avx512.push_str("/F") }
+        if avx512_dq   { avx512.push_str("/DQ") }
+        if avx512_ifma { avx512.push_str("/IFMA") }
+        if avx512_cd   { avx512.push_str("/CD") }
+        if avx512_bw   { avx512.push_str("/BW") }
+        if avx512_vl   { avx512.push_str("/VL") }
+
+        buff.push(avx512);
     }
 
     /*  Xeon Phi only */
     if ebx[26] && ebx[27] {
-        push!(buff, "AVX512PF/ER");
+        buff.push("AVX512PF/ER".to_string());
     }
 
     // 0x00000007_ECX_x0
@@ -225,10 +203,10 @@ pub fn feature_00_07h_x0(cpuid: &CpuidResult) -> String {
         Bit 25: AMX-INT8
     */
     if edx[22] && edx[24] && edx[25] {
-        push!(buff, format!("AMX-BF16/TILE/INT8"));
+        buff.push("AMX-BF16/TILE/INT8".to_string());
     }
 
-    return mold_ftr(buff);
+    return align_mold_ftr(&buff);
 }
 
 pub fn feature_00_07h_x1(eax: &u32) -> String {
@@ -236,16 +214,17 @@ pub fn feature_00_07h_x1(eax: &u32) -> String {
     let tmp = cpuid!(0x7, 0x1);
     print_cpuid!(0x7, 0x1, tmp);
     */
-    let eax = Reg::new(*eax).to_boolvec();
-    let mut buff: Vec<String> = Vec::with_capacity(4);
+    let eax = Reg::new(*eax).to_bool_array();
 
     // https://github.com/torvalds/linux/commit/b85a0425d8056f3bd8d0a94ecdddf2a39d32a801
-    if eax[ 4] { push!(buff, "AVX_VNNI")    }
-    if eax[ 5] { push!(buff, "AVX512_BF16") }
-    if eax[22] { push!(buff, "HRESET")      }
-    if eax[26] { push!(buff, "LAM")         }
+    let buff: Vec<String> = [
+        has_ftr!(eax[ 4], "AVX_VNNI"),
+        has_ftr!(eax[ 5], "AVX512_BF16"),
+        has_ftr!(eax[22], "HRESET"),
+        has_ftr!(eax[26], "LAM"),
+    ].iter().map(|v| v.to_string() ).collect();
 
-    return mold_ftr(buff);
+    return align_mold_ftr(&buff);
 }
 
 pub fn feature_80_01h(cpuid: &CpuidResult) -> String {
@@ -254,7 +233,7 @@ pub fn feature_80_01h(cpuid: &CpuidResult) -> String {
         cpuid.edx,
     ];
     // 0x8000_0001_ECX_x0
-    let ftr = vec![
+    let ftr = &[
         "LAHF/SAHF", "CmpLegacy", "SVM", "ExtApicSpace",
         "AltMovCr8", "ABM (LZCNT)", "SSE4A", "MisAlignSse",
         "3DNow!Prefetch", "OSVW", "IBS", "XOP",
@@ -264,17 +243,20 @@ pub fn feature_80_01h(cpuid: &CpuidResult) -> String {
         "PerfCtrExtDFl", "", "DataBreakpointExtension", "PerfTsc",
         "PerfCtrExtLLC", "MwaitExtended", "AdMskExtn", "",
     ];
-    let ftr = to_vstring(ftr);
 
-    let mut buff = detect_ftr(ecx, ftr);
+    let mut buff = str_detect_ftr(ecx, ftr);
 
     // 0x8000_0001_EDX_x0
-    let edx = Reg::new(edx).to_boolvec();
+    let edx = Reg::new(edx).to_bool_array();
     if edx[31] {
-        buff.push(format!("3DNow!{}", has_ftr!(edx[30], "/EXT")))
+        let mut tdnow = String::from("3DNow!");
+        if edx[30] { tdnow.push_str("/EXT"); }
+
+        buff.push(tdnow);
+        //buff.push(format!("3DNow!{}", has_ftr!(edx[30], "/EXT")).as_str())
     }
 
-    return mold_ftr(buff);
+    return align_mold_ftr(&buff);
 }
 
 #[allow(dead_code)]
@@ -347,17 +329,14 @@ pub fn cache_prop(cpuid: &CpuidResult) -> String {
         return "".to_string();
     }
 
-    let mut v = vec![
+    let v = &[
         format!(" [L{} {:<7} {:>3}-way, {:>4}{}]",
             cache.level, cache.cache_type, cache.way,
             cache.size / cache.size_unit, cache.size_unit_string),
         format!("{} [Shared {}T]",
             padln!(), cache.share_thread),
+        has_ftr!(cache.inclusive, " [Inclusive]").to_string(),
     ];
 
-    if cache.inclusive {
-        v.push(" [Inclusive]".to_string());
-    }
-   
-    return concat_string(v);
+    return concat_string_from_slice(v);
 }

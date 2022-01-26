@@ -1,7 +1,5 @@
 //  Copyright (c) 2021 Umio Yasuno
 //  SPDX-License-Identifier: MIT
-#[allow(unused_imports)]
-#[allow(dead_code)]
 
 use core::arch::x86_64::{CpuidResult, __cpuid_count};
 
@@ -34,11 +32,11 @@ macro_rules! pin_thread {
 
         #[cfg(target_os = "linux")]
         unsafe {
-            let mut set = mem::zeroed::<cpu_set_t>();
+            let mut set = std::mem::zeroed::<cpu_set_t>();
             CPU_ZERO(&mut set);
             CPU_SET($cpu, &mut set);
 
-            let status = sched_setaffinity(0, mem::size_of::<cpu_set_t>(), &set);
+            let status = sched_setaffinity(0, std::mem::size_of::<cpu_set_t>(), &set);
             if status == -1 {
                 eprintln!("sched_setaffinity failed.");
                 return;
@@ -57,7 +55,7 @@ pub fn get_proc_name() -> String {
 
     for i in 0..=2 {
         let tmp = cpuid!(_AX + 0x2 + i as u32, 0);
-        reg.extend(vec![tmp.eax, tmp.ebx, tmp.ecx, tmp.edx]);
+        reg.extend([tmp.eax, tmp.ebx, tmp.ecx, tmp.edx]);
     }
 
     reg.iter().for_each(
@@ -68,7 +66,8 @@ pub fn get_proc_name() -> String {
 }
 
 pub fn get_trim_proc_name() -> String {
-    let pat = ('\u{00}' ..= '\u{20}').collect::<Vec<char>>();
+    //  let pat = ('\u{00}' ..= '\u{20}').collect::<Vec<char>>();
+    let pat = ['\u{00}', '\u{20}'];
 
     return get_proc_name()
         .trim_end_matches(&pat[..])
@@ -76,7 +75,7 @@ pub fn get_trim_proc_name() -> String {
 }
 
 fn get_clflush_size() -> u32 {
-    ((cpuid!(0x1, 0).ebx >> 8) & 0xff) * 8
+    ((cpuid!(0x1, 0).ebx >> 8) & 0xFF) * 8
 }
 
 /*
@@ -338,14 +337,14 @@ pub struct CpuCoreCount {
     pub thread_per_core: u32,
     pub phy_core: u32,
     pub apic_id: u32,
-    //  pub core_id: u32,
+    pub core_id: u32,
 }
 
 impl CpuCoreCount {
     pub fn get() -> CpuCoreCount {
         //  let lf_04h = cpuid!(0x4, 0x0);
         //  let lf_0bh = cpuid!(0xB, 0);
-        //  let lf_80_1eh = cpuid!(_AX + 0x1E, 0x0);
+        let lf_80_1eh = cpuid!(_AX + 0x1E, 0x0);
         //  let lf_08h = cpuid!(0x4, 0x1);
 
         let vendor = VendorFlag::check();
@@ -362,7 +361,7 @@ impl CpuCoreCount {
         };
 
         let thread_per_core = if vendor.intel {
-            (cpuid!(0x4, 0x0).eax & 0xFFF) + 1
+            (lf_80_1eh.eax & 0xFFF) + 1
         } else if vendor.amd {
             (cpuid!(_AX + 0x1E, 0x0).ebx & 0xFF) + 1
         } else if has_htt {
@@ -373,8 +372,8 @@ impl CpuCoreCount {
 
         let phy_core = total_thread / thread_per_core;
         let apic_id = (lf_01h.ebx >> 24) & 0xFF;
-        //  TODO: CoreID for Intel CPU
-        //  let core_id = lf_80_1eh.ebx & 0xFF;
+        // TODO: CoreID for Intel CPU
+        let core_id = lf_80_1eh.ebx & 0xFF;
 
         CpuCoreCount {
             has_htt,
@@ -382,7 +381,7 @@ impl CpuCoreCount {
             thread_per_core,
             phy_core,
             apic_id,
-            //  core_id,
+            core_id,
         }
     }
 }
