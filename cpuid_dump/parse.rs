@@ -2,13 +2,16 @@
 //  SPDX-License-Identifier: MIT
 
 use core::arch::x86_64::{CpuidResult};
+use crate::const_cpuid_dump::*;
 
 #[path = "./_parse/parse_amd.rs"]
 mod parse_amd;
 pub use parse_amd::*;
+
 #[path = "./_parse/parse_intel.rs"]
 mod parse_intel;
 pub use parse_intel::*;
+
 #[path = "./parse_util.rs"]
 #[macro_use]
 mod parse_util;
@@ -22,59 +25,39 @@ pub fn info_00_01h(cpuid: &CpuidResult) -> String {
     let fms = FamModStep::from_cpuid(&eax);
     let codename = fms.codename();
 
-    let buff = &[
+    let buff = [
         format!(" [F: 0x{:X}, M: 0x{:X}, S: 0x{:X}]", fms.syn_fam, fms.syn_mod, fms.step),
-        format!("{} [{}]", padln!(), codename),
-        format!("{} [APIC ID: {}]", padln!(), ebx >> 24),
-        format!("{} [Total {} thread(s)]", padln!(), (ebx >> 16) & 0xFF),
-        format!("{} [CLFlush: {}B]", padln!(), ((ebx >> 8) & 0xFF) * 8),
+        padln!(),
+        format!(" [{}]", codename),
+        padln!(),
+        format!(" [APIC ID: {}]", ebx >> 24),
+        padln!(),
+        format!(" [Total {} thread(s)]", (ebx >> 16) & 0xFF),
+        padln!(),
+        format!(" [CLFlush: {}B]", ((ebx >> 8) & 0xFF) * 8),
     ];
 
-    return concat_string_from_slice(buff);
+    return concat_string_from_slice(&buff);
 }
 
 pub fn feature_00_01h(cpuid: &CpuidResult) -> String {
     let mut buff: Vec<String> = Vec::with_capacity(64);
-    //  0x0000_0007_EDX_x0
-    let ftr_edx = &[
-        "FPU", "VME", "DebugExt", "PSE",
-        "TSC", "MSR", "PAE", "MCE",
-        "CMPXCHG8B", "APIC", "", "SysCallSysRet",
-        "MTRR", "PGE", "MCA", "CMOV",
-        "PAT", "PSE36", "", "",
-        "", "", "", "MMX",
-        "FXSR", "", "",  "", /* Bit25: SSE, Bit26: SSE2 */
-        "HTT", /* */
-    ];
-    //  0x0000_0007_ECX_x0
-    let ftr_ecx = &[
-        "", "PCLMULQDQ", "", "Monitor/Mwait", /* Bit0: SSE3 */
-        "", "", "", "",
-        "", "", "", "", /* Bit9: SSSE3 */
-        "FMA", "CMPXCHG16B", "", "",
-        "", "PCID", "", "", /* Bit19: SSE41 */
-        "", "X2APIC", "MOVBE", "POPCNT", /* Bit24: SSE42 */
-        "", "AES", "XSAVE", "OSXSAVE",
-        "AVX", "F16C", "RDRAND", "",
-    ];
+    let [ecx, edx] = [cpuid.ecx, cpuid.edx];
 
-    let [edx, ecx] = [
-        cpuid.edx,
-        cpuid.ecx,
+    buff.extend(str_detect_ftr(edx, FTR_00_01_EDX_X0));
+    buff.extend(str_detect_ftr(ecx, FTR_00_01_ECX_X0));
+
+    let [ecx, edx] = [
+        Reg::new(ecx).to_bool_array(),
+        Reg::new(edx).to_bool_array(),
     ];
-
-    buff.extend(str_detect_ftr(edx, ftr_edx));
-    buff.extend(str_detect_ftr(ecx, ftr_ecx));
-
-    let [edx, ecx] = [edx, ecx]
-        .map(|reg| Reg::new(reg).to_bool_array());
 
     if edx[25] {
-        let mut sse = "SSE".to_string();
-        if edx[26] { sse.push_str("/2") }
-        if ecx[ 0] { sse.push_str("/3") }
-        if ecx[19] { sse.push_str("/4.1") }
-        if ecx[20] { sse.push_str("/4.2") }
+        let v = [
+            (edx[26], "2"), (ecx[0], "3"),
+            (ecx[19], "4.1"), (ecx[20], "4.2")
+        ];
+        let sse = ftr_variant_expand("SSE", &v);
 
         buff.push(sse.to_string());
     }
@@ -84,51 +67,18 @@ pub fn feature_00_01h(cpuid: &CpuidResult) -> String {
 }
 
 pub fn feature_00_07h_x0(cpuid: &CpuidResult) -> String {
-    //  let tmp = cpuid!(0x7, 0x0);
-    //  print_cpuid!(0x7, 0x0, tmp);
-
     let mut buff: Vec<String> = Vec::with_capacity(96);
+    let [ebx, ecx, edx] = [cpuid.ebx, cpuid.ecx, cpuid.edx];
+
+    buff.extend(str_detect_ftr(ebx, FTR_00_07_EBX_X0));
+    buff.extend(str_detect_ftr(ecx, FTR_00_07_ECX_X0));
+    buff.extend(str_detect_ftr(edx, FTR_00_07_EDX_X0));
+
     let [ebx, ecx, edx] = [
-        cpuid.ebx,
-        cpuid.ecx,
-        cpuid.edx,
+        Reg::new(ebx).to_bool_array(),
+        Reg::new(ecx).to_bool_array(),
+        Reg::new(edx).to_bool_array(),
     ];
-
-    // 0x00000007_EBX_x0
-    let ftr_ebx = &[
-        "FSGSBASE", "", "SGX", "", /* Bit3: BMI1 */
-        "", "", "", "SMEP", /* Bit5: AVX2 */
-        "", "ERMS", "INVPCID", "", /* Bit8: BMI2 */
-        "PQM", "", "", "PQE",
-        "", "", "RDSEED", "ADX",
-        "SMAP", "", "", "CLFSHOPT",
-        "CLWB", "", "", "",
-        "", "SHA", "", "",
-    ];
-    let ftr_ecx = &[
-        "", "", "UMIP", "PKU",
-        "OSPKE", "", "", "CET_SS",
-        "GFNI", "VAES", "VPCLMULQDQ", "",
-        "", "", "", "",
-        "", "", "", "",
-        "", "", "RDPID", "KL",
-        "", "CLDEMOTE", "", "MOVDIRI",
-        "MOVDIRI64B", "ENQCMD", /* */
-    ];
-    let ftr_edx = &[
-        "", "", "", "",
-        "FSRM", "UINTR", "", "",
-        "", "", "MD_CLEAR", "",
-        "", "", "SERIALIZE", "",
-        /* */
-    ];
-
-    buff.extend(str_detect_ftr(ebx, ftr_ebx));
-    buff.extend(str_detect_ftr(ecx, ftr_ecx));
-    buff.extend(str_detect_ftr(edx, ftr_edx));
-
-    let [ebx, ecx, edx] = [ebx, ecx, edx]
-        .map(|reg| Reg::new(reg).to_bool_array());
 
     let avx512_f    = ebx[16];
     let avx512_dq   = ebx[17];
@@ -139,21 +89,18 @@ pub fn feature_00_07h_x0(cpuid: &CpuidResult) -> String {
 
     if avx512_f || avx512_dq || avx512_ifma || avx512_cd
     || avx512_bw || avx512_vl {
-        let mut avx512: String = "AVX512".to_string();
-
-        if avx512_f    { avx512.push_str("/F") }
-        if avx512_dq   { avx512.push_str("/DQ") }
-        if avx512_ifma { avx512.push_str("/IFMA") }
-        if avx512_cd   { avx512.push_str("/CD") }
-        if avx512_bw   { avx512.push_str("/BW") }
-        if avx512_vl   { avx512.push_str("/VL") }
-
+        let v = [
+            (avx512_f, "F"), (avx512_dq, "DQ"),
+            (avx512_ifma, "IFMA"), (avx512_cd, "CD"),
+            (avx512_bw, "BW"), (avx512_vl, "VL")
+        ];
+        let avx512 = ftr_variant_expand("AVX512", &v);
         buff.push(avx512);
     }
 
     /*  Xeon Phi only */
     if ebx[26] && ebx[27] {
-        buff.push("AVX512PF/ER".to_string());
+        buff.push("AVX512{PF,ER}".to_string());
     }
 
     // 0x00000007_ECX_x0
@@ -165,36 +112,30 @@ pub fn feature_00_07h_x0(cpuid: &CpuidResult) -> String {
 
     if avx512_vbmi1 || avx512_vbmi2 || avx512_vnni
     || avx512_bitalg || avx512_vpopcntdq {
-        buff.push(
-            format!("AVX512_{0}{1}{2}{3}{4}",
-                has_ftr!(avx512_vbmi1,     "VBMI/"),
-                has_ftr!(avx512_vbmi2,     "VBMI2/"),
-                has_ftr!(avx512_vnni,      "VNNI/"),
-                has_ftr!(avx512_bitalg,    "BITALG/"),
-                has_ftr!(avx512_vpopcntdq, "VPOPCNTDQ/"),
-            )
-            .trim_end_matches("/")
-            .to_string(),
-        )
+        let v = [
+            (avx512_vbmi1, "VBMI"), (avx512_vbmi2, "VBMI2"),
+            (avx512_vnni, "VNNI"), (avx512_bitalg, "BITALG"),
+            (avx512_vpopcntdq, "VPOPCNTDQ"),
+        ];
+        let avx512 = ftr_variant_expand("AVX512", &v);
+        buff.push(avx512);
     }
 
     // 0x00000007_EDX_x0
     /* Xeon Phi Only */
-    let avx512_4vnniw_4fmaps = edx[ 2] && edx[ 3];
+    if edx[2] && edx[3] {
+        buff.push("AVX512{4VNNIW,4FMAPS}".to_string());
+    }
 
     let avx512_vp2intersect  = edx[ 8];
     let avx512_fp16          = edx[23];
 
-    if avx512_4vnniw_4fmaps || avx512_vp2intersect || avx512_fp16 {
-        buff.push(
-            format!("AVX512_{0}{1}{2}",
-                has_ftr!(avx512_4vnniw_4fmaps, "4VNNIW/4FMAPS/"),
-                has_ftr!(avx512_vp2intersect,  "VP2INTERSECT/"),
-                has_ftr!(avx512_fp16,          "FP16/"),
-            )
-            .trim_end_matches("/")
-            .to_string(),
-        )
+    if avx512_vp2intersect || avx512_fp16 {
+        let v = [
+            (avx512_vp2intersect, "VP2INTERSECT"), (avx512_fp16, "FP16"),
+        ];
+        let avx512 = ftr_variant_expand("AVX512", &v);
+        buff.push(avx512);
     }
 
     /*  Currently Intel Sapphire Rapids only
@@ -203,6 +144,12 @@ pub fn feature_00_07h_x0(cpuid: &CpuidResult) -> String {
         Bit 25: AMX-INT8
     */
     if edx[22] && edx[24] && edx[25] {
+        /*
+            let v = [
+                (ebx[22], "BF16"), (ebx[24], "TILE"), (ebx[25], "INT8"),
+            ];
+            let amx = ftr_variant_expand("AMX", &v);
+        */
         buff.push("AMX-BF16/TILE/INT8".to_string());
     }
 
@@ -210,50 +157,30 @@ pub fn feature_00_07h_x0(cpuid: &CpuidResult) -> String {
 }
 
 pub fn feature_00_07h_x1(eax: &u32) -> String {
-    /*
-    let tmp = cpuid!(0x7, 0x1);
-    print_cpuid!(0x7, 0x1, tmp);
-    */
-    let eax = Reg::new(*eax).to_bool_array();
-
     // https://github.com/torvalds/linux/commit/b85a0425d8056f3bd8d0a94ecdddf2a39d32a801
-    let buff: Vec<String> = [
-        has_ftr!(eax[ 4], "AVX_VNNI"),
-        has_ftr!(eax[ 5], "AVX512_BF16"),
-        has_ftr!(eax[22], "HRESET"),
-        has_ftr!(eax[26], "LAM"),
-    ].iter().map(|v| v.to_string() ).collect();
+    let mut v = [""; 32];
+    v[4] = "AVX_VNNI";
+    v[5] = "AVX512_BF16";
+    v[22] = "HRESET";
+    v[26] = "LAM";
+
+    let buff = str_detect_ftr(*eax, &v);
 
     return align_mold_ftr(&buff);
 }
 
 pub fn feature_80_01h(cpuid: &CpuidResult) -> String {
-    let [ecx, edx] = [
-        cpuid.ecx,
-        cpuid.edx,
-    ];
-    // 0x8000_0001_ECX_x0
-    let ftr = &[
-        "LAHF/SAHF", "CmpLegacy", "SVM", "ExtApicSpace",
-        "AltMovCr8", "ABM (LZCNT)", "SSE4A", "MisAlignSse",
-        "3DNow!Prefetch", "OSVW", "IBS", "XOP",
-        "SKINIT", "WDT", "", "LWP",
-        "FMA4", "TCE", "", "",
-        "", "", "TopologyExtensions", "PerfCtrExtCore",
-        "PerfCtrExtDFl", "", "DataBreakpointExtension", "PerfTsc",
-        "PerfCtrExtLLC", "MwaitExtended", "AdMskExtn", "",
-    ];
+    let [ecx, edx] = [ cpuid.ecx, cpuid.edx, ];
 
-    let mut buff = str_detect_ftr(ecx, ftr);
+    // 0x8000_0001_ECX_x0
+    let mut buff = str_detect_ftr(ecx, FTR_80_01_ECX_X0);
 
     // 0x8000_0001_EDX_x0
     let edx = Reg::new(edx).to_bool_array();
     if edx[31] {
-        let mut tdnow = String::from("3DNow!");
-        if edx[30] { tdnow.push_str("/EXT"); }
-
+        let v = [ (edx[30], "EXT") ];
+        let tdnow = ftr_variant_expand("3DNow!", &v);
         buff.push(tdnow);
-        //buff.push(format!("3DNow!{}", has_ftr!(edx[30], "/EXT")).as_str())
     }
 
     return align_mold_ftr(&buff);
@@ -274,8 +201,8 @@ struct CacheProp {
 }
 
 impl CacheProp {
-    fn dec(tmp: &CpuidResult) -> CacheProp {
-        let [eax, ebx, ecx, edx] = [tmp.eax, tmp.ebx, tmp.ecx, tmp.edx];
+    fn dec(cpuid: &CpuidResult) -> CacheProp {
+        let [eax, ebx, ecx, edx] = [cpuid.eax, cpuid.ebx, cpuid.ecx, cpuid.edx];
 
         let cache_type = match eax & 0b11111 {
             0x1 => "Data",
@@ -292,7 +219,7 @@ impl CacheProp {
 
         let share_thread = ((eax >> 14) & 0xFFF) + 1;
 
-        let mut size_unit = 1;
+        let mut size_unit = 1u32;
         let mut size_unit_string = "B";
 
         if size < 1000_000 {
@@ -329,14 +256,14 @@ pub fn cache_prop(cpuid: &CpuidResult) -> String {
         return "".to_string();
     }
 
-    let v = &[
-        format!(" [L{} {:<7} {:>3}-way, {:>4}{}]",
+    let v = [
+        format!(" [L{} {:>7} {:>3}-way, {:>4}{}]",
             cache.level, cache.cache_type, cache.way,
             cache.size / cache.size_unit, cache.size_unit_string),
-        format!("{} [Shared {}T]",
-            padln!(), cache.share_thread),
+        padln!(),
+        format!(" [Shared {}T]", cache.share_thread),
         has_ftr!(cache.inclusive, " [Inclusive]").to_string(),
     ];
 
-    return concat_string_from_slice(v);
+    return concat_string_from_slice(&v);
 }

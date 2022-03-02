@@ -52,11 +52,14 @@ impl RawCpuid {
                     0x8000_0005 => l1_amd_80_05h(&self.result),
                     0x8000_0006 => l2_amd_80_06h(&self.result),
                     0x8000_0007 => apmi_amd_80_07h(&self.result.edx),
-                    0x8000_0008 => concat_string_from_slice(&[
+                    0x8000_0008 => spec_amd_80_08h(&self.result.ebx),
+                    /*
+                    concat_string_from_slice(&[
                         spec_amd_80_08h(&self.result.ebx),
                         padln!().to_string(),
                         size_amd_80_08h(&self.result.ecx),
-                    ]),
+                    ])
+                    */
                     0x8000_000A => rev_id_amd_80_0ah(&self.result),
                     0x8000_0019 => l1l2tlb_1g_amd_80_19h(&self.result),
                     0x8000_001A => fpu_width_amd_80_1ah(&self.result.eax),

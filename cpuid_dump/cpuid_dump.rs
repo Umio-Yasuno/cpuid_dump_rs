@@ -6,6 +6,9 @@ use core::arch::x86_64::{CpuidResult, __cpuid_count};
 extern crate cpuid_asm;
 use cpuid_asm::{cpuid, Vendor, VendorFlag, _AX};
 
+#[path = "./const_cpuid_dump.rs"]
+mod const_cpuid_dump;
+pub use crate::const_cpuid_dump::*;
 #[path = "./parse.rs"]
 mod parse;
 pub use crate::parse::*;
@@ -91,7 +94,7 @@ fn dump() {
             "(out)EAX", "(out)EBX", "(out)ECX", "(out)EDX").into_bytes()
     );
     pool.extend(
-        format!("{}\n", "=".repeat(80)).into_bytes()
+        format!("{}\n", "=".repeat(TOTAL_WIDTH)).into_bytes()
     );
     pool.extend(parse_pool());
     pool.extend(b"\n");
@@ -100,8 +103,7 @@ fn dump() {
 }
 
 fn raw_dump() {
-    let pool = raw_pool();
-    dump_write(&pool);
+    dump_write(&raw_pool());
 }
 
 use std::thread;
@@ -154,13 +156,13 @@ fn dump_write(pool: &[u8]) {
     out.write(pool).unwrap();
 }
 
-fn save_file(save_path: String) {
+fn save_file(save_path: String, pool: &[u8]) {
     use std::fs::File;
     use std::io::Write;
 
     let mut f = File::create(save_path).unwrap();
-    let pool = parse_pool();
-    f.write(&pool).unwrap();
+    //  let pool = parse_pool();
+    f.write(pool).unwrap();
 }
 
 struct MainOpt {
@@ -168,6 +170,8 @@ struct MainOpt {
     dump_all: bool,
     save: bool,
     save_path: String,
+    load: bool,
+    load_path: String,
 }
 
 impl MainOpt {
@@ -176,7 +180,9 @@ impl MainOpt {
             raw: false,
             dump_all: false,
             save: false,
-            save_path: format!("./cpuid_dump.txt"),
+            save_path: "./cpuid_dump.txt".to_string(),
+            load: false,
+            load_path: "./cpuid_dump.txt".to_string(),
         }
     }
     fn parse() -> MainOpt {
@@ -190,14 +196,47 @@ impl MainOpt {
             match arg {
                 "a" | "all" => opt.dump_all = true,
                 "r" | "raw" => opt.raw = true,
-                "save" => {
+                "s" | "save" => {
                     opt.save = true;
+                    /*
+                    opt.save_path = format!("./{}.txt",
+                        cpuid_asm::get_trim_proc_name().replace(" ", "_"));
+                    */
+                    /*
                     opt.save_path = match args.get(i+1) {
-                        Some(v) => v.parse::<String>().expect("Parse error"),
+                        Some(v) => {
+                            v.parse::<String>().expect("Parse error")
+                        },
                         _ => format!("./{}.txt",
                             cpuid_asm::get_trim_proc_name().replace(" ", "_")
                         ),
                     };
+                    break;
+                    */
+                },
+                "l" | "load" => {
+                    use std::fs;
+                    opt.load = true;
+
+                    match args.get(i+1) {
+                        Some(v) => {
+                            opt.load_path = v.parse::<String>().unwrap()
+                            //.expect("Failed to parse the load path")
+                        },
+                        _ => {},
+                    };
+                    /*
+                    println!("path: {}", load_path);
+
+                    let v = fs::read_to_string(load_path)
+                        .expect("Load error");
+
+                    for ln in v.lines() {
+                        // println!("{ln}");
+                    }
+                    
+                    std::process::exit(1);
+                    */
                     break;
                 },
                 _ => eprintln!("Unknown option: {}", args[i]),
@@ -208,11 +247,20 @@ impl MainOpt {
     }
 }
 
+pub enum CpuidDumpType {
+    LibCpuid,
+    EtallenCpuid,
+    CpuidDumpRs,
+    Last,
+}
+
 fn main() {
     let opt = MainOpt::parse();
 
-    if opt.save {
-        save_file(opt.save_path);
+    if opt.raw && opt.save {
+        save_file(opt.save_path, &raw_pool());
+    } else if opt.save {
+        save_file(opt.save_path, &parse_pool());
     } else if opt.raw && opt.dump_all {
         raw_dump_all();
     } else if opt.raw {
@@ -222,7 +270,7 @@ fn main() {
         dump_all();
     }
 
-    if opt.raw || opt.dump_all || opt.save { return; }
+    if opt.raw || opt.dump_all || opt.save || opt.load { return; }
 
     println!("CPUID Dump");
     dump();

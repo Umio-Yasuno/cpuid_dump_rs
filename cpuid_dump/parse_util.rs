@@ -31,7 +31,7 @@ macro_rules! push {
 
 #[macro_export]
 macro_rules! pad {
-    () => { " ".repeat(62) };
+    () => { " ".repeat(crate::INPUT_WIDTH + crate::OUTPUT_WIDTH + 1) };
 }
 
 #[macro_export]
@@ -68,10 +68,10 @@ impl Reg {
     */
 }
 
-pub fn cpu_name(tmp: &CpuidResult) -> String {
+pub fn cpu_name(cpuid: &CpuidResult) -> String {
     let mut name = Vec::with_capacity(64);
 
-    [tmp.eax, tmp.ebx, tmp.ecx, tmp.edx].iter().for_each(
+    [cpuid.eax, cpuid.ebx, cpuid.ecx, cpuid.edx].iter().for_each(
         |val| name.extend(val.to_le_bytes().iter().map(
             // replace from \u0000..\u001F (<Control>) to \u0020 (space)
             |&byte| if byte <= 0x1F { 0x20 } else { byte }
@@ -82,131 +82,76 @@ pub fn cpu_name(tmp: &CpuidResult) -> String {
 }
 
 pub fn str_detect_ftr(reg: u32, ftr_str: &[&str]) -> Vec<String> {
-    let len = ftr_str.len();
-    let len = if 32 < len {
-        32
-    } else {
-        len
-    };
-
+    //  let len = std::cmp::min(32, ftr_str.len());
     let reg = Reg::new(reg).to_bool_array();
     let mut buff: Vec<String> = Vec::with_capacity(32);
 
-    for id in 0..len {
-        if !reg[id] || ftr_str[id].len() < 1 {
-            continue;
+    for (r, ftr) in reg.iter().zip(&ftr_str[..]) {
+        if *r && 0 < ftr.len() {
+            buff.push(ftr.to_string());
         }
-        buff.push(ftr_str[id].to_string());
     }
 
     return buff;
 }
-
-pub fn detect_ftr(reg: u32, ftr_str: Vec<String>) -> Vec<String> {
-    let len = ftr_str.len();
-    let len = if 32 < len {
-        32
-    } else {
-        len
-    };
-
-    let reg = Reg::new(reg).to_bool_array();
-    let mut buff: Vec<String> = Vec::with_capacity(32);
-
-    for id in 0..len {
-        if !reg[id] || ftr_str[id].len() < 1 {
-            continue;
-        }
-        buff.push(ftr_str[id].to_string());
-    }
-
-    return buff;
-}
-
-/*
-pub fn concat_string(src: Vec<String>) -> String {
-    let mut dst = String::new();
-
-    src.iter().for_each(
-        |val| dst.push_str(val.as_str())
-    );
-
-    return dst;
-}
-*/
 
 pub fn concat_string_from_slice(src: &[String]) -> String {
     let mut dst = String::new();
 
     src.iter().for_each(
-        |val| dst.push_str(val.as_str())
+        |val| dst.push_str(&val)
     );
 
     return dst;
 }
 
-/*
-pub fn packed_mold_ftr(buff: &[String]) -> String {
-    let to_line = |buff: &[String]| -> String {
-        let mut tmp = String::new();
-
-        for v in buff {
-            tmp.push_str(format!("[{}] ", v).as_str());
-        }
-        tmp
-    };
-        
-    let post_mold = to_line(buff);
-    let mut post_mold = post_mold.as_str();
-
-    const LEN: usize = 32;
-    let mut split_tmp = "";
-    let mut post_result = String::new();
-
-    loop {
-        if LEN < post_mold.len() {
-            (split_tmp, post_mold) = post_mold.split_at(LEN);
-            post_result.push_str(format!(" {}{}", split_tmp, padln!()).as_str());
-        } else {
-            post_result.push_str(format!(" {}", post_mold).as_str());
-            println!("Debug Result: {}", post_result);
-
-            return post_result;
-        }
-    }
-}
-*/
-
 pub fn align_mold_ftr(buff: &[String]) -> String {
-    const WIDTH: usize = 32;
-    let mut rest: usize = WIDTH;
+    let mut rest: usize = PARSE_WIDTH;
     let mut len: usize;
     let mut mold = String::new();
     let mut _inner = String::new();
+
+    const DECO_LEN: usize = " []".len();
     
     for v in buff {
-        len = v.len() + 3;
+        len = v.len() + DECO_LEN;
 
         if len <= rest {
             _inner = format!(" [{}]", v);
             rest -= len;
         } else {
-            _inner = format!("{} [{}]{}", padln!(), v, "");
-
-            rest = if WIDTH < len {
-                0
+            if PARSE_WIDTH < len {
+                /*
+                _inner = format!(" [{}{}  {}]",
+                    &v[..rest], padln!(), &v[rest..]);
+                rest = PARSE_WIDTH - (len - rest);
+                */
+                _inner = format!("{} [{}]", padln!(), v);
+                rest = 0;
             } else {
-                WIDTH - len
+                _inner = format!("{} [{}]", padln!(), v);
+                rest = PARSE_WIDTH - len;
             };
         }
-        mold.push_str(_inner.as_str());
+        mold.push_str(&_inner);
     }
 
     return mold;
 }
 
-/*
-pub fn mold_ftr(buff: Vec<String>) -> String {
-    return align_mold_ftr(&buff);
+pub fn ftr_variant_expand(base_name: &str, flag_str: &[(bool, &str)]) -> String {
+    let mut base = String::from(base_name);
+    base.push_str("{");
+
+    for (flag, name) in flag_str {
+        if *flag {
+            base.push_str(name);
+            base.push_str(",");
+        }
+    }
+    base.pop();
+
+    base.push_str("}");
+
+    return base;
 }
-*/
