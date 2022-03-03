@@ -46,23 +46,40 @@ pub fn fam06h(m: u32, s: u32) -> ProcInfo {
         0x4E => ProcInfo::info("Skylake (Mobile)", "Skylake", "14 nm"),
         0x5E => ProcInfo::info("Skylake (Desktop)", "Skylake", "14 nm"),
         0x55 => match s {
-            0x9 => ProcInfo::info("Cascade Lake (Server)", "Skylake AVX512/VNNI", "14 nm"),
+            0x7 => ProcInfo::info("Cascade Lake (Server)", "Skylake AVX512/VNNI", "14 nm"),
             0xB => ProcInfo::info("Cooper Lake (Server)", "Skylake AVX512/VNNI/BF16", "14 nm"),
             _ => ProcInfo::info("Skylake (Server)", "Skylake AVX512", "14 nm"),
         },
+
+        // 10th Generation Intel® Core™ Processors Datasheet, Volume 1 of 2
         0x8E => match s {
             0x9 => ProcInfo::info("Amber Lake (Mobile)", "Skylake", "14 nm"),
             0xA => ProcInfo::info("Coffee Lake (Mobile)", "Skylake", "14 nm"),
-            0xB | 0xC => ProcInfo::info("Whiskey Lake (Mobile)", "Skylake", "14 nm"),
+            0xB => ProcInfo::info("Whiskey Lake (Mobile)", "Skylake", "14 nm"),
+            0xC => ProcInfo::info("Comet/Whiskey Lake (Mobile) (V0)", "Skylake", "14 nm"),
             _ => ProcInfo::info("Kaby Lake (Mobile)", "Skylake", "14 nm"),
         },
+
         0x9E => match s {
             0xA | 0xB | 0xC => ProcInfo::info("Coffee Lake (Desktop)", "Skylake", "14 nm"),
+            0xD => ProcInfo::info("Comet/Coffee Lake (ES) (Desktop) (R0)", "Skylake", "14 nm"),
             _ => ProcInfo::info("Kaby Lake (Desktop)", "Skylake", "14 nm"),
         },
 
-        0xA5 => ProcInfo::info("Comet Lake (Desktop)", "Skylake", "14 nm"),
-        0xA6 => ProcInfo::info("Comet Lake (Mobile)", "Skylake", "14 nm"),
+        0xA5 => ProcInfo::info( &format!("Comet Lake (Desktop){}", match s {
+            0x0 => " (G0)",
+            0x3 => " (G1)",
+            0x1 => " (P0)",
+            0x4 => " (P1)",
+            0x5 => " (Q0)",
+            0x2 => " (R1)",
+            _ => "",
+        }), "Skylake", "14 nm"),
+
+        0xA6 => ProcInfo::info( match s {
+            0x0 => "Comet Lake (Mobile) (A0)",
+            _   => "Comet Lake (Mobile)",
+        }, "Skylake", "14 nm"),
 
         0x66 => ProcInfo::info("Cannon Lake (Mobile)", "Palm Cove", "10 nm"),
 
@@ -72,23 +89,36 @@ pub fn fam06h(m: u32, s: u32) -> ProcInfo {
         0x7E => ProcInfo::info("Ice Lake (Mobile)", "Sunny Cove", "10nm"),
         0x9D => ProcInfo::info("Ice Lake (NNPI)", "Sunny Cove", "10nm"),
 
-        0xA7 => ProcInfo::info("Rocket Lake (Desktop)", "Cypress Cove", "14 nm"),
+        0xA7 => ProcInfo::info( &format!("Rocket Lake (Desktop){}", match s {
+            0x1 => " (B0)",
+            _   => "",
+        }), "Cypress Cove", "14 nm"),
 
-        0x8C => ProcInfo::info("Tiger Lake (Mobile)", "Willow Cove", "10 nm SF"),
+        0x8C => ProcInfo::info( &format!("Tiger Lake (Mobile){}", match s {
+            0x1 => " (B0)",
+            0x2 => " (C0)",
+            _   => "",
+        }), "Willow Cove", "10 nm SF"),
         0x8D => ProcInfo::info("Tiger Lake (Desktop)", "Willow Cove", "10 nm SF"),
 
         //  Hybrid
-        0x8A => ProcInfo::info("Lakefield", "Sunny Cove/Tremont", "10 nm"),
+        0x8A => ProcInfo::info("Lakefield", "Sunny Cove + Tremont", "10 nm"),
 
-        0x97 => ProcInfo::info("Alder Lake", "Golden Cove/Gracemont", "Intel 7 /10 nm eSF"),
+        0x97 => ProcInfo::info( &format!("Alder Lake-S (Desktop){}", match s {
+            0x2 => " (C0, 8+8)",
+            0x5 => " (H0, 6+0)",
+            0x3 => " (L0, 6+8)",
+            _   => "",
+        }), "Golden Cove + Gracemont", "Intel 7 /10 nm eSF"),
+
         0x9A => match s {
             0x1 => ProcInfo::info(
                 "Alder Lake-M (Mobile)",
-                "Golden Cove/Gracemont", "Intel 7 /10 nm eSF"
+                "Golden Cove + Gracemont", "Intel 7 /10 nm eSF"
             ),
             _ => ProcInfo::info(
                 "Alder Lake-P (Mobile)",
-                "Golden Cove/Gracemont", "Intel 7 /10 nm eSF"
+                "Golden Cove + Gracemont", "Intel 7 /10 nm eSF"
             ),
         },
         0xBE => ProcInfo::info("Alder Lake-N", "Gracemont ?", "Intel 7 /10 nm eSF"),
