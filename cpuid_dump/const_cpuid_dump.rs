@@ -55,11 +55,54 @@ pub const FTR_00_07_ECX_X0: &[&str] = &[
     "", "CLDEMOTE", "", "MOVDIRI",
     "MOVDIRI64B", "ENQCMD", /* */
 ];
+
 pub const FTR_00_07_EDX_X0: &[&str] = &[
     "", "", "", "",
     "FSRM", "UINTR", "", "",
     "", "", "MD_CLEAR", "",
     "", "", "SERIALIZE", "",
+    /* */
+];
+
+pub const FTR_AMD_00_0D_EAX_X0: &[&str] = &[
+    "X87", "SSE", "AVX256", "",
+    "", "", "", "",
+    "", "MPK", /* Reserved Bit10-31 */
+];
+
+pub const FTR_AMD_00_0D_EAX_X1: &[&str] = &[
+    "XSAVEOPT", "XSAVEC", "XGETBV", "XSAVES",
+    /* "Reserved Bit4-31" */
+];
+
+
+pub const FTR_AMD_80_07_EDX_X0: &[&str] = &[
+    "TS", "", "", "TTP",
+    "TM", "", "OneHundredMHzSteps", "HwPstate",
+    "TscInvariant", "CPB", "EffFreqRO", "ProcFeedbackInterface",
+    "ProcPowerReporting", "ConnectedStandby", "RAPL",
+    /* "Reserved Bit15-31" */
+];
+
+pub const FTR_AMD_80_08_EBX_X0: &[&str] = &[
+    "CLZERO", "InstRetCntMsr", "RstrFpErrPtrs", "INVLPGB",
+    "RDPRU", "", "MBE", "",
+    "MCOMMIT", "WBNOINVD", "", "",
+    "IBPB", "INT_WBINVD", "IBRS", "STIBP",
+    "", "StibpAlwaysOn", "IbrsPreferred", "IbrsProvidesSameModeProtection",
+    "EferLmsleUnsupported", "", "", "PPIN",
+    "SSBD", "", "", "CPPC",
+    "PSFD",
+    /* "Reserved Bit29-31", */
+];
+
+pub const FTR_AMD_80_0A_EBX_X0: &[&str] = &[
+    "NestedPage", "LbrVirt", "SvmLock", "NRIP Save",
+    "TscRateMsr", "VmcbClean", "FlushByAsid", "DecodeAssists",
+    "", "", "PauseFilter", "",
+    "PauseFilterThreshold", "AVIC", "", "V_VMSAVE_VMLOAD",
+    "vGIF", "GMET", "", "SupervisorShadowStack",
+    "GuestSpecCtrl", "", "", "HOST_MCE_OVERRIDE",
     /* */
 ];
 
@@ -72,5 +115,23 @@ pub const FTR_80_01_ECX_X0: &[&str] = &[
     "", "", "TopologyExtensions", "PerfCtrExtCore",
     "PerfCtrExtDFl", "", "DataBreakpointExtension", "PerfTsc",
     "PerfCtrExtLLC", "MwaitExtended", "AdMskExtn", "",
+];
+
+pub const FTR_AMD_80_1A_EAX_X0: &[&str] = &[
+    "FP128", "MOVU", "FP256",
+];
+
+pub const FTR_AMD_80_1B_EAX_X0: &[&str] = &[
+    "IBSFFV", "FetchSam", "OpSam", "RdWrOpCnt",
+    "OpCnt", "BrnTrgt", "OpCntExt", "RipInvalidChk",
+    "OpBrnFuse", "IbsFetchCtlExtd", "IbsOpData4", /* */
+];
+
+pub const FTR_AMD_80_1F_EAX_X0: &[&str] = &[
+    "SME", "SEV", "VmPgFlush", "SevEs",
+    "SNP", "VMPL", "", "",
+    "", "", "CoherencyEnforced", "Req64BitHypervisor",
+    "RestrictInjection", "AlternateInjection", "DebugStateSwap", "PreventHostIBS",
+    "VTE", /* "Reserved Bit17-31" */
 ];
 

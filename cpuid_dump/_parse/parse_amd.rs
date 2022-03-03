@@ -102,22 +102,10 @@ pub fn l2_amd_80_06h(cpuid: &CpuidResult) -> String {
 
 pub fn enum_amd_0dh(cpuid: &RawCpuid) -> String {
     let x0 = |eax: u32| -> String {
-        let ftr = &[
-            "X87", "SSE", "AVX256", "",
-            "", "", "", "",
-            "", "MPK",
-            /* Reserved Bit10-31 */
-        ];
-
-        return align_mold_ftr(&str_detect_ftr(eax, ftr));
+        return align_mold_ftr(&str_detect_ftr(eax, FTR_AMD_00_0D_EAX_X0));
     };
     let x1 = |eax: u32| -> String {
-        let ftr = &[
-            "XSAVEOPT", "XSAVEC", "XGETBV", "XSAVES",
-            /* "Reserved Bit4-31" */
-        ];
-
-        return align_mold_ftr(&str_detect_ftr(eax, ftr));
+        return align_mold_ftr(&str_detect_ftr(eax, FTR_AMD_00_0D_EAX_X1));
     };
 
     let size = |eax: u32, txt: &str| -> String {
@@ -142,31 +130,11 @@ pub fn enum_amd_0dh(cpuid: &RawCpuid) -> String {
 }
 
 pub fn apmi_amd_80_07h(edx: &u32) -> String {
-    let ftr = [
-        "TS", "", "", "TTP",
-        "TM", "", "OneHundredMHzSteps", "HwPstate",
-        "TscInvariant", "CPB", "EffFreqRO", "ProcFeedbackInterface",
-        "ProcPowerReporting", "ConnectedStandby", "RAPL",
-        /* "Reserved Bit15-31" */
-    ];
-
-    return align_mold_ftr(&str_detect_ftr(*edx, &ftr));
+    return align_mold_ftr(&str_detect_ftr(*edx, FTR_AMD_80_07_EDX_X0));
 }
 
 pub fn spec_amd_80_08h(ebx: &u32) -> String {
-    let ftr = [
-        "CLZERO", "InstRetCntMsr", "RstrFpErrPtrs", "INVLPGB",
-        "RDPRU", "", "MBE", "",
-        "MCOMMIT", "WBNOINVD", "", "",
-        "IBPB", "INT_WBINVD", "IBRS", "STIBP",
-        "", "StibpAlwaysOn", "IbrsPreferred", "IbrsProvidesSameModeProtection",
-        "EferLmsleUnsupported", "", "", "PPIN",
-        "SSBD", "", "", "CPPC",
-        "PSFD",
-        /* "Reserved Bit29-31", */
-    ];
-
-    return align_mold_ftr(&str_detect_ftr(*ebx, &ftr));
+    return align_mold_ftr(&str_detect_ftr(*ebx, FTR_AMD_80_08_EBX_X0));
 }
 
 pub fn size_amd_80_08h(ecx: &u32) -> String {
@@ -174,43 +142,17 @@ pub fn size_amd_80_08h(ecx: &u32) -> String {
 }
 
 pub fn rev_id_amd_80_0ah(cpuid: &CpuidResult) -> String {
-    let ftr_edx = [
-        "NestedPage", "LbrVirt", "SvmLock", "NRIP Save",
-        "TscRateMsr", "VmcbClean", "FlushByAsid", "DecodeAssists",
-        "", "", "PauseFilter", "",
-        "PauseFilterThreshold", "AVIC", "", "V_VMSAVE_VMLOAD",
-        "vGIF", "GMET", "", "SupervisorShadowStack",
-        "GuestSpecCtrl", "", "", "HOST_MCE_OVERRIDE",
-        /* */
-    ];
-
-    return align_mold_ftr(&str_detect_ftr(cpuid.edx, &ftr_edx));
+    return align_mold_ftr(&str_detect_ftr(cpuid.edx, FTR_AMD_80_0A_EBX_X0));
 }
 
 pub fn fpu_width_amd_80_1ah(eax: &u32) -> String {
-    let ftr = [ "FP128", "MOVU", "FP256", ];
-
-    return align_mold_ftr(&str_detect_ftr(*eax, &ftr));
+    return align_mold_ftr(&str_detect_ftr(*eax, FTR_AMD_80_1A_EAX_X0));
 }
 
 pub fn ibs_amd_80_1bh(eax: &u32) -> String {
-    const FTR: &[&str] = &[
-        "IBSFFV", "FetchSam", "OpSam", "RdWrOpCnt",
-        "OpCnt", "BrnTrgt", "OpCntExt", "RipInvalidChk",
-        "OpBrnFuse", "IbsFetchCtlExtd", "IbsOpData4", /* */
-    ];
-
-    return align_mold_ftr(&str_detect_ftr(*eax, FTR));
+    return align_mold_ftr(&str_detect_ftr(*eax, FTR_AMD_80_1B_EAX_X0));
 }
 
 pub fn secure_amd_80_1fh(eax: &u32) -> String {
-    const FTR: &[&str] = &[
-        "SME", "SEV", "VmPgFlush", "SevEs",
-        "SNP", "VMPL", "", "",
-        "", "", "CoherencyEnforced", "Req64BitHypervisor",
-        "RestrictInjection", "AlternateInjection", "DebugStateSwap", "PreventHostIBS",
-        "VTE", /* "Reserved Bit17-31" */
-    ];
-
-    return align_mold_ftr(&str_detect_ftr(*eax, FTR));
+    return align_mold_ftr(&str_detect_ftr(*eax, FTR_AMD_80_1F_EAX_X0));
 }

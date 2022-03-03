@@ -165,6 +165,10 @@ fn save_file(save_path: String, pool: &[u8]) {
     f.write(pool).unwrap();
 }
 
+fn load_file(load_path: String) {
+    use std::fs;
+}
+
 struct MainOpt {
     raw: bool,
     dump_all: bool,
@@ -180,17 +184,30 @@ impl MainOpt {
             raw: false,
             dump_all: false,
             save: false,
-            save_path: "./cpuid_dump.txt".to_string(),
+            save_path: format!("./{}.txt",
+                cpuid_asm::get_trim_proc_name().replace(" ", "_")
+            ),
             load: false,
             load_path: "./cpuid_dump.txt".to_string(),
         }
     }
     fn parse() -> MainOpt {
         let mut opt = MainOpt::init();
+        let mut skip = false;
 
         let args: Vec<String> = std::env::args().collect();
 
         for i in 1..args.len() {
+            if skip {
+                skip = false;
+                continue;
+            }
+
+            if !args[i].starts_with("-") {
+                eprintln!("Unknown option: {}", args[i]);
+                continue;
+            }
+
             let arg = args[i].trim_start_matches("-");
 
             match arg {
@@ -198,46 +215,33 @@ impl MainOpt {
                 "r" | "raw" => opt.raw = true,
                 "s" | "save" => {
                     opt.save = true;
-                    /*
-                    opt.save_path = format!("./{}.txt",
-                        cpuid_asm::get_trim_proc_name().replace(" ", "_"));
-                    */
-                    /*
                     opt.save_path = match args.get(i+1) {
                         Some(v) => {
-                            v.parse::<String>().expect("Parse error")
+                            let v = v.parse::<String>().expect("Parse error");
+                            if v.starts_with("-") {
+                                skip = true;
+                                continue;
+                            } else {
+                                v
+                            }
                         },
-                        _ => format!("./{}.txt",
-                            cpuid_asm::get_trim_proc_name().replace(" ", "_")
-                        ),
+                        _ => continue,
                     };
-                    break;
-                    */
                 },
                 "l" | "load" => {
-                    use std::fs;
                     opt.load = true;
-
-                    match args.get(i+1) {
+                    opt.load_path = match args.get(i+1) {
                         Some(v) => {
-                            opt.load_path = v.parse::<String>().unwrap()
-                            //.expect("Failed to parse the load path")
+                            let v = v.parse::<String>().expect("Parse error");
+                            if v.starts_with("-") {
+                                skip = true;
+                                continue;
+                            } else {
+                                v
+                            }
                         },
-                        _ => {},
+                        _ => continue,
                     };
-                    /*
-                    println!("path: {}", load_path);
-
-                    let v = fs::read_to_string(load_path)
-                        .expect("Load error");
-
-                    for ln in v.lines() {
-                        // println!("{ln}");
-                    }
-                    
-                    std::process::exit(1);
-                    */
-                    break;
                 },
                 _ => eprintln!("Unknown option: {}", args[i]),
             }
@@ -255,23 +259,22 @@ pub enum CpuidDumpType {
 }
 
 fn main() {
-    let opt = MainOpt::parse();
-
-    if opt.raw && opt.save {
-        save_file(opt.save_path, &raw_pool());
-    } else if opt.save {
-        save_file(opt.save_path, &parse_pool());
-    } else if opt.raw && opt.dump_all {
-        raw_dump_all();
-    } else if opt.raw {
-        raw_dump();
-    } else if opt.dump_all {
-        println!("CPUID Dump");
-        dump_all();
+    match MainOpt::parse() {
+        MainOpt { load: true, load_path, .. } =>
+            load_file(load_path),
+        MainOpt { raw: true, save: true, save_path, .. } =>
+            save_file(save_path, &raw_pool()),
+        MainOpt { raw: true, dump_all: true, .. } =>
+            raw_dump_all(),
+        MainOpt { dump_all: true, .. } =>
+            dump_all(),
+        MainOpt { raw: true, .. } =>
+            raw_dump(),
+        MainOpt { save: true, save_path, .. } =>
+            save_file(save_path, &parse_pool()),
+        _ => {
+            println!("CPUID Dump");
+            dump();
+        },
     }
-
-    if opt.raw || opt.dump_all || opt.save || opt.load { return; }
-
-    println!("CPUID Dump");
-    dump();
 }

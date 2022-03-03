@@ -150,7 +150,7 @@ pub fn feature_00_07h_x0(cpuid: &CpuidResult) -> String {
             ];
             let amx = ftr_variant_expand("AMX", &v);
         */
-        buff.push("AMX-BF16/TILE/INT8".to_string());
+        buff.push("AMX{BF16,TILE,INT8}".to_string());
     }
 
     return align_mold_ftr(&buff);
