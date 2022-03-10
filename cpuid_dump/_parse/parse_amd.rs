@@ -102,10 +102,10 @@ pub fn l2_amd_80_06h(cpuid: &CpuidResult) -> String {
 
 pub fn enum_amd_0dh(cpuid: &RawCpuid) -> String {
     let x0 = |eax: u32| -> String {
-        return align_mold_ftr(&str_detect_ftr(eax, FTR_AMD_00_0D_EAX_X0));
+        align_mold_ftr(&str_detect_ftr(eax, FTR_AMD_00_0D_EAX_X0))
     };
     let x1 = |eax: u32| -> String {
-        return align_mold_ftr(&str_detect_ftr(eax, FTR_AMD_00_0D_EAX_X1));
+        align_mold_ftr(&str_detect_ftr(eax, FTR_AMD_00_0D_EAX_X1))
     };
 
     let size = |eax: u32, txt: &str| -> String {
@@ -130,11 +130,11 @@ pub fn enum_amd_0dh(cpuid: &RawCpuid) -> String {
 }
 
 pub fn apmi_amd_80_07h(edx: &u32) -> String {
-    return align_mold_ftr(&str_detect_ftr(*edx, FTR_AMD_80_07_EDX_X0));
+    align_mold_ftr(&str_detect_ftr(*edx, FTR_AMD_80_07_EDX_X0))
 }
 
 pub fn spec_amd_80_08h(ebx: &u32) -> String {
-    return align_mold_ftr(&str_detect_ftr(*ebx, FTR_AMD_80_08_EBX_X0));
+    align_mold_ftr(&str_detect_ftr(*ebx, FTR_AMD_80_08_EBX_X0))
 }
 
 pub fn size_amd_80_08h(ecx: &u32) -> String {
@@ -142,17 +142,21 @@ pub fn size_amd_80_08h(ecx: &u32) -> String {
 }
 
 pub fn rev_id_amd_80_0ah(cpuid: &CpuidResult) -> String {
-    return align_mold_ftr(&str_detect_ftr(cpuid.edx, FTR_AMD_80_0A_EBX_X0));
+    align_mold_ftr(&str_detect_ftr(cpuid.edx, FTR_AMD_80_0A_EBX_X0))
 }
 
 pub fn fpu_width_amd_80_1ah(eax: &u32) -> String {
-    return align_mold_ftr(&str_detect_ftr(*eax, FTR_AMD_80_1A_EAX_X0));
+    align_mold_ftr(&str_detect_ftr(*eax, FTR_AMD_80_1A_EAX_X0))
 }
 
 pub fn ibs_amd_80_1bh(eax: &u32) -> String {
-    return align_mold_ftr(&str_detect_ftr(*eax, FTR_AMD_80_1B_EAX_X0));
+    align_mold_ftr(&str_detect_ftr(*eax, FTR_AMD_80_1B_EAX_X0))
 }
 
 pub fn secure_amd_80_1fh(eax: &u32) -> String {
-    return align_mold_ftr(&str_detect_ftr(*eax, FTR_AMD_80_1F_EAX_X0));
+    align_mold_ftr(&str_detect_ftr(*eax, FTR_AMD_80_1F_EAX_X0))
+}
+
+pub fn ext_amd_80_21h(eax: &u32) -> String {
+    align_mold_ftr(&str_detect_ftr(*eax, FTR_AMD_80_21_EAX_X0))
 }

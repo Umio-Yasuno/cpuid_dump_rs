@@ -178,10 +178,11 @@ fn main() {
     }
     impl Seq {
         fn set() -> Seq {
+            let v = Arc::new(AtomicIsize::new(-1));
             let line = cpuid_asm::CacheInfo::get().l1d_line as usize;
 
             return Seq {
-                v: Arc::new(AtomicIsize::new(-1)),
+                v,
                 _pad: vec![Arc::new(AtomicIsize::new(-1));
                             (line / mem::size_of::<isize>()) - 1],
             }

@@ -1,5 +1,6 @@
 use crate::*;
 
+#[derive(Debug)]
 pub struct RawCpuid {
     pub leaf: u32,      // in_eax
     pub sub_leaf: u32,  // in_ecx
@@ -14,11 +15,24 @@ impl RawCpuid {
             result: cpuid!(leaf, sub_leaf),
         }
     }
+    pub fn zero() -> RawCpuid {
+        RawCpuid {
+            leaf: 0x0,
+            sub_leaf: 0x0,
+            result: CpuidResult {
+                eax: 0x0, ebx: 0x0, ecx: 0x0, edx: 0x0,
+            },
+        }
+    }
     pub fn check_result_zero(&self) -> bool {
         let cpuid = &self.result;
         (cpuid.eax == 0) && (cpuid.ebx == 0) && (cpuid.ecx == 0) && (cpuid.edx == 0)
     }
-    pub fn parse(&self, vendor: &VendorFlag) -> String {
+    fn parse(&self, vendor: &VendorFlag) -> String {
+        if self.check_result_zero() {
+            return "".to_string();
+        }
+
         let parse_result: String = match self.leaf {
             0x0 => format!(" [{}]", Vendor::from_cpuid(&self.result).name),
             0x1 => concat_string_from_slice(&[
@@ -67,6 +81,7 @@ impl RawCpuid {
                     0x8000_001D => cache_prop(&self.result),
                     0x8000_001E => cpu_topo_amd_80_1eh(&self.result),
                     0x8000_001F => secure_amd_80_1fh(&self.result.eax),
+                    0x8000_0021 => ext_amd_80_21h(&self.result.eax),
                     _ => "".to_string(),
                 }
             } else if vendor.intel {
@@ -94,6 +109,12 @@ impl RawCpuid {
         self.result("\n")
     }
     pub fn parse_fmt(&self, vendor: &VendorFlag) -> String {
-        self.result(&self.parse(&vendor))
+        let parsed = &self.parse(&vendor);
+
+        if parsed == "" {
+            return "".to_string();
+        }
+
+        self.result(parsed)
     }
 }

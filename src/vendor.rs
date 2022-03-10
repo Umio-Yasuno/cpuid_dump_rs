@@ -76,6 +76,12 @@ impl VendorFlag {
             intel,
         }
     }
+    pub fn all_true() -> VendorFlag {
+        VendorFlag {
+            amd: true,
+            intel: true,
+        }
+    }
 }
 
 pub fn get_vendor_name() -> String {

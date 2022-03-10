@@ -15,6 +15,9 @@ pub use crate::parse::*;
 #[path = "./raw_cpuid.rs"]
 mod raw_cpuid;
 pub use crate::raw_cpuid::*;
+#[path = "./load_parse.rs"]
+mod load_parse;
+pub use crate::load_parse::*;
 
 fn cpuid_pool() -> Vec<RawCpuid> {
     let mut pool: Vec<RawCpuid> = Vec::new();
@@ -108,13 +111,13 @@ fn raw_dump() {
 
 use std::thread;
 fn dump_all() {
-    let thread_count = cpuid_asm::CpuCoreCount::get().total_thread;
+    let thread_count = cpuid_asm::CpuCoreCount::get().total_thread as usize;
 
     println!("   (in)EAX_xECX:  {:<10} {:<10} {:<10} {:<10}\n{}",
             "(out)EAX", "(out)EBX", "(out)ECX", "(out)EDX",
             "=".repeat(80));
 
-    for i in 0..(thread_count) as usize {
+    for i in 0..(thread_count) {
         thread::spawn(move || {
             cpuid_asm::pin_thread!(i);
 
@@ -165,10 +168,6 @@ fn save_file(save_path: String, pool: &[u8]) {
     f.write(pool).unwrap();
 }
 
-fn load_file(load_path: String) {
-    use std::fs;
-}
-
 struct MainOpt {
     raw: bool,
     dump_all: bool,
@@ -204,7 +203,7 @@ impl MainOpt {
             }
 
             if !args[i].starts_with("-") {
-                eprintln!("Unknown option: {}", args[i]);
+                // eprintln!("Unknown option: {}", args[i]);
                 continue;
             }
 
@@ -251,27 +250,23 @@ impl MainOpt {
     }
 }
 
+/*
 pub enum CpuidDumpType {
     LibCpuid,
     EtallenCpuid,
     CpuidDumpRs,
     Last,
 }
+*/
 
 fn main() {
     match MainOpt::parse() {
-        MainOpt { load: true, load_path, .. } =>
-            load_file(load_path),
-        MainOpt { raw: true, save: true, save_path, .. } =>
-            save_file(save_path, &raw_pool()),
-        MainOpt { raw: true, dump_all: true, .. } =>
-            raw_dump_all(),
-        MainOpt { dump_all: true, .. } =>
-            dump_all(),
-        MainOpt { raw: true, .. } =>
-            raw_dump(),
-        MainOpt { save: true, save_path, .. } =>
-            save_file(save_path, &parse_pool()),
+        MainOpt { load: true, load_path, .. } => load_file(load_path),
+        MainOpt { raw: true, save: true, save_path, .. } => save_file(save_path, &raw_pool()),
+        MainOpt { raw: true, dump_all: true, .. } => raw_dump_all(),
+        MainOpt { dump_all: true, .. } => dump_all(),
+        MainOpt { raw: true, .. } => raw_dump(),
+        MainOpt { save: true, save_path, .. } => save_file(save_path, &parse_pool()),
         _ => {
             println!("CPUID Dump");
             dump();
