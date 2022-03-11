@@ -89,7 +89,11 @@ impl RawCpuid {
                     0x8000_001B => ibs_amd_80_1bh(&self.result.eax),
                     0x8000_001D => cache_prop(&self.result),
                     0x8000_001E => cpu_topo_amd_80_1eh(&self.result),
-                    0x8000_001F => secure_amd_80_1fh(&self.result.eax),
+                    0x8000_001F => concat_string_from_slice(&[
+                        encrypt_ftr_amd_80_1fh(&self.result.eax),
+                        padln!().to_string(),
+                        reduction_phys_addr_amd_80_1fh(&self.result.ebx),
+                    ]),
                     0x8000_0021 => ext_amd_80_21h(&self.result.eax),
                     _ => "".to_string(),
                 }

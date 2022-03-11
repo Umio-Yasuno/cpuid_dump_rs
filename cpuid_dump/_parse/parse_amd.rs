@@ -155,8 +155,24 @@ pub fn ibs_amd_80_1bh(eax: &u32) -> String {
     align_mold_ftr(&str_detect_ftr(*eax, FTR_AMD_80_1B_EAX_X0))
 }
 
-pub fn secure_amd_80_1fh(eax: &u32) -> String {
+pub fn encrypt_ftr_amd_80_1fh(eax: &u32) -> String {
     align_mold_ftr(&str_detect_ftr(*eax, FTR_AMD_80_1F_EAX_X0))
+}
+
+pub fn reduction_phys_addr_amd_80_1fh(ebx: &u32) -> String {
+    // Reduction of physical address space in bits when 
+    // memory encryption is enabled (0 indicates no reduction).
+    // [Reserved]: Bit16-31
+    // VmplSupported: Bit12-15
+    // MemEncryptPhysAddWidth: Bit6-11
+    // CBit: Bit00-05
+    let reduction_size = (ebx >> 6) & 0x3F;
+
+    if 0 < reduction_size {
+        format!(" [MemEncryptPhysAddWidth: {reduction_size}-bits]")
+    } else {
+        "".to_string()
+    }
 }
 
 pub fn ext_amd_80_21h(eax: &u32) -> String {
