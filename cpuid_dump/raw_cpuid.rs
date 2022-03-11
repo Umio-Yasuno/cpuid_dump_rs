@@ -101,7 +101,7 @@ impl RawCpuid {
             },
         };
 
-        return parse_result + "\n";
+        return format!("{}\n", parse_result);
     }
     pub fn result(&self, end_str: &str) -> String {
         format!("  0x{:08X}_x{:1X}:  0x{:08X} 0x{:08X} 0x{:08X} 0x{:08X} {}",
