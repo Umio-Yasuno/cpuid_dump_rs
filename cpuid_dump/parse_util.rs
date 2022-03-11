@@ -9,6 +9,7 @@ macro_rules! has_ftr {
             ""
         }
     };
+/*
     ($ftr_bool: expr, $name_str: expr, $else_ftr: expr, $else_name: expr) => {
         if $ftr_bool {
             $name_str
@@ -18,20 +19,12 @@ macro_rules! has_ftr {
             ""
         }
     };
-}
-
-/*
-#[macro_export]
-macro_rules! push {
-    ($buff: expr, $str: expr) => {
-        $buff.push($str.to_string())
-    };
-}
 */
+}
 
 #[macro_export]
 macro_rules! pad {
-    () => { " ".repeat(crate::INPUT_WIDTH + crate::OUTPUT_WIDTH + 1) };
+    () => { " ".repeat(INPUT_WIDTH + OUTPUT_WIDTH + 1) };
 }
 
 #[macro_export]

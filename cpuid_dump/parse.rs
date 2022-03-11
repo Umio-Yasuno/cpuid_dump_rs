@@ -28,11 +28,11 @@ pub fn info_00_01h(cpuid: &CpuidResult) -> String {
     let buff = [
         format!(" [F: 0x{:X}, M: 0x{:X}, S: 0x{:X}]", fms.syn_fam, fms.syn_mod, fms.step),
         padln!(),
-        format!(" [{}]", codename),
+        format!(" [Codename: {}]", codename),
         padln!(),
         format!(" [APIC ID: {}]", ebx >> 24),
         padln!(),
-        format!(" [Total {} thread(s)]", (ebx >> 16) & 0xFF),
+        format!(" [Total thread(s): {}T]", (ebx >> 16) & 0xFF),
         padln!(),
         format!(" [CLFlush: {}B]", ((ebx >> 8) & 0xFF) * 8),
     ];
@@ -54,8 +54,7 @@ pub fn feature_00_01h(cpuid: &CpuidResult) -> String {
 
     if edx[25] {
         let v = [
-            (edx[26], "2"), (ecx[0], "3"),
-            (ecx[19], "4.1"), (ecx[20], "4.2")
+            (edx[26], "2"), (ecx[0], "3"), (ecx[19], "4.1"), (ecx[20], "4.2"),
         ];
         let sse = ftr_variant_expand("SSE", &v);
 
@@ -219,17 +218,18 @@ impl CacheProp {
 
         let share_thread = ((eax >> 14) & 0xFFF) + 1;
 
-        let mut size_unit = 1u32;
-        let mut size_unit_string = "B";
+        const UNIT_KIB: u32 = 1 << 10;
+        const UNIT_MIB: u32 = 1 << 20;
+        // const UNIT_GIB: u32 = 1 << 30;
 
-        if size < 1000_000 {
-            size_unit = 1 << 10;
-            size_unit_string = "KiB";
-        } else if size < 1000_000_000 {
-            size_unit = 1 << 20;
-            size_unit_string = "MiB";
-        };
-
+        let (size_unit, size_unit_string) = 
+            if UNIT_KIB < size && size < UNIT_MIB {
+                (UNIT_KIB, "KiB")
+            } else if UNIT_MIB < size {
+                (UNIT_MIB, "MiB")
+            } else {
+                (1u32, "B")
+            };
         let size_unit_string = size_unit_string.to_string();
 
         let inclusive = (edx & 0b10) != 0;
@@ -257,12 +257,13 @@ pub fn cache_prop(cpuid: &CpuidResult) -> String {
     }
 
     let v = [
-        format!(" [L{} {:>7} {:>3}-way, {:>4}{}]",
-            cache.level, cache.cache_type, cache.way,
+        format!(" [L{}{}, {:>3}-way, {:>4}-{}]",
+            cache.level, &cache.cache_type[..1], cache.way,
             cache.size / cache.size_unit, cache.size_unit_string),
         padln!(),
         format!(" [Shared {}T]", cache.share_thread),
-        has_ftr!(cache.inclusive, " [Inclusive]").to_string(),
+        if cache.inclusive { " [Inclusive]" } else { "" }.to_string(),
+        // has_ftr!(cache.inclusive, " [Inclusive]").to_string(),
     ];
 
     return concat_string_from_slice(&v);

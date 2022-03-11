@@ -32,7 +32,7 @@ pub fn cpu_topo_amd_80_1eh(cpuid: &CpuidResult) -> String {
     let v = [
         format!(" [Core ID: {}]", ebx & 0xFF),
         padln!(),
-        format!(" [per core thread: {}]", ((ebx >> 8) & 0xFF) + 1),
+        format!(" [Thread(s) per core: {}T]", ((ebx >> 8) & 0xFF) + 1),
         padln!(),
         format!(" [Node ID: {}]", ecx & 0xFF),
     ];
