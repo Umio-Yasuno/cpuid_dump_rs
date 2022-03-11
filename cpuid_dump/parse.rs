@@ -185,6 +185,13 @@ pub fn feature_80_01h(cpuid: &CpuidResult) -> String {
     return align_mold_ftr(&buff);
 }
 
+pub fn addr_size_80_08h(eax: &u32) -> String {
+    let pad = format!("{}{}", padln!(), " ".repeat(" [Address size:".len()));
+
+    format!(" [Address size: {:2}-bits physical {} {:2}-bits virtual]",
+        eax & 0xFF, pad, (eax >> 8) & 0xFF)
+}
+
 #[allow(dead_code)]
 struct CacheProp {
     cache_type: String,

@@ -14,6 +14,8 @@ pub fn pkgtype_amd_80_01h(ebx: &u32) -> String {
 pub fn l1l2tlb_1g_amd_80_19h(cpuid: &CpuidResult) -> String {
     let [eax, ebx] = [cpuid.eax, cpuid.ebx];
 
+    // Inst TLB number of entries for 1-GB pages, size: Bit00-11, assoc: Bit12-15
+    // Data TLB number of entries for 1-GB pages, size: Bit16-27, assoc: Bit28-31
     let v = [
         format!(" [L1TLB 1G: Data {:>4}, Inst {:>4}]",
             (eax >> 16) & 0xFFF, eax & 0xFFF,

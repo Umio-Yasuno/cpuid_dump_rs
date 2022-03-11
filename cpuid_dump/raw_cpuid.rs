@@ -61,6 +61,15 @@ impl RawCpuid {
                 concat_string_from_slice(&v)
             },
             0x8000_0002..=0x8000_0004 => format!(" [{}]", cpu_name(&self.result)),
+            0x8000_0008 => concat_string_from_slice(&[
+                addr_size_80_08h(&self.result.eax),
+                padln!().to_string(),
+                if vendor.amd {
+                    spec_amd_80_08h(&self.result.ebx)
+                } else {
+                    "".to_string()
+                },
+            ]),
             _ => if vendor.amd {
                 match self.leaf {
                     0x8000_0005 => l1_amd_80_05h(&self.result),
