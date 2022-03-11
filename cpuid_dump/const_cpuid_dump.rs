@@ -135,8 +135,8 @@ pub const FTR_AMD_80_1F_EAX_X0: &[&str] = &[
     "VTE", /* "Reserved Bit17-31" */
 ];
 
-/// [[RFC PATCH v0 0/6] x86/AMD: Userspace address tagging](https://lore.kernel.org/linux-mm/699fb763ac054833bc8c29c9814c63b2@AcuMS.aculab.com/T/#m1b9caa0c700839bc9238a3161ddc5b757062d077)
+// [[RFC PATCH v0 0/6] x86/AMD: Userspace address tagging](https://lore.kernel.org/linux-mm/699fb763ac054833bc8c29c9814c63b2@AcuMS.aculab.com/T/#m1b9caa0c700839bc9238a3161ddc5b757062d077)
 pub const FTR_AMD_80_21_EAX_X0: &[&str] = &[
-    "", "", "", "",
-    "", "", "", "UpperAddressIgnore",
+    "NoNestedDataBp", "", "LFenceAlwaysSerializing", "SmmPgCfgLock",
+    "", "", "NullSelectorClearsBase", "UpperAddressIgnore",
 ];
