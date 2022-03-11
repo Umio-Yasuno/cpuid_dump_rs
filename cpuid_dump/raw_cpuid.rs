@@ -51,15 +51,17 @@ impl RawCpuid {
             } else {
                 "".to_string()
             },
-            0x8000_0001 => {
-                let mut v: Vec<String> = Vec::new();
+            0x8000_0001 => concat_string_from_slice(&[
                 if vendor.amd {
-                    v.push(pkgtype_amd_80_01h(&self.result.ebx));
-                    v.push(padln!().to_string());
-                }
-                v.push(feature_80_01h(&self.result));
-                concat_string_from_slice(&v)
-            },
+                    concat_string_from_slice(&[
+                        pkgtype_amd_80_01h(&self.result.ebx),
+                        padln!().to_string(),
+                    ])
+                } else {
+                    "".to_string()
+                },
+                feature_80_01h(&self.result),
+            ]),
             0x8000_0002..=0x8000_0004 => format!(" [{}]", cpu_name(&self.result)),
             0x8000_0008 => concat_string_from_slice(&[
                 addr_size_80_08h(&self.result.eax),
