@@ -66,7 +66,7 @@ pub fn cpu_name(cpuid: &CpuidResult) -> String {
 
     [cpuid.eax, cpuid.ebx, cpuid.ecx, cpuid.edx].iter().for_each(
         |val| name.extend(val.to_le_bytes().iter().map(
-            // replace from \u0000..\u001F (<Control>) to \u0020 (space)
+            // replace from \u0000..\u001F (<Control>) to \u0020 (<Space>)
             |&byte| if byte <= 0x1F { 0x20 } else { byte }
         ))
     );
@@ -100,14 +100,14 @@ pub fn concat_string_from_slice(src: &[String]) -> String {
 
 pub fn align_mold_ftr(buff: &[String]) -> String {
     let mut rest: usize = PARSE_WIDTH;
-    let mut len: usize;
+    // let mut len: usize;
     let mut mold = String::new();
     let mut _inner = String::new();
 
     const DECO_LEN: usize = " []".len();
     
     for v in buff {
-        len = v.len() + DECO_LEN;
+        let len = v.len() + DECO_LEN;
 
         if len <= rest {
             _inner = format!(" [{}]", v);
@@ -133,17 +133,15 @@ pub fn align_mold_ftr(buff: &[String]) -> String {
 }
 
 pub fn ftr_variant_expand(base_name: &str, flag_str: &[(bool, &str)]) -> String {
-    let mut base = String::from(base_name);
-    base.push_str("{");
+    let mut base = format!("{base_name}{{");
 
     for (flag, name) in flag_str {
         if *flag {
-            base.push_str(name);
-            base.push_str(",");
+            base.push_str(&format!("{name},"));
         }
     }
+    
     base.pop();
-
     base.push_str("}");
 
     return base;
