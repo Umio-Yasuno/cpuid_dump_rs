@@ -9,15 +9,15 @@ use cpuid_asm::{cpuid, Vendor, VendorFlag, _AX};
 #[path = "./const_cpuid_dump.rs"]
 mod const_cpuid_dump;
 pub use crate::const_cpuid_dump::*;
-#[path = "./parse.rs"]
-mod parse;
-pub use crate::parse::*;
+#[path = "./parse_mod.rs"]
+mod parse_mod;
+pub use crate::parse_mod::*;
 #[path = "./raw_cpuid.rs"]
 mod raw_cpuid;
 pub use crate::raw_cpuid::*;
-#[path = "./load_parse.rs"]
-mod load_parse;
-pub use crate::load_parse::*;
+#[path = "./load_file.rs"]
+mod load_file;
+pub use crate::load_file::*;
 
 fn cpuid_pool() -> Vec<RawCpuid> {
     let mut pool: Vec<RawCpuid> = Vec::new();

@@ -1,21 +1,4 @@
-//  Copyright (c) 2021 Umio Yasuno
-//  SPDX-License-Identifier: MIT
-
-use core::arch::x86_64::{CpuidResult};
-use crate::const_cpuid_dump::*;
-
-#[path = "./_parse/parse_amd.rs"]
-mod parse_amd;
-pub use parse_amd::*;
-
-#[path = "./_parse/parse_intel.rs"]
-mod parse_intel;
-pub use parse_intel::*;
-
-#[path = "./parse_util.rs"]
-#[macro_use]
-mod parse_util;
-pub use parse_util::*;
+use crate::*;
 
 pub fn info_00_01h(cpuid: &CpuidResult) -> String {
     use cpuid_asm::*;
@@ -210,7 +193,7 @@ impl CacheProp {
     fn dec(cpuid: &CpuidResult) -> CacheProp {
         let [eax, ebx, ecx, edx] = [cpuid.eax, cpuid.ebx, cpuid.ecx, cpuid.edx];
 
-        let cache_type = match eax & 0b11111 {
+        let cache_type = match eax & 0x1F {
             0x1 => "Data",
             0x2 => "Inst",
             0x3 => "Unified",
