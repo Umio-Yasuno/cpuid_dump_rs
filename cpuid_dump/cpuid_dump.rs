@@ -168,6 +168,15 @@ fn save_file(save_path: String, pool: &[u8]) {
     f.write(pool).unwrap();
 }
 
+fn only_leaf(leaf: u32, sub_leaf: u32) {
+    dump_write(
+        RawCpuid::exe(leaf, sub_leaf)
+            .parse_fmt(&VendorFlag::all_true())
+            .into_bytes()
+            .as_slice()
+    )
+}
+
 struct MainOpt {
     raw: bool,
     dump_all: bool,
@@ -175,6 +184,9 @@ struct MainOpt {
     save_path: String,
     load: bool,
     load_path: String,
+    only_leaf: bool,
+    leaf: u32,
+    sub_leaf: u32,
 }
 
 impl MainOpt {
@@ -188,6 +200,9 @@ impl MainOpt {
             ),
             load: false,
             load_path: "./cpuid_dump.txt".to_string(),
+            only_leaf: false,
+            leaf: 0x0,
+            sub_leaf: 0x0,
         }
     }
     fn parse() -> MainOpt {
@@ -242,6 +257,44 @@ impl MainOpt {
                         _ => continue,
                     };
                 },
+                "leaf" => {
+                    opt.only_leaf = true;
+                    opt.leaf = match args.get(i+1) {
+                        Some(v) => {
+                            if v.starts_with("-") {
+                                eprintln!("Please the value of leaf <u32>");
+                                continue;
+                            }
+
+                            if v.starts_with("0x") {
+                                u32::from_str_radix(&v[2..], 16).unwrap()
+                            } else {
+                                v.parse::<u32>().expect("Parse error")
+                            }
+                        },
+                        _ => continue,
+                    };
+                },
+                "sub_leaf" => {
+                    if !opt.only_leaf {
+                        eprintln!("Please \"--leaf <u32>\" argument");
+                    }
+                    opt.sub_leaf = match args.get(i+1) {
+                        Some(v) => {
+                            if v.starts_with("-") {
+                                eprintln!("Please the value of sub_leaf <u32>");
+                                continue;
+                            }
+
+                            if v.starts_with("0x") {
+                                u32::from_str_radix(&v[2..], 16).unwrap()
+                            } else {
+                                v.parse::<u32>().expect("Parse error")
+                            }
+                        },
+                        _ => continue,
+                    };
+                }
                 _ => eprintln!("Unknown option: {}", args[i]),
             }
         }
@@ -261,6 +314,9 @@ pub enum CpuidDumpType {
 
 fn main() {
     match MainOpt::parse() {
+        MainOpt { only_leaf: true, leaf, sub_leaf, .. } => {
+            return only_leaf(leaf, sub_leaf);
+        },
         MainOpt { load: true, load_path, .. } => load_file(load_path),
         MainOpt { raw: true, save: true, save_path, .. } => save_file(save_path, &raw_pool()),
         MainOpt { raw: true, dump_all: true, .. } => raw_dump_all(),

@@ -29,9 +29,11 @@ impl RawCpuid {
         (cpuid.eax == 0) && (cpuid.ebx == 0) && (cpuid.ecx == 0) && (cpuid.edx == 0)
     }
     fn parse(&self, vendor: &VendorFlag) -> String {
+        /*
         if self.check_result_zero() {
             return "".to_string();
         }
+        */
 
         let parse_result: String = match self.leaf {
             0x0 => format!(" [{}]", Vendor::from_cpuid(&self.result).name),
