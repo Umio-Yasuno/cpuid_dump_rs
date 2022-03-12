@@ -65,9 +65,11 @@ fn parse_pool() -> Vec<u8> {
     let vendor = VendorFlag::check();
     
     for cpuid in cpuid_pool {
+        /*
         if cpuid.check_result_zero() {
             continue;
         }
+        */
         parse_pool.extend(
             cpuid.parse_fmt(&vendor).into_bytes()
         );
@@ -231,13 +233,12 @@ impl MainOpt {
                     opt.save = true;
                     opt.save_path = match args.get(i+1) {
                         Some(v) => {
-                            let v = v.parse::<String>().expect("Parse error");
                             if v.starts_with("-") {
                                 skip = true;
                                 continue;
-                            } else {
-                                v
                             }
+
+                            v.to_string()
                         },
                         _ => continue,
                     };
@@ -246,13 +247,12 @@ impl MainOpt {
                     opt.load = true;
                     opt.load_path = match args.get(i+1) {
                         Some(v) => {
-                            let v = v.parse::<String>().expect("Parse error");
                             if v.starts_with("-") {
                                 skip = true;
                                 continue;
-                            } else {
-                                v
                             }
+
+                            v.to_string()
                         },
                         _ => continue,
                     };
@@ -314,9 +314,7 @@ pub enum CpuidDumpType {
 
 fn main() {
     match MainOpt::parse() {
-        MainOpt { only_leaf: true, leaf, sub_leaf, .. } => {
-            return only_leaf(leaf, sub_leaf);
-        },
+        MainOpt { only_leaf: true, leaf, sub_leaf, .. } => only_leaf(leaf, sub_leaf),
         MainOpt { load: true, load_path, .. } => load_file(load_path),
         MainOpt { raw: true, save: true, save_path, .. } => save_file(save_path, &raw_pool()),
         MainOpt { raw: true, dump_all: true, .. } => raw_dump_all(),

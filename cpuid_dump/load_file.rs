@@ -37,26 +37,38 @@ pub fn load_file(load_path: String) {
 
     let vendor_flag = VendorFlag::all_true();
 
+
     for ln in v.lines() {
-        pool.extend(
-            load_parse_cpuid_dump_rs(ln)
-                .parse_fmt(&vendor_flag)
-                .into_bytes()
-        );
+        let raw_cpuid_set = load_cpuid_dump_rs(ln);
+        if !raw_cpuid_set.check_all_zero() {
+            pool.extend(
+                raw_cpuid_set
+                    .parse_fmt(&vendor_flag)
+                    .into_bytes()
+            );
+        }
     }
 
     dump_write(&pool);
 }
 
-fn load_parse_cpuid_dump_rs(line: &str) -> RawCpuid {
-    // for ignore parsed strings
-    const LEN: usize = INPUT_WIDTH + OUTPUT_WIDTH;
+fn load_cpuid_dump_rs(line: &str) -> RawCpuid {
 
     let mut raw = RawCpuid::zero();
     let mut cpuid = CpuidResult { eax: 0x0, ebx: 0x0, ecx: 0x0, edx: 0x0 };
     let mut reg_type = RegType::EAX;
 
-    for v in line[..LEN].split(' ') {
+    // for ignore parsed strings
+    const LEN: usize = INPUT_WIDTH + OUTPUT_WIDTH;
+
+    let line = match line.get(..LEN) {
+        Some(v) => v,
+        _ => {
+            panic!("Load error: Possibly not the result file of cpuid_dump_rs")
+        },
+    };
+
+    for v in line.split(' ') {
         match v.len() {
             // "0x80000000".len()
             10 => {

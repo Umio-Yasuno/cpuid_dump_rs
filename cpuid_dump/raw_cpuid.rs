@@ -28,6 +28,9 @@ impl RawCpuid {
         let cpuid = &self.result;
         (cpuid.eax == 0) && (cpuid.ebx == 0) && (cpuid.ecx == 0) && (cpuid.edx == 0)
     }
+    pub fn check_all_zero(&self) -> bool {
+        self.leaf == 0 && self.sub_leaf == 0 && self.check_result_zero()
+    }
     fn parse(&self, vendor: &VendorFlag) -> String {
         /*
         if self.check_result_zero() {
@@ -105,7 +108,7 @@ impl RawCpuid {
             },
         };
 
-        return format!("{}\n", parse_result);
+        return format!("{parse_result}\n");
     }
     pub fn result(&self, end_str: &str) -> String {
         format!("  0x{:08X}_x{:1X}:  0x{:08X} 0x{:08X} 0x{:08X} 0x{:08X} {}",
