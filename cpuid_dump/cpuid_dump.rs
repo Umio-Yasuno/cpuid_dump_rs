@@ -46,13 +46,18 @@ fn cpuid_pool() -> Vec<RawCpuid> {
     }
 
     // Ext
-    for leaf in _AX+0x0..=_AX+0x21 {
+    for leaf in _AX+0x0..=_AX+0xA {
         pool.push(RawCpuid::exe(leaf, 0x0));
+    }
+    for leaf in _AX+0x19..=_AX+0x21 {
+        // Cache Properties, AMD, same format as Intel Leaf: 0x4
+        const LF_80_1D: u32 = _AX + 0x1D;
 
-        if leaf == _AX+0x1D {
-            for sub_leaf in 0x1..=0x4 {
+        match leaf {
+            LF_80_1D => for sub_leaf in 0x1..=0x4 {
                 pool.push(RawCpuid::exe(leaf, sub_leaf));
-            }
+            },
+            _ => pool.push(RawCpuid::exe(leaf, 0x0)),
         }
     }
 
@@ -197,11 +202,11 @@ impl MainOpt {
             raw: false,
             dump_all: false,
             save: false,
-            save_path: format!("./{}.txt",
+            save_path: format!("{}.txt",
                 cpuid_asm::get_trim_proc_name().replace(" ", "_")
             ),
             load: false,
-            load_path: "./cpuid_dump.txt".to_string(),
+            load_path: "cpuid_dump.txt".to_string(),
             only_leaf: false,
             leaf: 0x0,
             sub_leaf: 0x0,
@@ -238,7 +243,11 @@ impl MainOpt {
                                 continue;
                             }
 
-                            v.to_string()
+                            if std::path::Path::new(v).is_dir() {
+                                format!("{v}{}", opt.save_path)
+                            } else {
+                                v.to_string()
+                            }
                         },
                         _ => continue,
                     };
