@@ -39,7 +39,6 @@ macro_rules! pin_thread {
             let status = sched_setaffinity(0, std::mem::size_of::<cpu_set_t>(), &set);
             if status == -1 {
                 eprintln!("sched_setaffinity failed.");
-                return;
             }
         }
         #[cfg(target_os = "windows")]
