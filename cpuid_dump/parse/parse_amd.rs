@@ -127,7 +127,7 @@ pub fn enum_amd_0dh(cpuid: &RawCpuid) -> String {
         0x9 => size(eax, "MPK"),
         0xB => size(eax, "CET_U"),
         0xC => size(eax, "CET_S"),
-        _ => unreachable!(),
+        _ => "".to_string(),
     };
 }
 

@@ -98,11 +98,13 @@ fn dump() {
     let mut pool: Vec<u8> = Vec::new();
 
     pool.extend(
-        format!("   (in)EAX_xECX:  {:<10} {:<10} {:<10} {:<10}\n",
-            "(out)EAX", "(out)EBX", "(out)ECX", "(out)EDX").into_bytes()
+        format!("  {{LEAF}}_x{{SUB}}:  {:<10} {:<10} {:<10} {:<10}\n",
+        "(out)EAX", "(out)EBX", "(out)ECX", "(out)EDX")
+            .into_bytes()
     );
     pool.extend(
-        format!("{}\n", "=".repeat(TOTAL_WIDTH)).into_bytes()
+        format!("{}\n", "=".repeat(TOTAL_WIDTH))
+            .into_bytes()
     );
     pool.extend(parse_pool());
     pool.extend(b"\n");
@@ -118,9 +120,9 @@ use std::thread;
 fn dump_all() {
     let thread_count = cpuid_asm::CpuCoreCount::get().total_thread as usize;
 
-    println!("   (in)EAX_xECX:  {:<10} {:<10} {:<10} {:<10}\n{}",
+    println!("   {{LEAF}}_x{{SUB}}:  {:<10} {:<10} {:<10} {:<10}\n{}",
             "(out)EAX", "(out)EBX", "(out)ECX", "(out)EDX",
-            "=".repeat(80));
+            "=".repeat(TOTAL_WIDTH));
 
     for i in 0..(thread_count) {
         thread::spawn(move || {
@@ -174,6 +176,22 @@ fn save_file(save_path: String, pool: &[u8]) {
 }
 
 fn only_leaf(leaf: u32, sub_leaf: u32, use_bin: bool) {
+    if use_bin {
+        const INPUT_LEN: usize = 16;
+        const OUTPUT_LEN: usize = 34;
+        const PAD_LEN: usize = (34 - "(out)EAX / (out)ECX".len()) / 2;
+        let pad = " ".repeat(PAD_LEN);
+        println!("  {{LEAF}}_x{{SUB}}: {pad} (out)EAX / (out)ECX {pad}{pad} (out)EBX / (out)EDX");
+        println!("{} {} {}",
+            "=".repeat(INPUT_LEN),
+            "=".repeat(OUTPUT_LEN),
+            "=".repeat(OUTPUT_LEN),
+        );
+    } else {
+        println!("  {{LEAF}}_x{{SUB}}:  {:<10} {:<10} {:<10} {:<10}\n{}",
+            "(out)EAX", "(out)EBX", "(out)ECX", "(out)EDX",
+            "=".repeat(TOTAL_WIDTH));
+    }
     let tmp = if use_bin {
         RawCpuid::exe(leaf, sub_leaf)
             .bin_fmt()
