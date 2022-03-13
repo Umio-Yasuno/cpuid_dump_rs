@@ -173,13 +173,17 @@ fn save_file(save_path: String, pool: &[u8]) {
     f.write(pool).unwrap();
 }
 
-fn only_leaf(leaf: u32, sub_leaf: u32) {
-    dump_write(
+fn only_leaf(leaf: u32, sub_leaf: u32, use_bin: bool) {
+    let tmp = if use_bin {
+        RawCpuid::exe(leaf, sub_leaf)
+            .bin_fmt()
+    } else {
         RawCpuid::exe(leaf, sub_leaf)
             .parse_fmt(&VendorFlag::all_true())
-            .into_bytes()
-            .as_slice()
-    )
+    };
+    let tmp = tmp.into_bytes();
+
+    dump_write(&tmp)
 }
 
 struct MainOpt {
@@ -187,7 +191,7 @@ struct MainOpt {
     dump_all: bool,
     save: (bool, String),
     load: (bool, String),
-    only_leaf: (bool, u32, u32),
+    only_leaf: (bool, u32, u32, bool),
 }
 
 impl MainOpt {
@@ -199,7 +203,7 @@ impl MainOpt {
                 cpuid_asm::get_trim_proc_name().replace(" ", "_")
             )),
             load: (false, "cpuid_dump.txt".to_string()),
-            only_leaf: (false, 0x0, 0x0),
+            only_leaf: (false, 0x0, 0x0, false),
         }
     }
     fn parse() -> MainOpt {
@@ -300,6 +304,9 @@ impl MainOpt {
                         _ => continue,
                     };
                 }
+                "bin" => {
+                    opt.only_leaf.3 = true
+                },
                 _ => eprintln!("Unknown option: {}", args[i]),
             }
         }
@@ -320,8 +327,8 @@ pub enum CpuidDumpType {
 
 fn main() {
     match MainOpt::parse() {
-        MainOpt { only_leaf: (true, leaf, sub_leaf), .. }
-            => only_leaf(leaf, sub_leaf),
+        MainOpt { only_leaf: (true, leaf, sub_leaf, use_bin), .. }
+            => only_leaf(leaf, sub_leaf, use_bin),
         MainOpt { load: (true, load_path), .. }
             => load_file(load_path),
         MainOpt { raw: true, save: (true, save_path), .. }

@@ -48,7 +48,7 @@ impl RawCpuid {
             0x7 => match self.sub_leaf {
                 0x0 => feature_00_07h_x0(&self.result),
                 0x1 => feature_00_07h_x1(&self.result.eax),
-                _ => unreachable!(),
+                _ => "".to_string(),
             },
             0xD => enum_amd_0dh(&self),
             0x1F => if vendor.intel {
@@ -129,5 +129,14 @@ impl RawCpuid {
         }
 
         self.result(parsed)
+    }
+    pub fn bin_fmt(&self) -> String {
+        format!("  0x{:08X}_x{:1X}: 0b{:032b} 0b{:032b} \n{} 0b{:032b} 0b{:032b} {}",
+            self.leaf, self.sub_leaf,
+            self.result.eax, self.result.ebx,
+            " ".repeat(16),
+            self.result.ecx, self.result.edx,
+            "\n",
+        )
     }
 }
