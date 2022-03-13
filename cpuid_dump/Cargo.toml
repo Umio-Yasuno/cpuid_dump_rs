@@ -18,4 +18,5 @@ libc = "^0.2"
 
 [[bin]]
 name = "cpuid_dump"
-path = "cpuid_dump.rs"
+path = "main.rs"
+# path = "cpuid_dump.rs"
