@@ -72,15 +72,18 @@ pub fn feature_00_07h_x0(cpuid: &CpuidResult) -> String {
     if avx512_f || avx512_dq || avx512_ifma || avx512_cd
     || avx512_bw || avx512_vl {
         let v = [
-            (avx512_f, "F"), (avx512_dq, "DQ"),
-            (avx512_ifma, "IFMA"), (avx512_cd, "CD"),
-            (avx512_bw, "BW"), (avx512_vl, "VL")
+            (avx512_f,    "F"),
+            (avx512_dq,   "DQ"),
+            (avx512_ifma, "IFMA"),
+            (avx512_cd,   "CD"),
+            (avx512_bw,   "BW"),
+            (avx512_vl,   "VL")
         ];
         let avx512 = ftr_variant_expand("AVX512", &v);
         buff.push(avx512);
     }
 
-    /*  Xeon Phi only */
+    /* Intel Xeon Phi only */
     if ebx[26] && ebx[27] {
         buff.push("AVX512{PF,ER}".to_string());
     }
@@ -95,8 +98,10 @@ pub fn feature_00_07h_x0(cpuid: &CpuidResult) -> String {
     if avx512_vbmi1 || avx512_vbmi2 || avx512_vnni
     || avx512_bitalg || avx512_vpopcntdq {
         let v = [
-            (avx512_vbmi1, "VBMI"), (avx512_vbmi2, "VBMI2"),
-            (avx512_vnni, "VNNI"), (avx512_bitalg, "BITALG"),
+            (avx512_vbmi1,     "VBMI"),
+            (avx512_vbmi2,     "VBMI2"),
+            (avx512_vnni,      "VNNI"),
+            (avx512_bitalg,    "BITALG"),
             (avx512_vpopcntdq, "VPOPCNTDQ"),
         ];
         let avx512 = ftr_variant_expand("AVX512", &v);
@@ -104,7 +109,7 @@ pub fn feature_00_07h_x0(cpuid: &CpuidResult) -> String {
     }
 
     // 0x00000007_EDX_x0
-    /* Xeon Phi Only */
+    /* Intel Xeon Phi Only */
     if edx[2] && edx[3] {
         buff.push("AVX512{4VNNIW,4FMAPS}".to_string());
     }
@@ -114,21 +119,25 @@ pub fn feature_00_07h_x0(cpuid: &CpuidResult) -> String {
 
     if avx512_vp2intersect || avx512_fp16 {
         let v = [
-            (avx512_vp2intersect, "VP2INTERSECT"), (avx512_fp16, "FP16"),
+            (avx512_vp2intersect, "VP2INTERSECT"),
+            (avx512_fp16,         "FP16"),
         ];
         let avx512 = ftr_variant_expand("AVX512", &v);
         buff.push(avx512);
     }
 
-    /*  Currently Intel Sapphire Rapids only
-        Bit 22: AMX-BF16,
-        Bit 24: AMX-TILE,
-        Bit 25: AMX-INT8
+    /*
+        Currently Intel Sapphire Rapids only
+        Bit22 => AMX-BF16,
+        Bit24 => AMX-TILE,
+        Bit25 => AMX-INT8,
     */
     if edx[22] && edx[24] && edx[25] {
         /*
             let v = [
-                (ebx[22], "BF16"), (ebx[24], "TILE"), (ebx[25], "INT8"),
+                (ebx[22], "BF16"),
+                (ebx[24], "TILE"),
+                (ebx[25], "INT8"),
             ];
             let amx = ftr_variant_expand("AMX", &v);
         */

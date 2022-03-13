@@ -244,11 +244,14 @@ impl MainOpt {
                             }
 
                             if std::path::Path::new(v).is_dir() {
-                                format!("{v}{}", opt.save_path)
+                                format!("{}{}", v, opt.save_path)
                             } else {
                                 v.to_string()
                             }
                         },
+                        // use default path/file name
+                        // save_path: format!("{}.txt",
+                        //      cpuid_asm::get_trim_proc_name().replace(" ", "_")
                         _ => continue,
                     };
                 },
@@ -263,7 +266,10 @@ impl MainOpt {
 
                             v.to_string()
                         },
-                        _ => continue,
+                        _ => {
+                            eprintln!("Please load path");
+                            std::process::exit(1);
+                        },
                     };
                 },
                 "leaf" => {

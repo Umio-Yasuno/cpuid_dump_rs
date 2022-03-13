@@ -169,7 +169,8 @@ pub fn reduction_phys_addr_amd_80_1fh(ebx: &u32) -> String {
     let reduction_size = (ebx >> 6) & 0x3F;
 
     if 0 < reduction_size {
-        format!(" [MemEncryptPhysAddWidth: {reduction_size}-bits]")
+        format!("{} [MemEncryptPhysAddWidth: {}-bits]",
+            padln!(), reduction_size)
     } else {
         "".to_string()
     }

@@ -70,9 +70,11 @@ impl RawCpuid {
             0x8000_0002..=0x8000_0004 => format!(" [{}]", cpu_name(&self.result)),
             0x8000_0008 => concat_string_from_slice(&[
                 addr_size_80_08h(&self.result.eax),
-                padln!().to_string(),
                 if vendor.amd {
-                    spec_amd_80_08h(&self.result.ebx)
+                    concat_string_from_slice(&[
+                        padln!().to_string(),
+                        spec_amd_80_08h(&self.result.ebx),
+                    ])
                 } else {
                     "".to_string()
                 },
@@ -90,7 +92,6 @@ impl RawCpuid {
                     0x8000_001E => cpu_topo_amd_80_1eh(&self.result),
                     0x8000_001F => concat_string_from_slice(&[
                         encrypt_ftr_amd_80_1fh(&self.result.eax),
-                        padln!().to_string(),
                         reduction_phys_addr_amd_80_1fh(&self.result.ebx),
                     ]),
                     0x8000_0021 => ext_amd_80_21h(&self.result.eax),

@@ -21,30 +21,67 @@ pub const FTR_00_01_EDX_X0: &[&str] = &[
     "MTRR", "PGE", "MCA", "CMOV",
     "PAT", "PSE36", "", "",
     "", "", "", "MMX",
-    "FXSR", "", "",  "", /* Bit25: SSE, Bit26: SSE2 */
-    "HTT", /* */
+    "FXSR", "", "",  "",
+    "HTT",
+    /*
+        Bit25 => SSE,
+        Bit26 => SSE2,
+
+        use `ftr_variant_expand("SSE", &[(flag: bool, end_name: &str)])`
+    */
 ];
 pub const FTR_00_01_ECX_X0: &[&str] = &[
-    "", "PCLMULQDQ", "", "Monitor/Mwait", /* Bit0: SSE3 */
+    "", "PCLMULQDQ", "", "Monitor/Mwait",
     "", "", "", "",
-    "", "", "", "", /* Bit9: SSSE3 */
+    "", "", "", "",
     "FMA", "CMPXCHG16B", "", "",
-    "", "PCID", "", "", /* Bit19: SSE41 */
-    "", "X2APIC", "MOVBE", "POPCNT", /* Bit24: SSE42 */
+    "", "PCID", "", "",
+    "", "X2APIC", "MOVBE", "POPCNT",
     "", "AES", "XSAVE", "OSXSAVE",
     "AVX", "F16C", "RDRAND", "",
+    /*
+        Bit00 => SSE3,
+        Bit19 => SSE41,
+        Bit24 => SSE42,
+
+        use `ftr_variant_expand("SSE", &[(flag: bool, end_name: &str)])`
+    */
+    /* Bit09 => SSSE3, */
 ];
 
 pub const FTR_00_07_EBX_X0: &[&str] = &[
     "FSGSBASE", "", "SGX", "BMI1",
-    "", "AVX2", "", "SMEP",
+    "HLE", "AVX2", "", "SMEP",
     "BMI2", "ERMS", "INVPCID", "",
-    "PQM", "", "", "PQE",
+    "", "", "", "",
     "", "", "RDSEED", "ADX",
     "SMAP", "", "", "CLFSHOPT",
     "CLWB", "", "", "",
     "", "SHA", "", "",
+    /*
+        Bit11 => Intel: RTM, AMD: [Reserved]
+        Bit12 => Intel RDT-M (Resource Director Technology - Monitoring),
+                 AMD: PQM (Platform QoS Monitoring)
+        Bit15 => Intel RTD-A (Allocation),
+                 AMD: PQE (Cache Allocation Technology, Platform QoS Allocation?)
+    */
+    /*
+        Bit16 => AVX512F,
+        Bit17 => AVX512DQ,
+        Bit21 => AVX512_IFMA,
+        Bit28 => AVX512CD,
+        Bit30 => AVX512BW,
+        Bit31 => AVX512VL,
+
+        use `ftr_variant_expand("AVX512", &[(flag: bool, end_name: &str)])`
+    */
+    /*
+        Intel Xeon Phi only:
+        Bit26 => AVX512PF,
+        Bit27 => AVX512ER,
+    */
 ];
+
 pub const FTR_00_07_ECX_X0: &[&str] = &[
     "", "", "UMIP", "PKU",
     "OSPKE", "", "", "CET_SS",
@@ -53,26 +90,51 @@ pub const FTR_00_07_ECX_X0: &[&str] = &[
     "", "", "", "",
     "", "", "RDPID", "KL",
     "", "CLDEMOTE", "", "MOVDIRI",
-    "MOVDIRI64B", "ENQCMD", /* */
+    "MOVDIRI64B", "ENQCMD",
+    /*
+        Bit01 => AVX512_VBMI,
+        Bit06 => AVX512_VBMI2,
+        Bit11 => AVX512_VNNI,
+        Bit12 => AVX512_BITALG,
+        Bit14 => AVX512_VPOPCNTDQ,
+
+        use `ftr_variant_expand("AVX512", &[(flag: bool, end_name: &str)])`
+    */
 ];
 
 pub const FTR_00_07_EDX_X0: &[&str] = &[
     "", "", "", "",
     "FSRM", "UINTR", "", "",
     "", "", "MD_CLEAR", "",
-    "", "", "SERIALIZE", "",
-    /* */
+    "", "", "SERIALIZE", "Hybrid",
+    "TSXLDTRK", "", "PCONFIG", "",
+    "CET_IBT",
+    /*
+        Bit08 => AVX512_VP2INTERSECT,
+        Bit23 => AVX512_FP16,
+
+        use `ftr_variant_expand("AVX512", &[(flag: bool, end_name: &str)])`
+    */
+    /*
+        Bit22 => AMX-BF16,
+        Bit24 => AMX-TILE,
+        Bit25 => AMX-INT8,
+    */
+    /*
+        Intel Xeon Phi only:
+        Bit02 => AVX512_4VNNIW,
+        Bit03 => AVX512_4FMAPS,
+    */
 ];
 
 pub const FTR_AMD_00_0D_EAX_X0: &[&str] = &[
     "X87", "SSE", "AVX256", "",
     "", "", "", "",
-    "", "MPK", /* Reserved Bit10-31 */
+    "", "MPK",
 ];
 
 pub const FTR_AMD_00_0D_EAX_X1: &[&str] = &[
     "XSAVEOPT", "XSAVEC", "XGETBV", "XSAVES",
-    /* "Reserved Bit4-31" */
 ];
 
 
@@ -81,7 +143,6 @@ pub const FTR_AMD_80_07_EDX_X0: &[&str] = &[
     "TM", "", "OneHundredMHzSteps", "HwPstate",
     "TscInvariant", "CPB", "EffFreqRO", "ProcFeedbackInterface",
     "ProcPowerReporting", "ConnectedStandby", "RAPL",
-    /* "Reserved Bit15-31" */
 ];
 
 pub const FTR_AMD_80_08_EBX_X0: &[&str] = &[
@@ -93,7 +154,6 @@ pub const FTR_AMD_80_08_EBX_X0: &[&str] = &[
     "EferLmsleUnsupported", "", "", "PPIN",
     "SSBD", "", "", "CPPC",
     "PSFD",
-    /* "Reserved Bit29-31", */
 ];
 
 pub const FTR_AMD_80_0A_EBX_X0: &[&str] = &[
@@ -103,7 +163,6 @@ pub const FTR_AMD_80_0A_EBX_X0: &[&str] = &[
     "PauseFilterThreshold", "AVIC", "", "V_VMSAVE_VMLOAD",
     "vGIF", "GMET", "", "SupervisorShadowStack",
     "GuestSpecCtrl", "", "", "HOST_MCE_OVERRIDE",
-    /* */
 ];
 
 pub const FTR_80_01_ECX_X0: &[&str] = &[
@@ -124,7 +183,7 @@ pub const FTR_AMD_80_1A_EAX_X0: &[&str] = &[
 pub const FTR_AMD_80_1B_EAX_X0: &[&str] = &[
     "IBSFFV", "FetchSam", "OpSam", "RdWrOpCnt",
     "OpCnt", "BrnTrgt", "OpCntExt", "RipInvalidChk",
-    "OpBrnFuse", "IbsFetchCtlExtd", "IbsOpData4", /* */
+    "OpBrnFuse", "IbsFetchCtlExtd", "IbsOpData4",
 ];
 
 pub const FTR_AMD_80_1F_EAX_X0: &[&str] = &[
@@ -132,10 +191,13 @@ pub const FTR_AMD_80_1F_EAX_X0: &[&str] = &[
     "SNP", "VMPL", "", "",
     "", "", "CoherencyEnforced", "Req64BitHypervisor",
     "RestrictInjection", "AlternateInjection", "DebugStateSwap", "PreventHostIBS",
-    "VTE", /* "Reserved Bit17-31" */
+    "VTE",
 ];
 
-// [[RFC PATCH v0 0/6] x86/AMD: Userspace address tagging](https://lore.kernel.org/linux-mm/699fb763ac054833bc8c29c9814c63b2@AcuMS.aculab.com/T/#m1b9caa0c700839bc9238a3161ddc5b757062d077)
+/*
+    [RFC PATCH v0 0/6] x86/AMD: Userspace address tagging
+    https://lore.kernel.org/linux-mm/699fb763ac054833bc8c29c9814c63b2@AcuMS.aculab.com/T/#m1b9caa0c700839bc9238a3161ddc5b757062d077
+*/
 pub const FTR_AMD_80_21_EAX_X0: &[&str] = &[
     "NoNestedDataBp", "", "LFenceAlwaysSerializing", "SmmPgCfgLock",
     "", "", "NullSelectorClearsBase", "UpperAddressIgnore",
