@@ -325,6 +325,18 @@ impl MainOpt {
                 "bin" => {
                     opt.only_leaf.3 = true
                 },
+                "pin" | "pin_thread" => {
+                    let cpu = match args.get(i+1) {
+                        Some(v) => {
+                            v.parse::<usize>().expect("Parse error")
+                        },
+                        _ => continue,
+                    };
+                    cpuid_asm::pin_thread!(cpu);
+                },
+                // TODO: "taskset" option?
+                // cpuid_dump --taskset <list>
+                // same `taskset -c <list> cpuid_dump -a`
                 _ => eprintln!("Unknown option: {}", args[i]),
             }
         }
