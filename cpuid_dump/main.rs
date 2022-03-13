@@ -22,7 +22,7 @@ pub use crate::load_file::*;
 fn cpuid_pool() -> Vec<RawCpuid> {
     let mut pool: Vec<RawCpuid> = Vec::new();
 
-    // Base
+    /* Base */
     for leaf in 0x0..=0xC {
         match leaf {
             0x4 => for sub_leaf in 0..=4 {
@@ -35,22 +35,22 @@ fn cpuid_pool() -> Vec<RawCpuid> {
         }
     }
 
-    // 0xD: Processor Extended State Enumeration
+    /* 0xD: Processor Extended State Enumeration */
     for sub_leaf in [0x0, 0x1, 0x2, 0x9, 0xB, 0xC] {
         pool.push(RawCpuid::exe(0xD, sub_leaf));
     }
 
-    // 0x1F: V2 Extended Topology Enumeration Leaf, Intel
+    /* 0x1F: V2 Extended Topology Enumeration Leaf, Intel */
     for sub_leaf in 0..6 {
         pool.push(RawCpuid::exe(0x1F, sub_leaf));
     }
 
-    // Ext
+    /* Ext */
     for leaf in _AX+0x0..=_AX+0xA {
         pool.push(RawCpuid::exe(leaf, 0x0));
     }
     for leaf in _AX+0x19..=_AX+0x21 {
-        // Cache Properties, AMD, same format as Intel Leaf: 0x4
+        /* Cache Properties, AMD, same format as Intel Leaf:0x4 */
         const LF_80_1D: u32 = _AX + 0x1D;
 
         match leaf {
@@ -70,11 +70,9 @@ fn parse_pool() -> Vec<u8> {
     let vendor = VendorFlag::check();
     
     for cpuid in cpuid_pool {
-        /*
         if cpuid.check_result_zero() {
             continue;
         }
-        */
         parse_pool.extend(
             cpuid.parse_fmt(&vendor).into_bytes()
         );
@@ -187,13 +185,9 @@ fn only_leaf(leaf: u32, sub_leaf: u32) {
 struct MainOpt {
     raw: bool,
     dump_all: bool,
-    save: bool,
-    save_path: String,
-    load: bool,
-    load_path: String,
-    only_leaf: bool,
-    leaf: u32,
-    sub_leaf: u32,
+    save: (bool, String),
+    load: (bool, String),
+    only_leaf: (bool, u32, u32),
 }
 
 impl MainOpt {
@@ -201,15 +195,11 @@ impl MainOpt {
         MainOpt {
             raw: false,
             dump_all: false,
-            save: false,
-            save_path: format!("{}.txt",
+            save: (false, format!("{}.txt",
                 cpuid_asm::get_trim_proc_name().replace(" ", "_")
-            ),
-            load: false,
-            load_path: "cpuid_dump.txt".to_string(),
-            only_leaf: false,
-            leaf: 0x0,
-            sub_leaf: 0x0,
+            )),
+            load: (false, "cpuid_dump.txt".to_string()),
+            only_leaf: (false, 0x0, 0x0),
         }
     }
     fn parse() -> MainOpt {
@@ -235,8 +225,8 @@ impl MainOpt {
                 "a" | "all" => opt.dump_all = true,
                 "r" | "raw" => opt.raw = true,
                 "s" | "save" => {
-                    opt.save = true;
-                    opt.save_path = match args.get(i+1) {
+                    opt.save.0 = true;
+                    opt.save.1 = match args.get(i+1) {
                         Some(v) => {
                             if v.starts_with("-") {
                                 skip = true;
@@ -244,7 +234,7 @@ impl MainOpt {
                             }
 
                             if std::path::Path::new(v).is_dir() {
-                                format!("{}{}", v, opt.save_path)
+                                format!("{}{}", v, opt.save.1)
                             } else {
                                 v.to_string()
                             }
@@ -256,8 +246,8 @@ impl MainOpt {
                     };
                 },
                 "l" | "load" => {
-                    opt.load = true;
-                    opt.load_path = match args.get(i+1) {
+                    opt.load.0 = true;
+                    opt.load.1 = match args.get(i+1) {
                         Some(v) => {
                             if v.starts_with("-") {
                                 skip = true;
@@ -273,8 +263,8 @@ impl MainOpt {
                     };
                 },
                 "leaf" => {
-                    opt.only_leaf = true;
-                    opt.leaf = match args.get(i+1) {
+                    opt.only_leaf.0 = true;
+                    opt.only_leaf.1 = match args.get(i+1) {
                         Some(v) => {
                             if v.starts_with("-") {
                                 eprintln!("Please the value of leaf <u32>");
@@ -291,10 +281,10 @@ impl MainOpt {
                     };
                 },
                 "sub_leaf" => {
-                    if !opt.only_leaf {
+                    if !opt.only_leaf.0 {
                         eprintln!("Please \"--leaf <u32>\" argument");
                     }
-                    opt.sub_leaf = match args.get(i+1) {
+                    opt.only_leaf.2 = match args.get(i+1) {
                         Some(v) => {
                             if v.starts_with("-") {
                                 eprintln!("Please the value of sub_leaf <u32>");
@@ -319,6 +309,7 @@ impl MainOpt {
 }
 
 /*
+TODO: load & parse,
 pub enum CpuidDumpType {
     LibCpuid,
     EtallenCpuid,
@@ -329,13 +320,20 @@ pub enum CpuidDumpType {
 
 fn main() {
     match MainOpt::parse() {
-        MainOpt { only_leaf: true, leaf, sub_leaf, .. } => only_leaf(leaf, sub_leaf),
-        MainOpt { load: true, load_path, .. } => load_file(load_path),
-        MainOpt { raw: true, save: true, save_path, .. } => save_file(save_path, &raw_pool()),
-        MainOpt { raw: true, dump_all: true, .. } => raw_dump_all(),
-        MainOpt { dump_all: true, .. } => dump_all(),
-        MainOpt { raw: true, .. } => raw_dump(),
-        MainOpt { save: true, save_path, .. } => save_file(save_path, &parse_pool()),
+        MainOpt { only_leaf: (true, leaf, sub_leaf), .. }
+            => only_leaf(leaf, sub_leaf),
+        MainOpt { load: (true, load_path), .. }
+            => load_file(load_path),
+        MainOpt { raw: true, save: (true, save_path), .. }
+            => save_file(save_path, &raw_pool()),
+        MainOpt { raw: true, dump_all: true, .. }
+            => raw_dump_all(),
+        MainOpt { dump_all: true, .. }
+            => dump_all(),
+        MainOpt { raw: true, .. }
+            => raw_dump(),
+        MainOpt { save: (true, save_path), .. }
+            => save_file(save_path, &parse_pool()),
         _ => {
             println!("CPUID Dump");
             dump();
