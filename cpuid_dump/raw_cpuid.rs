@@ -131,11 +131,23 @@ impl RawCpuid {
         self.result(parsed)
     }
     pub fn bin_fmt(&self) -> String {
-        format!("  0x{:08X}_x{:1X}: 0b{:032b} 0b{:032b} \n{} 0b{:032b} 0b{:032b} {}",
+        let separate = |reg: u32| -> String {
+            let tmp = format!("{:032b}", reg);
+
+            format!("{}_{}_{}_{}",
+                &tmp[..8], &tmp[8..16], &tmp[16..24], &tmp[24..32])
+        };
+
+        let [eax, ebx, ecx, edx] = [
+            self.result.eax,
+            self.result.ebx,
+            self.result.ecx,
+            self.result.edx,
+        ].map(|reg| separate(reg));
+
+        format!("  0x{:08X}_x{:1X}: {eax} {ebx} \n{} {ecx} {edx} {}",
             self.leaf, self.sub_leaf,
-            self.result.eax, self.result.ebx,
             " ".repeat(16),
-            self.result.ecx, self.result.edx,
             "\n",
         )
     }

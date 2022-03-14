@@ -178,9 +178,9 @@ fn save_file(save_path: String, pool: &[u8]) {
 fn only_leaf(leaf: u32, sub_leaf: u32, use_bin: bool) {
     if use_bin {
         const INPUT_LEN: usize = 16;
-        const OUTPUT_LEN: usize = 34;
-        const PAD_LEN: usize = (34 - "(out)EAX / (out)ECX".len()) / 2;
-        let pad = " ".repeat(PAD_LEN);
+        const OUTPUT_LEN: usize = 35;
+        const PAD_LEN: usize = (OUTPUT_LEN - "(out)EAX / (out)ECX".len()) / 2;
+        let pad = " ".repeat(PAD_LEN - 1);
         println!("  {{LEAF}}_x{{SUB}}: {pad} (out)EAX / (out)ECX {pad}{pad} (out)EBX / (out)EDX");
         println!("{} {} {}",
             "=".repeat(INPUT_LEN),
@@ -212,6 +212,15 @@ struct MainOpt {
     only_leaf: (bool, u32, u32, bool),
 }
 
+/*
+struct OnlyLeaf {
+    flag: bool,
+    leaf: bool,
+    sub_leaf: bool,
+    bin_fmt: bool,
+}
+*/
+
 impl MainOpt {
     fn init() -> MainOpt {
         MainOpt {
@@ -230,25 +239,25 @@ impl MainOpt {
 
         let args: Vec<String> = std::env::args().collect();
 
-        for i in 1..args.len() {
+        for (idx, arg) in args.iter().enumerate() {
             if skip {
                 skip = false;
                 continue;
             }
 
-            if !args[i].starts_with("-") {
+            if !arg.starts_with("-") {
                 // eprintln!("Unknown option: {}", args[i]);
                 continue;
             }
 
-            let arg = args[i].trim_start_matches("-");
+            let arg = arg.trim_start_matches("-");
 
             match arg {
                 "a" | "all" => opt.dump_all = true,
                 "r" | "raw" => opt.raw = true,
                 "s" | "save" => {
                     opt.save.0 = true;
-                    opt.save.1 = match args.get(i+1) {
+                    opt.save.1 = match args.get(idx+1) {
                         Some(v) => {
                             if v.starts_with("-") {
                                 skip = true;
@@ -269,7 +278,7 @@ impl MainOpt {
                 },
                 "l" | "load" => {
                     opt.load.0 = true;
-                    opt.load.1 = match args.get(i+1) {
+                    opt.load.1 = match args.get(idx+1) {
                         Some(v) => {
                             if v.starts_with("-") {
                                 skip = true;
@@ -286,7 +295,7 @@ impl MainOpt {
                 },
                 "leaf" => {
                     opt.only_leaf.0 = true;
-                    opt.only_leaf.1 = match args.get(i+1) {
+                    opt.only_leaf.1 = match args.get(idx+1) {
                         Some(v) => {
                             if v.starts_with("-") {
                                 eprintln!("Please the value of leaf <u32>");
@@ -296,7 +305,7 @@ impl MainOpt {
                             if v.starts_with("0x") {
                                 u32::from_str_radix(&v[2..], 16).unwrap()
                             } else {
-                                v.parse::<u32>().expect("Parse error")
+                                v.parse::<u32>().expect("Parse error: leaf")
                             }
                         },
                         _ => continue,
@@ -306,7 +315,7 @@ impl MainOpt {
                     if !opt.only_leaf.0 {
                         eprintln!("Please \"--leaf <u32>\" argument");
                     }
-                    opt.only_leaf.2 = match args.get(i+1) {
+                    opt.only_leaf.2 = match args.get(idx+1) {
                         Some(v) => {
                             if v.starts_with("-") {
                                 eprintln!("Please the value of sub_leaf <u32>");
@@ -316,7 +325,7 @@ impl MainOpt {
                             if v.starts_with("0x") {
                                 u32::from_str_radix(&v[2..], 16).unwrap()
                             } else {
-                                v.parse::<u32>().expect("Parse error")
+                                v.parse::<u32>().expect("Parse error: sub_leaf")
                             }
                         },
                         _ => continue,
@@ -326,18 +335,21 @@ impl MainOpt {
                     opt.only_leaf.3 = true
                 },
                 "pin" | "pin_thread" => {
-                    let cpu = match args.get(i+1) {
+                    let cpu = match args.get(idx+1) {
                         Some(v) => {
-                            v.parse::<usize>().expect("Parse error")
+                            v.parse::<usize>().expect("Parse error: pin/pin_thread")
                         },
-                        _ => continue,
+                        _ => {
+                            eprintln!("Please the value of pin/pin_thread <usize>");
+                            continue;
+                        },
                     };
                     cpuid_asm::pin_thread!(cpu);
                 },
                 // TODO: "taskset" option?
                 // cpuid_dump --taskset <list>
                 // same `taskset -c <list> cpuid_dump -a`
-                _ => eprintln!("Unknown option: {}", args[i]),
+                _ => eprintln!("Unknown option: {}", arg),
             }
         }
 
@@ -348,9 +360,9 @@ impl MainOpt {
 /*
 TODO: load & parse,
 pub enum CpuidDumpType {
+    CpuidDumpRs,
     LibCpuid,
     EtallenCpuid,
-    CpuidDumpRs,
     Last,
 }
 */
