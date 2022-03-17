@@ -1,14 +1,4 @@
-use crate::*;
-
-const VENDOR_AMD_EBX: u32 = 0x6874_7541;
-const VENDOR_AMD_ECX: u32 = 0x444D_4163;
-const VENDOR_AMD_EDX: u32 = 0x6974_6E65;
-const VENDOR_AMD_NAME: &str = "AuthenticAMD";
-
-const VENDOR_INTEL_EBX: u32 = 0x756E_6547;
-const VENDOR_INTEL_ECX: u32 = 0x4965_6E69;
-const VENDOR_INTEL_EDX: u32 = 0x6C65_746E;
-const VENDOR_INTEL_NAME: &str = "GenuineIntel";
+use crate::{cpuid, CpuidResult};
 
 pub struct Vendor {
     pub ebx: u32,
@@ -17,11 +7,21 @@ pub struct Vendor {
     pub name: String,
 }
 
-impl Vendor {
+impl<'a> Vendor {
+    const AMD_EBX: u32 = 0x6874_7541;
+    const AMD_ECX: u32 = 0x444D_4163;
+    const AMD_EDX: u32 = 0x6974_6E65;
+    const AMD_NAME: &'a str = "AuthenticAMD";
+
+    const INTEL_EBX: u32 = 0x756E_6547;
+    const INTEL_ECX: u32 = 0x4965_6E69;
+    const INTEL_EDX: u32 = 0x6C65_746E;
+    const INTEL_NAME: &'a str = "GenuineIntel";
+
     fn name_from_ebx(ebx: u32) -> String {
         match ebx {
-            VENDOR_AMD_EBX => VENDOR_AMD_NAME,
-            VENDOR_INTEL_EBX => VENDOR_INTEL_NAME,
+            Self::AMD_EBX => Self::AMD_NAME,
+            Self::INTEL_EBX => Self::INTEL_NAME,
             _ => "Unknown",
         }.to_string()
     }
@@ -30,7 +30,7 @@ impl Vendor {
             ebx: cpuid.ebx,
             ecx: cpuid.ecx,
             edx: cpuid.edx,
-            name: Vendor::name_from_ebx(cpuid.ebx),
+            name: Self::name_from_ebx(cpuid.ebx),
         }
     }
     pub fn get() -> Vendor {
@@ -38,25 +38,25 @@ impl Vendor {
     }
     pub fn amd() -> Vendor {
         Vendor {
-            ebx: VENDOR_AMD_EBX,
-            ecx: VENDOR_AMD_ECX,
-            edx: VENDOR_AMD_EDX,
-            name: VENDOR_AMD_NAME.to_string(),
+            ebx: Self::AMD_EBX,
+            ecx: Self::AMD_ECX,
+            edx: Self::AMD_EDX,
+            name: Self::AMD_NAME.to_string(),
         }
     }
     pub fn intel() -> Vendor {
         Vendor {
-            ebx: VENDOR_INTEL_EBX,
-            ecx: VENDOR_INTEL_ECX,
-            edx: VENDOR_INTEL_EDX,
-            name: VENDOR_INTEL_NAME.to_string(),
+            ebx: Self::INTEL_EBX,
+            ecx: Self::INTEL_ECX,
+            edx: Self::INTEL_EDX,
+            name: Self::INTEL_NAME.to_string(),
         }
     }
     pub fn check_amd(&self) -> bool {
-        self.ebx == VENDOR_AMD_EBX
+        self.ebx == Self::AMD_EBX
     }
     pub fn check_intel(&self) -> bool {
-        self.ebx == VENDOR_INTEL_EBX
+        self.ebx == Self::INTEL_EBX
     }
 }
 

@@ -1,15 +1,20 @@
 //  Copyright (c) 2021 Umio Yasuno
 //  SPDX-License-Identifier: MIT
 
-use core::arch::x86_64::{CpuidResult, __cpuid_count};
+use core::arch::x86_64::CpuidResult;
 
 //  pub mod feature_detect;
-#[path = "./codename.rs"]
-mod codename;
-pub use codename::*;
+#[path = "./codename_mod.rs"]
+mod codename_mod;
+pub use codename_mod::*;
+
 #[path = "./vendor.rs"]
 mod vendor;
 pub use vendor::*;
+
+#[path = "./micro_arch_level.rs"]
+mod micro_arch_level;
+pub use micro_arch_level::*;
 
 pub mod cpuid_macro;
 
@@ -17,8 +22,8 @@ pub const _AX: u32 = 0x8000_0000;
 
 #[macro_export]
 macro_rules! cpuid {
-    ($in_eax: expr, $in_ecx: expr) => {
-        unsafe { __cpuid_count($in_eax, $in_ecx) }
+    ($leaf: expr, $sub_leaf: expr) => {
+        unsafe { std::arch::x86_64::__cpuid_count($leaf, $sub_leaf) }
     };
 }
 

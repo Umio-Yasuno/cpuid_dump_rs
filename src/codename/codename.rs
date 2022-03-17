@@ -1,14 +1,4 @@
-//  Copyright (c) 2021 Umio Yasuno
-//  SPDX-License-Identifier: MIT
-
-use crate::*;
-
-#[path = "./_codename/codename_amd.rs"]
-mod codename_amd;
-pub use codename_amd::*;
-#[path = "./_codename/codename_intel.rs"]
-mod codename_intel;
-pub use codename_intel::*;
+use crate::cpuid;
 
 pub struct ProcInfo {
     pub codename: String,
@@ -17,8 +7,8 @@ pub struct ProcInfo {
 }
 
 impl ProcInfo {
-    pub fn info(code: &str, arch: &str, process: &str) -> ProcInfo {
-        ProcInfo {
+    pub fn info(code: &str, arch: &str, process: &str) -> Self {
+        Self {
             codename: code.to_string(),
             archname: arch.to_string(),
             process: process.to_string(),
@@ -34,19 +24,19 @@ pub struct FamModStep {
 }
 
 impl FamModStep {
-    pub fn get() -> FamModStep {
-        FamModStep::from_cpuid(&cpuid!(0x1, 0).eax)
+    pub fn get() -> Self {
+        Self::from_cpuid(&cpuid!(0x1, 0).eax)
     }
-    pub fn dec(eax: u32) -> FamModStep {
-         FamModStep {
+    pub fn dec(eax: u32) -> Self {
+         Self {
             syn_fam: ((eax >> 8) & 0xF) + ((eax >> 20) & 0xFF),
             syn_mod: ((eax >> 4) & 0xF) + ((eax >> 12) & 0xF0),
             step: eax & 0xF,
             raw_eax: eax,
         }
     }
-    pub fn from_cpuid(eax: &u32) -> FamModStep {
-         FamModStep {
+    pub fn from_cpuid(eax: &u32) -> Self {
+         Self {
             syn_fam: ((*eax >> 8) & 0xF) + ((*eax >> 20) & 0xFF),
             syn_mod: ((*eax >> 4) & 0xF) + ((*eax >> 12) & 0xF0),
             step: *eax & 0xF,
@@ -58,10 +48,10 @@ impl FamModStep {
 
         return match f {
             0x5 => ProcInfo::info("Quark X1000", "P5C", "32 nm"),
-            0x6 => fam06h(m, s),
+            0x6 => ProcInfo::fam06h(m, s),
 
-            0x17 => fam17h(m, s),
-            0x19 => fam19h(m, s),
+            0x17 => ProcInfo::fam17h(m, s),
+            0x19 => ProcInfo::fam19h(m, s),
             _ => ProcInfo {
                 codename: format!("F{}h_M{}h_S{}h", f, m, s),
                 archname: "Unknown".to_string(),
