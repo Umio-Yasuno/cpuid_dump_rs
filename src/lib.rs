@@ -3,7 +3,6 @@
 
 use core::arch::x86_64::CpuidResult;
 
-//  pub mod feature_detect;
 #[path = "./codename_mod.rs"]
 mod codename_mod;
 pub use codename_mod::*;
