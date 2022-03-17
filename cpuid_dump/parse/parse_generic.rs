@@ -1,17 +1,14 @@
 use crate::*;
 
 pub fn info_00_01h(cpuid: &CpuidResult) -> String {
-    use cpuid_asm::*;
+    let [eax, ebx] = [cpuid.eax, cpuid.ebx];
 
-    let [eax, ebx] = [ cpuid.eax, cpuid.ebx, ];
-
-    let fms = FamModStep::from_cpuid(&eax);
-    let codename = fms.codename();
+    let fms = cpuid_asm::FamModStep::from_cpuid(&eax);
 
     let buff = [
         format!(" [F: 0x{:X}, M: 0x{:X}, S: 0x{:X}]", fms.syn_fam, fms.syn_mod, fms.step),
         padln!(),
-        format!(" [Codename: {}]", codename),
+        format!(" [Codename: {}]", fms.codename()),
         padln!(),
         format!(" [APIC ID: {}]", ebx >> 24),
         padln!(),

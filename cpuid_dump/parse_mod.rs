@@ -4,6 +4,10 @@
 // use core::arch::x86_64::{CpuidResult};
 // use crate::const_cpuid_dump::*;
 
+#[path = "./parse/const_parse.rs"]
+mod const_parse;
+pub use const_parse::*;
+
 #[path = "./parse/parse_util.rs"]
 #[macro_use]
 mod parse_util;

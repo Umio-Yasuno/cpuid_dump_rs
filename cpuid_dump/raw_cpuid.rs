@@ -8,15 +8,15 @@ pub struct RawCpuid {
 }
 
 impl RawCpuid {
-    pub fn exe(leaf: u32, sub_leaf: u32) -> RawCpuid {
-        RawCpuid {
+    pub fn exe(leaf: u32, sub_leaf: u32) -> Self {
+        Self {
             leaf,
             sub_leaf,
             result: cpuid!(leaf, sub_leaf),
         }
     }
-    pub fn zero() -> RawCpuid {
-        RawCpuid {
+    pub fn zero() -> Self {
+        Self {
             leaf: 0x0,
             sub_leaf: 0x0,
             result: CpuidResult {

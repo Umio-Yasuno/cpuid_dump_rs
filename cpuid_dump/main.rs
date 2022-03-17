@@ -1,14 +1,11 @@
 //  Copyright (c) 2021 Umio Yasuno
 //  SPDX-License-Identifier: MIT
 
-use core::arch::x86_64::{CpuidResult, __cpuid_count};
+use core::arch::x86_64::CpuidResult;
 
 extern crate cpuid_asm;
 use cpuid_asm::{cpuid, Vendor, VendorFlag, _AX};
 
-#[path = "./const_cpuid_dump.rs"]
-mod const_cpuid_dump;
-pub use crate::const_cpuid_dump::*;
 #[path = "./parse_mod.rs"]
 mod parse_mod;
 pub use crate::parse_mod::*;
@@ -192,14 +189,14 @@ fn only_leaf(leaf: u32, sub_leaf: u32, use_bin: bool) {
             "(out)EAX", "(out)EBX", "(out)ECX", "(out)EDX",
             "=".repeat(TOTAL_WIDTH));
     }
+
     let tmp = if use_bin {
         RawCpuid::exe(leaf, sub_leaf)
             .bin_fmt()
     } else {
         RawCpuid::exe(leaf, sub_leaf)
             .parse_fmt(&VendorFlag::all_true())
-    };
-    let tmp = tmp.into_bytes();
+    }.into_bytes();
 
     dump_write(&tmp)
 }
@@ -222,8 +219,8 @@ struct OnlyLeaf {
 */
 
 impl MainOpt {
-    fn init() -> MainOpt {
-        MainOpt {
+    fn init() -> Self {
+        Self {
             raw: false,
             dump_all: false,
             save: (false, format!("{}.txt",
@@ -233,7 +230,7 @@ impl MainOpt {
             only_leaf: (false, 0x0, 0x0, false),
         }
     }
-    fn parse() -> MainOpt {
+    fn parse() -> Self {
         let mut opt = MainOpt::init();
         let mut skip = false;
 
