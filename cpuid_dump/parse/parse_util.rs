@@ -62,14 +62,7 @@ impl Reg {
 }
 
 pub fn cpu_name(cpuid: &CpuidResult) -> String {
-    let mut name = Vec::with_capacity(64);
-
-    [cpuid.eax, cpuid.ebx, cpuid.ecx, cpuid.edx].iter().for_each(
-        |val| name.extend(val.to_le_bytes().iter().map(
-            // replace from \u0000..\u001F (<Control>) to \u0020 (<Space>)
-            |&byte| if byte <= 0x1F { 0x20 } else { byte }
-        ))
-    );
+    let name = cpuid_asm::ProcName::dec_cpuid(*cpuid);
 
     return String::from_utf8(name).unwrap();
 }

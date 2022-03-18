@@ -224,7 +224,7 @@ impl MainOpt {
             raw: false,
             dump_all: false,
             save: (false, format!("{}.txt",
-                cpuid_asm::get_trim_proc_name().replace(" ", "_")
+                cpuid_asm::ProcName::get_trim_name().replace(" ", "_")
             )),
             load: (false, "cpuid_dump.txt".to_string()),
             only_leaf: (false, 0x0, 0x0, false),

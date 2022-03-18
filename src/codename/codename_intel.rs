@@ -112,12 +112,10 @@ pub fn fam06h(m: u32, s: u32) -> Self {
 
         0x9A => {
             let (variant, stepping) = match s {
-                0x1 | 0x4 => {
-                    ("M", match s {
-                        0x4 => " (R0, 2+8)",
-                        _ => " (2+8)",
-                    })
-                },
+                0x1 | 0x4 => ("M", match s {
+                    0x4 => " (R0, 2+8)",
+                    _ => " (2+8)",
+                }),
                 _ => ("P", " (L0, 6+8)")
             };
 

@@ -15,6 +15,10 @@ pub use vendor::*;
 mod micro_arch_level;
 pub use micro_arch_level::*;
 
+#[path = "./proc_name.rs"]
+mod proc_name;
+pub use proc_name::*;
+
 pub mod cpuid_macro;
 
 pub const _AX: u32 = 0x8000_0000;
@@ -50,31 +54,6 @@ macro_rules! pin_thread {
             SetThreadAffinityMask(GetCurrentThread(), 1 << $cpu);
         }
     };
-}
-
-pub fn get_proc_name() -> String {
-    let mut reg: Vec<u32> = Vec::with_capacity(12);
-    let mut name: Vec<u8> = Vec::with_capacity(48);
-
-    for i in 0..=2 {
-        let tmp = cpuid!(_AX + 0x2 + i as u32, 0);
-        reg.extend([tmp.eax, tmp.ebx, tmp.ecx, tmp.edx]);
-    }
-
-    reg.iter().for_each(
-        |&val| name.extend( &val.to_le_bytes() )
-    );
-
-    return String::from_utf8(name).unwrap();
-}
-
-pub fn get_trim_proc_name() -> String {
-    //  let pat = ('\u{00}' ..= '\u{20}').collect::<Vec<char>>();
-    let pat = ['\u{00}', '\u{20}'];
-
-    return get_proc_name()
-        .trim_end_matches(&pat[..])
-        .to_string();
 }
 
 fn get_clflush_size() -> u32 {

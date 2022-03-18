@@ -124,7 +124,7 @@ impl RawCpuid {
     pub fn parse_fmt(&self, vendor: &VendorFlag) -> String {
         let parsed = &self.parse(&vendor);
 
-        if parsed == "" {
+        if parsed.is_empty() {
             return "".to_string();
         }
 

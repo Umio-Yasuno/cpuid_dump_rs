@@ -83,19 +83,9 @@ impl MicroArchLevel {
         };
 
         let base_line = mask(&[Self::BASE_LINE], &[cpuid_00_01.edx]);
-        let x86_64_v2 = base_line 
-            && mask(&Self::X86_64_V2, &[cpuid_00_01.ecx, cpuid_80_01.ecx]);
-        let x86_64_v3 = x86_64_v2 
-            && mask(&Self::X86_64_V3, &[cpuid_00_01.ecx, cpuid_00_07.ebx, cpuid_80_01.ecx]);
-        let x86_64_v4 = x86_64_v3
-            && mask(&[Self::X86_64_V4], &[cpuid_00_07.ebx]);
-
-        /*
-        println!("BASE_LINE: {}", base_line);
-        println!("v2: {}", x86_64_v2);
-        println!("v3: {}", x86_64_v3);
-        println!("v4: {}", x86_64_v4);
-        */
+        let x86_64_v2 = mask(&Self::X86_64_V2, &[cpuid_00_01.ecx, cpuid_80_01.ecx]);
+        let x86_64_v3 = mask(&Self::X86_64_V3, &[cpuid_00_01.ecx, cpuid_00_07.ebx, cpuid_80_01.ecx]);
+        let x86_64_v4 = mask(&[Self::X86_64_V4], &[cpuid_00_07.ebx]);
 
         let mut level = if base_line {
             1
@@ -103,15 +93,9 @@ impl MicroArchLevel {
             0
         };
 
-        if x86_64_v2 {
-            level |= 1 << 1;
-        }
-        if x86_64_v3 {
-            level |= 1 << 2;
-        }
-        if x86_64_v4 {
-            level |= 1 << 3;
-        }
+        if x86_64_v2 { level |= 1 << 1 }
+        if x86_64_v3 { level |= 1 << 2 }
+        if x86_64_v4 { level |= 1 << 3 }
 
         return level;
     }
@@ -124,4 +108,10 @@ impl MicroArchLevel {
             _ => 0,
         }
     }
+}
+
+#[test]
+fn test_micro_arch_level() {
+    println!("MicroArchLevel: 0b{:04b}", MicroArchLevel::check());
+    println!("MicroArchLevel: {}", MicroArchLevel::level_u8());
 }
