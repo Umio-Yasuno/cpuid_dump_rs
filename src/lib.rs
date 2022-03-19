@@ -33,13 +33,13 @@ macro_rules! cpuid {
 #[macro_export]
 macro_rules! pin_thread {
     ($cpu: expr) => {
-        #[cfg(target_os = "windows")]
-        use kernel32::{GetCurrentThread, SetThreadAffinityMask};
-        #[cfg(target_os = "linux")]
-        use libc::{cpu_set_t, sched_getaffinity, sched_setaffinity, CPU_ALLOC_SIZE, CPU_SET, CPU_ZERO};
-
         #[cfg(target_os = "linux")]
         unsafe {
+            use libc::{
+                cpu_set_t, sched_getaffinity, sched_setaffinity,
+                CPU_ALLOC_SIZE, CPU_SET, CPU_ZERO
+            };
+
             let mut set = std::mem::zeroed::<cpu_set_t>();
             CPU_ZERO(&mut set);
             CPU_SET($cpu, &mut set);
@@ -49,8 +49,12 @@ macro_rules! pin_thread {
                 eprintln!("sched_setaffinity failed.");
             }
         }
+
         #[cfg(target_os = "windows")]
         unsafe {
+            use windows_sys::Win32::System::Threading::{
+                GetCurrentThread, SetThreadAffinityMask
+            };
             SetThreadAffinityMask(GetCurrentThread(), 1 << $cpu);
         }
     };
@@ -60,7 +64,6 @@ fn get_clflush_size() -> u32 {
     ((cpuid!(0x1, 0).ebx >> 8) & 0xFF) * 8
 }
 
-/*
 enum CoreType {
     Core = 0x20, // big
     Atom = 0x40, // small
@@ -134,7 +137,6 @@ impl CacheProp {
         }
     }
 }
-*/
 
 pub struct CacheInfo {
     pub l1d_size: u32, // KiB

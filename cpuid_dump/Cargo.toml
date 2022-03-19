@@ -11,12 +11,19 @@ license = "MIT"
 name = "cpuid_asm"
 path = "../src/lib.rs"
 
-[dependencies]
-
-[target.'cfg(target_os = "linux")'.dependencies]
-libc = "^0.2"
-
 [[bin]]
 name = "cpuid_dump"
 path = "main.rs"
 # path = "cpuid_dump.rs"
+
+[target.'cfg(target_os = "linux")'.dependencies]
+libc = "^0.2"
+
+[target.'cfg(target_os = "windows")'.dependencies]
+windows-sys = "^0.33.0"
+
+[dependencies.windows-sys]
+features = [
+   "Win32_Foundation",
+   "Win32_System_Threading",
+]

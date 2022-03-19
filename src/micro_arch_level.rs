@@ -84,14 +84,11 @@ impl MicroArchLevel {
 
         let base_line = mask(&[Self::BASE_LINE], &[cpuid_00_01.edx]);
         let x86_64_v2 = mask(&Self::X86_64_V2, &[cpuid_00_01.ecx, cpuid_80_01.ecx]);
-        let x86_64_v3 = mask(&Self::X86_64_V3, &[cpuid_00_01.ecx, cpuid_00_07.ebx, cpuid_80_01.ecx]);
+        let x86_64_v3 =
+            mask(&Self::X86_64_V3, &[cpuid_00_01.ecx, cpuid_00_07.ebx, cpuid_80_01.ecx]);
         let x86_64_v4 = mask(&[Self::X86_64_V4], &[cpuid_00_07.ebx]);
 
-        let mut level = if base_line {
-            1
-        } else {
-            0
-        };
+        let mut level = if base_line { 1 } else { 0 };
 
         if x86_64_v2 { level |= 1 << 1 }
         if x86_64_v3 { level |= 1 << 2 }

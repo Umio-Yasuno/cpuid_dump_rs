@@ -1,9 +1,10 @@
 use crate::{cpuid, CpuidResult};
 
+#[allow(dead_code)]
 pub struct Vendor {
-    pub ebx: u32,
-    pub ecx: u32,
-    pub edx: u32,
+    ebx: u32,
+    ecx: u32,
+    edx: u32,
     pub name: String,
 }
 
@@ -34,7 +35,7 @@ impl<'a> Vendor {
         }
     }
     pub fn get() -> Vendor {
-        Vendor::from_cpuid(&cpuid!(0, 0))
+        Vendor::from_cpuid(&cpuid!(0x0, 0x0))
     }
     pub fn amd() -> Vendor {
         Vendor {

@@ -20,11 +20,12 @@ impl ProcName {
         ).collect()
     }
     pub fn get_name() -> String {
+        /* 4 (0x8000_0002..0x8000_0004) * u32 ([u8; 4]) * 4 (E{A,B,C,D}X) */
         let mut name: Vec<u8> = Vec::with_capacity(48);
 
-        for i in 0..=2u32 {
+        for leaf in _AX+0x2..=_AX+0x4 {
             name.extend(
-                Self::dec_cpuid(cpuid!(_AX+0x2 + i, 0))
+                Self::dec_cpuid(cpuid!(leaf, 0x0))
             );
         }
 
