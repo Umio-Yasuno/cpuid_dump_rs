@@ -9,22 +9,13 @@ macro_rules! has_ftr {
             ""
         }
     };
-/*
-    ($ftr_bool: expr, $name_str: expr, $else_ftr: expr, $else_name: expr) => {
-        if $ftr_bool {
-            $name_str
-        } else if $else_ftr {
-            $else_name
-        } else {
-            ""
-        }
-    };
-*/
 }
+
+pub const PAD_WIDTH: usize = INPUT_WIDTH + OUTPUT_WIDTH + 1;
 
 #[macro_export]
 macro_rules! pad {
-    () => { " ".repeat(INPUT_WIDTH + OUTPUT_WIDTH + 1) };
+    () => { " ".repeat(PAD_WIDTH) };
 }
 
 #[macro_export]
@@ -38,11 +29,11 @@ impl Reg {
         Reg(reg)
     }
     pub fn to_bit_array(&self) -> [u8; 32] {
-        let mut bit = [0u8; 32];
-        for i in 0..32 {
-            bit[i] = ((self.0 >> i) & 1) as u8;
+        let mut array = [0u8; 32];
+        for idx in 0..32 {
+            array[idx] = ((self.0 >> idx) & 1) as u8;
         }
-        return bit;
+        return array;
     }
     pub fn to_bool_array(&self) -> [bool; 32] {
         let mut array = [false; 32];

@@ -1,5 +1,9 @@
 use crate::*;
 
+pub fn vendor_00_00h(cpuid: &CpuidResult) -> String {
+    format!(" [{}]", Vendor::from_cpuid(cpuid).name)
+}
+
 pub fn info_00_01h(cpuid: &CpuidResult) -> String {
     let [eax, ebx] = [cpuid.eax, cpuid.ebx];
 
@@ -188,9 +192,9 @@ struct CacheProp {
     line_size: u32,
     way: u32,
     set: u32,
-    size: u32,
+    size: u64,
     share_thread: u32,
-    size_unit: u32,
+    size_unit: u64,
     size_unit_string: String,
     inclusive: bool,
 }
@@ -210,12 +214,12 @@ impl CacheProp {
         let line_size = (ebx & 0xFFF) + 1;
         let way = (ebx >> 22) + 1;
         let set = ecx + 1;
-        let size = line_size * way * set;
+        let size = line_size as u64 * way as u64 * set as u64;
 
         let share_thread = ((eax >> 14) & 0xFFF) + 1;
 
-        const UNIT_KIB: u32 = 1 << 10;
-        const UNIT_MIB: u32 = 1 << 20;
+        const UNIT_KIB: u64 = 1 << 10;
+        const UNIT_MIB: u64 = 1 << 20;
         // const UNIT_GIB: u32 = 1 << 30;
 
         let (size_unit, size_unit_string) = 
@@ -224,7 +228,7 @@ impl CacheProp {
             } else if UNIT_MIB < size {
                 (UNIT_MIB, "MiB")
             } else {
-                (1u32, "B")
+                (1u64, "B")
             };
         let size_unit_string = size_unit_string.to_string();
 

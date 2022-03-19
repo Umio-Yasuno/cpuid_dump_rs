@@ -39,7 +39,7 @@ impl RawCpuid {
         */
 
         let parse_result: String = match self.leaf {
-            0x0 => format!(" [{}]", Vendor::from_cpuid(&self.result).name),
+            0x0 => vendor_00_00h(&self.result),
             0x1 => concat_string_from_slice(&[
                 info_00_01h(&self.result),
                 padln!().to_string(),
