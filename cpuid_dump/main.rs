@@ -51,7 +51,7 @@ fn cpuid_pool() -> Vec<RawCpuid> {
         const LF_80_1D: u32 = _AX + 0x1D;
 
         match leaf {
-            LF_80_1D => for sub_leaf in 0x1..=0x4 {
+            LF_80_1D => for sub_leaf in 0x0..=0x4 {
                 pool.push(RawCpuid::exe(leaf, sub_leaf));
             },
             _ => pool.push(RawCpuid::exe(leaf, 0x0)),
