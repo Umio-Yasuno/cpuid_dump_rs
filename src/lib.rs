@@ -33,7 +33,7 @@ macro_rules! cpuid {
 #[macro_export]
 macro_rules! pin_thread {
     ($cpu: expr) => {
-        #[cfg(target_os = "linux")]
+        #[cfg(unix)]
         unsafe {
             use libc::{
                 cpu_set_t, sched_getaffinity, sched_setaffinity,
@@ -50,9 +50,9 @@ macro_rules! pin_thread {
             }
         }
 
-        #[cfg(target_os = "windows")]
+        #[cfg(windows)]
         unsafe {
-            use windows_sys::Win32::System::Threading::{
+            use windows::Win32::System::Threading::{
                 GetCurrentThread, SetThreadAffinityMask
             };
             SetThreadAffinityMask(GetCurrentThread(), 1 << $cpu);
@@ -60,10 +60,12 @@ macro_rules! pin_thread {
     };
 }
 
+/*
 fn get_clflush_size() -> u32 {
     ((cpuid!(0x1, 0).ebx >> 8) & 0xFF) * 8
 }
-
+*/
+/*
 enum CoreType {
     Core = 0x20, // big
     Atom = 0x40, // small
@@ -308,7 +310,7 @@ impl CpuTopoInfo {
         }
     }
 }
-
+*/
 /*
 struct IntelExtTopo {
     
