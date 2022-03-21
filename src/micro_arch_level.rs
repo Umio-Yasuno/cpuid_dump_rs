@@ -1,6 +1,6 @@
-use crate::{_AX, cpuid};
+use crate::{_AX, cpuid, CpuidResult};
 
-pub struct MicroArchLevel;
+pub struct MicroArchLevel(u8);
 
 impl MicroArchLevel {
     const BASE_LINE: u32 = {
@@ -67,10 +67,15 @@ impl MicroArchLevel {
         AVX512F | AVX512DQ | AVX512CD | AVX512BW | AVX512VL 
     };
     
-    pub fn check() -> u8 {
-        let cpuid_00_01 = cpuid!(0x1, 0x0);
-        let cpuid_00_07 = cpuid!(0x7, 0x0);
-        let cpuid_80_01 = cpuid!(_AX+0x1, 0x0);
+    fn set_cpuid() -> [CpuidResult; 3] {
+        [
+            cpuid!(0x1, 0x0),
+            cpuid!(0x7, 0x0),
+            cpuid!(_AX+0x1, 0x0),
+        ]
+    }
+    fn from_cpuid_array(cpuid_array: [CpuidResult; 3]) -> Self {
+        let [cpuid_00_01, cpuid_00_07, cpuid_80_01] = cpuid_array;
 
         let mask = |bitmask: &[u32], cpuid: &[u32]| -> bool {
             for (bitmask, cpuid) in bitmask.iter().zip(cpuid) {
@@ -94,10 +99,15 @@ impl MicroArchLevel {
         if x86_64_v3 { level |= 1 << 2 }
         if x86_64_v4 { level |= 1 << 3 }
 
-        return level;
+        return Self(level);
     }
-    pub fn level_u8() -> u8 {
-        match Self::check() {
+    pub fn check() -> u8 {
+        let cpuid_array = Self::set_cpuid();
+
+        Self::from_cpuid_array(cpuid_array).0
+    }
+    pub fn to_u8(&self) -> u8 {
+        match self.0 {
             0b0001 => 1,
             0b0011 => 2,
             0b0111 => 3,
@@ -109,6 +119,18 @@ impl MicroArchLevel {
 
 #[test]
 fn test_micro_arch_level() {
-    println!("MicroArchLevel: 0b{:04b}", MicroArchLevel::check());
-    println!("MicroArchLevel: {}", MicroArchLevel::level_u8());
+    let cpuid_array = [
+        CpuidResult { eax: 0x00A50F00, ebx: 0x0A0C0800, ecx: 0x7EF8320B, edx: 0x178BFBFF },
+        CpuidResult { eax: 0x00000000, ebx: 0x219C97A9, ecx: 0x0040068C, edx: 0x00000010 },
+        CpuidResult { eax: 0x00A50F00, ebx: 0x20000000, ecx: 0x75C237FF, edx: 0x2FD3FBFF },
+    ];
+
+    let level = MicroArchLevel::from_cpuid_array(cpuid_array);
+
+    assert_eq!(0b0111, level.0);
+
+    /*
+    println!("MicroArchLevel: 0b{:04b}", level.0);
+    println!("MicroArchLevel: {}", level.to_u8());
+    */
 }
