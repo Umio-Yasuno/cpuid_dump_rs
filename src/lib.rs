@@ -19,6 +19,10 @@ pub use micro_arch_level::*;
 mod proc_name;
 pub use proc_name::*;
 
+#[path = "./cache_prop.rs"]
+mod cache_prop;
+pub use cache_prop::*;
+
 pub mod cpuid_macro;
 
 pub const _AX: u32 = 0x8000_0000;

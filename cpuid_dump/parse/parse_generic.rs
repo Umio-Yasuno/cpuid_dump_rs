@@ -185,81 +185,15 @@ pub fn addr_size_80_08h(eax: &u32) -> String {
         eax & 0xFF, pad, (eax >> 8) & 0xFF)
 }
 
-#[allow(dead_code)]
-struct CacheProp {
-    cache_type: String,
-    level: u32,
-    line_size: u32,
-    way: u32,
-    set: u32,
-    size: u64,
-    share_thread: u32,
-    size_unit: u64,
-    size_unit_string: String,
-    inclusive: bool,
-}
-
-impl CacheProp {
-    fn dec(cpuid: &CpuidResult) -> CacheProp {
-        let [eax, ebx, ecx, edx] = [cpuid.eax, cpuid.ebx, cpuid.ecx, cpuid.edx];
-
-        let cache_type = match eax & 0x1F {
-            0x1 => "Data",
-            0x2 => "Inst",
-            0x3 => "Unified",
-            0x0 | _ => "",
-        }.to_string();
-
-        let level = (eax >> 5) & 0b111;
-        let line_size = (ebx & 0xFFF) + 1;
-        let way = (ebx >> 22) + 1;
-        let set = ecx + 1;
-        let size = line_size as u64 * way as u64 * set as u64;
-
-        let share_thread = ((eax >> 14) & 0xFFF) + 1;
-
-        const UNIT_KIB: u64 = 1 << 10;
-        const UNIT_MIB: u64 = 1 << 20;
-        // const UNIT_GIB: u32 = 1 << 30;
-
-        let (size_unit, size_unit_string) = 
-            if UNIT_KIB < size && size < UNIT_MIB {
-                (UNIT_KIB, "KiB")
-            } else if UNIT_MIB < size {
-                (UNIT_MIB, "MiB")
-            } else {
-                (1u64, "B")
-            };
-        let size_unit_string = size_unit_string.to_string();
-
-        let inclusive = (edx & 0b10) != 0;
-
-        CacheProp {
-            cache_type,
-            level,
-            line_size,
-            way,
-            set,
-            size,
-            share_thread,
-            size_unit,
-            size_unit_string,
-            inclusive,
-        }
-    }
-}
-
 pub fn cache_prop(cpuid: &CpuidResult) -> String {
-    let cache = CacheProp::dec(cpuid);
+    let cache = cpuid_asm::CacheProp::from_cpuid(cpuid);
 
-    if cache.level == 0 || cache.cache_type.len() == 0 {
-        return "".to_string();
-    }
+    if cache.level == 0 { return "".to_string(); }
 
     let v = [
         format!(" [L{}{}, {:>3}-way, {:>4}-{}]",
-            cache.level, &cache.cache_type[..1], cache.way,
-            cache.size / cache.size_unit, cache.size_unit_string),
+            cache.level, &cache.cache_type_string[..1], cache.way,
+            cache.size / cache.size_unit_byte, cache.size_unit_string),
         padln!(),
         format!(" [Shared {}T]", cache.share_thread),
         if cache.inclusive { " [Inclusive]" } else { "" }.to_string(),

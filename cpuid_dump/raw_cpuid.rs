@@ -1,6 +1,6 @@
 use crate::*;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct RawCpuid {
     pub leaf: u32,      // in_eax
     pub sub_leaf: u32,  // in_ecx
@@ -25,11 +25,10 @@ impl RawCpuid {
         }
     }
     pub fn check_result_zero(&self) -> bool {
-        let cpuid = &self.result;
-        (cpuid.eax == 0) && (cpuid.ebx == 0) && (cpuid.ecx == 0) && (cpuid.edx == 0)
+        self.result == CpuidResult { eax: 0x0, ebx: 0x0, ecx: 0x0, edx: 0x0 }
     }
     pub fn check_all_zero(&self) -> bool {
-        self.leaf == 0 && self.sub_leaf == 0 && self.check_result_zero()
+        *self == Self::zero()
     }
     fn parse(&self, vendor: &VendorFlag) -> String {
         /*
@@ -128,7 +127,7 @@ impl RawCpuid {
             return "".to_string();
         }
 
-        self.result(parsed)
+        return self.result(parsed);
     }
     pub fn bin_fmt(&self) -> String {
         let separate = |reg: u32| -> String {
@@ -145,7 +144,7 @@ impl RawCpuid {
             self.result.edx,
         ].map(|reg| separate(reg));
 
-        format!("  0x{:08X}_x{:1X}: {eax} {ebx} \n{} {ecx} {edx} {}",
+        return format!("  0x{:08X}_x{:1X}: {eax} {ebx} \n{} {ecx} {edx} {}",
             self.leaf, self.sub_leaf,
             " ".repeat(16),
             "\n",

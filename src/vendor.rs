@@ -12,19 +12,24 @@ impl<'a> Vendor {
     const AMD_EBX: u32 = 0x6874_7541;
     const AMD_ECX: u32 = 0x444D_4163;
     const AMD_EDX: u32 = 0x6974_6E65;
-    const AMD_NAME: &'a str = "AuthenticAMD";
+    const AMD_NAME_BYTE: [u8; 12] = *b"AuthenticAMD";
 
     const INTEL_EBX: u32 = 0x756E_6547;
     const INTEL_ECX: u32 = 0x4965_6E69;
     const INTEL_EDX: u32 = 0x6C65_746E;
-    const INTEL_NAME: &'a str = "GenuineIntel";
+    const INTEL_NAME_BYTE: [u8; 12] = *b"GenuineIntel";
 
+    fn name_to_string(byte: &[u8]) -> String {
+        String::from_utf8(byte.to_vec()).unwrap()
+    }
     fn name_from_ebx(ebx: u32) -> String {
-        match ebx {
-            Self::AMD_EBX => Self::AMD_NAME,
-            Self::INTEL_EBX => Self::INTEL_NAME,
-            _ => "Unknown",
-        }.to_string()
+        Self::name_to_string(
+            match ebx {
+                Self::AMD_EBX => &Self::AMD_NAME_BYTE,
+                Self::INTEL_EBX => &Self::INTEL_NAME_BYTE,
+                _ => b"Unknown",
+            }
+        )
     }
     pub fn from_cpuid(cpuid: &CpuidResult) -> Vendor {
         Vendor {
@@ -35,14 +40,17 @@ impl<'a> Vendor {
         }
     }
     pub fn get() -> Vendor {
-        Vendor::from_cpuid(&cpuid!(0x0, 0x0))
+        Self::from_cpuid(&cpuid!(0x0, 0x0))
+    }
+    pub fn get_name() -> String {
+        Self::get().name
     }
     pub fn amd() -> Vendor {
         Vendor {
             ebx: Self::AMD_EBX,
             ecx: Self::AMD_ECX,
             edx: Self::AMD_EDX,
-            name: Self::AMD_NAME.to_string(),
+            name: Self::name_to_string(&Self::AMD_NAME_BYTE),
         }
     }
     pub fn intel() -> Vendor {
@@ -50,7 +58,7 @@ impl<'a> Vendor {
             ebx: Self::INTEL_EBX,
             ecx: Self::INTEL_ECX,
             edx: Self::INTEL_EDX,
-            name: Self::INTEL_NAME.to_string(),
+            name: Self::name_to_string(&Self::INTEL_NAME_BYTE),
         }
     }
     pub fn check_amd(&self) -> bool {
@@ -87,4 +95,9 @@ impl VendorFlag {
 
 pub fn get_vendor_name() -> String {
     Vendor::get().name
+}
+
+#[test]
+fn test_vendor_name() {
+    println!("Vendor Name: [{}]", Vendor::get_name());
 }

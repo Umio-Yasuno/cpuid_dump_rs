@@ -22,6 +22,7 @@ fn cpuid_pool() -> Vec<RawCpuid> {
     /* Base */
     for leaf in 0x0..=0xC {
         match leaf {
+            /* Cache Properties, Intel */
             0x4 => for sub_leaf in 0..=4 {
                 pool.push(RawCpuid::exe(leaf, sub_leaf));
             },
