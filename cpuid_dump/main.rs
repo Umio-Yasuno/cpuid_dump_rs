@@ -301,15 +301,17 @@ impl MainOpt {
                             }
 
                             if v.starts_with("0x") {
-                                u32::from_str_radix(&v[2..], 16).unwrap()
+                                u32::from_str_radix(&v[2..], 16)
+                                    .expect("Parse error: leaf <u32>")
                             } else {
-                                v.parse::<u32>().expect("Parse error: leaf")
+                                v.parse::<u32>()
+                                    .expect("Parse error: leaf <u32>")
                             }
                         },
                         _ => continue,
                     };
                 },
-                "sub_leaf" => {
+                "sub-leaf" | "sub_leaf" => {
                     if !opt.only_leaf.0 {
                         eprintln!("Please \"--leaf <u32>\" argument");
                     }
@@ -321,9 +323,11 @@ impl MainOpt {
                             }
 
                             if v.starts_with("0x") {
-                                u32::from_str_radix(&v[2..], 16).unwrap()
+                                u32::from_str_radix(&v[2..], 16)
+                                    .expect("Parse error: sub_leaf <u32>")
                             } else {
-                                v.parse::<u32>().expect("Parse error: sub_leaf")
+                                v.parse::<u32>()
+                                    .expect("Parse error: sub_leaf <u32>")
                             }
                         },
                         _ => continue,
@@ -335,7 +339,8 @@ impl MainOpt {
                 "pin" | "pin_thread" => {
                     let cpu = match args.get(idx+1) {
                         Some(v) => {
-                            v.parse::<usize>().expect("Parse error: pin/pin_thread")
+                            v.parse::<usize>()
+                                .expect("Parse error: pin/pin_thread")
                         },
                         _ => {
                             eprintln!("Please the value of pin/pin_thread <usize>");
