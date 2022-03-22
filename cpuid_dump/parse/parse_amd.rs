@@ -101,44 +101,6 @@ pub fn l2_amd_80_06h(cpuid: &CpuidResult) -> String {
     return concat_string_from_slice(&v);
 }
 
-
-pub fn enum_amd_0dh(cpuid: &RawCpuid) -> String {
-    let x0 = |eax: u32| -> String {
-        let tmp = align_mold_ftr(&str_detect_ftr(eax, XFEATURE_MASK_00_0D_EAX_X0));
-
-        if !tmp.is_empty() {
-            format!(" [XFEATURE Mask:]{}{}",
-                padln!(), tmp)
-        } else {
-            tmp
-        }
-    };
-    let x1 = |eax: u32| -> String {
-        align_mold_ftr(&str_detect_ftr(eax, XSAVE_00_0D_EAX_X1))
-    };
-
-    let size = |eax: u32, txt: &str| -> String {
-        /* 00_0D_X{SUB}:EAX is the state size, EAX = 0 indicates not supported it */
-        if eax != 0x0 {
-            format!(" [{}: size({})]", txt, eax)
-        } else {
-            "".to_string()
-        }
-    };
-
-    let eax = cpuid.result.eax;
-
-    return match cpuid.sub_leaf {
-        0x0 => x0(eax),
-        0x1 => x1(eax),
-        0x2 => size(eax, "XSTATE"),
-        0x9 => size(eax, "Protection Key"),
-        0xB => size(eax, "CET User"),
-        0xC => size(eax, "CET SuperVisor"),
-        _ => "".to_string(),
-    };
-}
-
 pub fn apmi_amd_80_07h(edx: &u32) -> String {
     align_mold_ftr(&str_detect_ftr(*edx, FTR_AMD_80_07_EDX_X0))
 }

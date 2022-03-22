@@ -49,7 +49,7 @@ impl RawCpuid {
                 0x1 => feature_00_07h_x1(&self.result.eax),
                 _ => "".to_string(),
             },
-            0xD => enum_amd_0dh(&self),
+            0xD => xstate_00_0dh(&self),
             0x1F => if vendor.intel {
                 v2_ext_topo_intel_1fh(&self.result)
             } else {
