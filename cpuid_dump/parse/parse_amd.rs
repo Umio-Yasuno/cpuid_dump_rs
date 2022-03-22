@@ -104,10 +104,17 @@ pub fn l2_amd_80_06h(cpuid: &CpuidResult) -> String {
 
 pub fn enum_amd_0dh(cpuid: &RawCpuid) -> String {
     let x0 = |eax: u32| -> String {
-        align_mold_ftr(&str_detect_ftr(eax, FTR_AMD_00_0D_EAX_X0))
+        let tmp = align_mold_ftr(&str_detect_ftr(eax, XFEATURE_MASK_00_0D_EAX_X0));
+
+        if !tmp.is_empty() {
+            format!(" [XFEATURE Mask:]{}{}",
+                padln!(), tmp)
+        } else {
+            tmp
+        }
     };
     let x1 = |eax: u32| -> String {
-        align_mold_ftr(&str_detect_ftr(eax, FTR_AMD_00_0D_EAX_X1))
+        align_mold_ftr(&str_detect_ftr(eax, XSAVE_00_0D_EAX_X1))
     };
 
     let size = |eax: u32, txt: &str| -> String {
@@ -125,9 +132,9 @@ pub fn enum_amd_0dh(cpuid: &RawCpuid) -> String {
         0x0 => x0(eax),
         0x1 => x1(eax),
         0x2 => size(eax, "XSTATE"),
-        0x9 => size(eax, "MPK"),
-        0xB => size(eax, "CET_U"),
-        0xC => size(eax, "CET_S"),
+        0x9 => size(eax, "Protection Key"),
+        0xB => size(eax, "CET User"),
+        0xC => size(eax, "CET SuperVisor"),
         _ => "".to_string(),
     };
 }

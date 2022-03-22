@@ -127,14 +127,20 @@ pub const FTR_00_07_EDX_X0: &[&str] = &[
     */
 ];
 
-pub const FTR_AMD_00_0D_EAX_X0: &[&str] = &[
-    "X87", "SSE", "AVX256", "",
+pub const XFEATURE_MASK_00_0D_EAX_X0: &[&str] = &[
+    "X87", "SSE", "AVX256", "MPX bound",
+    "MPX CSR", "AVX512 opmask", "AVX512 Hi256", "AVX512 ZMM_Hi256",
+    "", "Protection Key", "PASID", "",
     "", "", "", "",
-    "", "MPK",
+    "", "AMX Tile config", "AMX Tile data",
+    /*  Reference:
+        https://github.com/torvalds/linux/blob/master/arch/x86/kernel/fpu/xstate.c
+    */
 ];
 
-pub const FTR_AMD_00_0D_EAX_X1: &[&str] = &[
+pub const XSAVE_00_0D_EAX_X1: &[&str] = &[
     "XSAVEOPT", "XSAVEC", "XGETBV", "XSAVES",
+    "XFD",
 ];
 
 

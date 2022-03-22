@@ -7,7 +7,7 @@ pub fn vendor_00_00h(cpuid: &CpuidResult) -> String {
 pub fn info_00_01h(cpuid: &CpuidResult) -> String {
     let [eax, ebx] = [cpuid.eax, cpuid.ebx];
 
-    let fms = cpuid_asm::FamModStep::from_cpuid(&eax);
+    let fms = cpuid_asm::FamModStep::from_cpuid(eax);
 
     let buff = [
         format!(" [F: 0x{:X}, M: 0x{:X}, S: 0x{:X}]", fms.syn_fam, fms.syn_mod, fms.step),
