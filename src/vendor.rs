@@ -8,7 +8,7 @@ pub struct Vendor {
     pub name: String,
 }
 
-impl<'a> Vendor {
+impl Vendor {
     const AMD_EBX: u32 = 0x6874_7541;
     const AMD_ECX: u32 = 0x444D_4163;
     const AMD_EDX: u32 = 0x6974_6E65;
@@ -97,7 +97,9 @@ pub fn get_vendor_name() -> String {
     Vendor::get().name
 }
 
+/*
 #[test]
 fn test_vendor_name() {
     println!("Vendor Name: [{}]", Vendor::get_name());
 }
+*/

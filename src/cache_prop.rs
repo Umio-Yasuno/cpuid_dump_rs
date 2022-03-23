@@ -145,7 +145,7 @@ fn test_cache_prop() {
             line_size: 64,
             way: 16,
             set: 16384,
-            size: 16777216,
+            size: 16 * unit.to_byte(),
             share_thread: 12,
             size_unit_byte: unit.to_byte(),
             size_unit_string: unit.to_string(),
