@@ -232,7 +232,22 @@ impl MainOpt {
             only_leaf: (false, 0x0, 0x0, false),
         }
     }
-    fn parse() -> Self {
+    fn parse_value(raw_value: String, msg: &str) -> u32 {
+        let raw_value = raw_value.replace("_", "");
+        if raw_value.starts_with("-") {
+            eprintln!("Please the value of {msg} <u32>");
+            return 0u32;
+        }
+
+        if raw_value.starts_with("0x") {
+            u32::from_str_radix(&raw_value[2..], 16)
+                .expect("Parse error: {msg} <u32>")
+        } else {
+            raw_value.parse::<u32>()
+                .expect("Parse error: {msg} <u32>")
+        }
+    }
+    pub fn main_parse() -> Self {
         let mut opt = MainOpt::init();
         let mut skip = false;
 
@@ -295,44 +310,17 @@ impl MainOpt {
                 "leaf" => {
                     opt.only_leaf.0 = true;
                     opt.only_leaf.1 = match args.get(idx+1) {
-                        Some(v) => {
-                            let v = v.replace("_", "");
-                            if v.starts_with("-") {
-                                eprintln!("Please the value of leaf <u32>");
-                                continue;
-                            }
-
-                            if v.starts_with("0x") {
-                                u32::from_str_radix(&v[2..], 16)
-                                    .expect("Parse error: leaf <u32>")
-                            } else {
-                                v.parse::<u32>()
-                                    .expect("Parse error: leaf <u32>")
-                            }
-                        },
+                        Some(v) => Self::parse_value(v.to_string(), "leaf"),
                         _ => continue,
                     };
                 },
                 "sub-leaf" | "sub_leaf" => {
                     if !opt.only_leaf.0 {
                         eprintln!("Please \"--leaf <u32>\" argument");
+                        continue;
                     }
                     opt.only_leaf.2 = match args.get(idx+1) {
-                        Some(v) => {
-                            let v = v.replace("_", "");
-                            if v.starts_with("-") {
-                                eprintln!("Please the value of sub_leaf <u32>");
-                                continue;
-                            }
-
-                            if v.starts_with("0x") {
-                                u32::from_str_radix(&v[2..], 16)
-                                    .expect("Parse error: sub_leaf <u32>")
-                            } else {
-                                v.parse::<u32>()
-                                    .expect("Parse error: sub_leaf <u32>")
-                            }
-                        },
+                        Some(v) => Self::parse_value(v.to_string(), "sub-leaf"),
                         _ => continue,
                     };
                 }
@@ -374,7 +362,7 @@ pub enum CpuidDumpType {
 */
 
 fn main() {
-    match MainOpt::parse() {
+    match MainOpt::main_parse() {
         MainOpt { only_leaf: (true, leaf, sub_leaf, use_bin), .. }
             => only_leaf(leaf, sub_leaf, use_bin),
         MainOpt { load: (true, load_path), .. }
