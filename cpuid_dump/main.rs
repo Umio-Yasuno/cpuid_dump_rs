@@ -114,8 +114,8 @@ fn raw_dump() {
     dump_write(&raw_pool());
 }
 
-use std::thread;
 fn dump_all() {
+    use std::thread;
     let thread_count = cpuid_asm::CpuCoreCount::get().total_thread as usize;
 
     println!("   {{LEAF}}_x{{SUB}}:  {:<10} {:<10} {:<10} {:<10}\n{}",
@@ -139,6 +139,7 @@ fn dump_all() {
 }
 
 fn raw_dump_all() {
+    use std::thread;
     let thread_count = cpuid_asm::CpuCoreCount::get().total_thread;
 
     for i in 0..(thread_count) as usize {
@@ -295,6 +296,7 @@ impl MainOpt {
                     opt.only_leaf.0 = true;
                     opt.only_leaf.1 = match args.get(idx+1) {
                         Some(v) => {
+                            let v = v.replace("_", "");
                             if v.starts_with("-") {
                                 eprintln!("Please the value of leaf <u32>");
                                 continue;
@@ -317,6 +319,7 @@ impl MainOpt {
                     }
                     opt.only_leaf.2 = match args.get(idx+1) {
                         Some(v) => {
+                            let v = v.replace("_", "");
                             if v.starts_with("-") {
                                 eprintln!("Please the value of sub_leaf <u32>");
                                 continue;

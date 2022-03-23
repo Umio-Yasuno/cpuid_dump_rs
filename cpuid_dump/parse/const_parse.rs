@@ -158,8 +158,8 @@ pub const FTR_AMD_80_08_EBX_X0: &[&str] = &[
     "IBPB", "INT_WBINVD", "IBRS", "STIBP",
     "", "StibpAlwaysOn", "IbrsPreferred", "IbrsProvidesSameModeProtection",
     "EferLmsleUnsupported", "", "", "PPIN",
-    "SSBD", "", "", "CPPC",
-    "PSFD",
+    "SpeculativeStoreBypassDisable", "VirtSSBD", "SSB_HW_FIXED", "CPPC",
+    "PSFD", "", "", "BranchSampling"
 ];
 
 pub const FTR_AMD_80_0A_EBX_X0: &[&str] = &[
