@@ -6,16 +6,6 @@
 //  Copyright (c) 2021 Umio Yasuno
 //  SPDX-License-Identifier: MIT
 
-/*
-#[cfg(target_os = "linux")]
-extern crate libc;
-*/
-#[cfg(target_os = "linux")]
-use libc::{cpu_set_t, CPU_SET, CPU_ISSET, CPU_ZERO, CPU_SETSIZE, sched_setaffinity, sched_getaffinity};
-
-#[cfg(target_os = "windows")]
-use kernel32::{GetCurrentThread, SetThreadAffinityMask};
-
 extern crate cpuid_asm;
 use cpuid_asm::pin_thread;
 
@@ -142,8 +132,12 @@ fn main() {
 
     let mut cpus: Vec<usize> = Vec::new();
 
-    #[cfg(target_os = "linux")]
     unsafe {
+        use libc::{
+            cpu_set_t, CPU_SET, CPU_ISSET, CPU_ZERO,
+            CPU_SETSIZE, sched_setaffinity, sched_getaffinity
+        };
+
         let mut set = mem::zeroed::<cpu_set_t>();
         CPU_ZERO(&mut set);
 
@@ -159,42 +153,17 @@ fn main() {
             }
         }
     }
-    #[cfg(target_os = "windows")]
-    for i in 0..CPU_SETSIZE as usize {
-        cpus.push(i);
-    }
 
     let ncpu: usize = cpus.len();
     
     let mut min_result: Vec<Vec<u128>> = vec![vec![0; ncpu]; ncpu];
     let mut avg_result: Vec<Vec<u128>> = vec![vec![0; ncpu]; ncpu];
 
-    
-    // TODO: align for cache line
-    #[derive(Clone)]
-    struct Seq {
-        v: Arc<AtomicIsize>,
-        _pad: Vec<Arc<AtomicIsize>>,
-    }
-    impl Seq {
-        fn set() -> Seq {
-            let v = Arc::new(AtomicIsize::new(-1));
-            let line = cpuid_asm::CacheInfo::get().l1d_line as usize;
-
-            return Seq {
-                v,
-                _pad: vec![Arc::new(AtomicIsize::new(-1));
-                            (line / mem::size_of::<isize>()) - 1],
-            }
-        }
-    }
-
     for i in 0..(ncpu) {
-        let seq1 = Seq::set();
-        let seq2 = Seq::set();
+        let seq1 = Arc::new(AtomicIsize::new(-1));
+        let seq2 = Arc::new(AtomicIsize::new(-1));
 
         for j in (i+1)..(ncpu) {
-
             let _seq1 = seq1.clone();
             let _seq2 = seq2.clone();
 
@@ -204,8 +173,8 @@ fn main() {
                 pin_thread!(c);
                 for _m in 0..100 {
                     for n in 0..nsamples {
-                        while _seq1.v.load(Ordering::Acquire) != n {}
-                        _seq2.v.store(n, Ordering::Release);
+                        while _seq1.load(Ordering::Acquire) != n {}
+                        _seq2.store(n, Ordering::Release);
                     }
                 }
             });
@@ -218,8 +187,8 @@ fn main() {
                 let start = time::Instant::now();
 
                 for n in 0..nsamples {
-                    seq1.v.store(n, Ordering::Release);
-                    while seq2.v.load(Ordering::Acquire) != n {}
+                    seq1.store(n, Ordering::Release);
+                    while seq2.load(Ordering::Acquire) != n {}
                 }
 
                 let perf = start.elapsed();
