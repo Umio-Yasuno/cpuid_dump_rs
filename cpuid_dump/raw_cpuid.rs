@@ -2,8 +2,8 @@ use crate::*;
 
 #[derive(Debug, PartialEq)]
 pub struct RawCpuid {
-    pub leaf: u32,      // in_eax
-    pub sub_leaf: u32,  // in_ecx
+    pub leaf: u32,
+    pub sub_leaf: u32,
     pub result: CpuidResult,
 }
 
@@ -144,7 +144,7 @@ impl RawCpuid {
             self.result.edx,
         ].map(|reg| separate(reg));
 
-        return format!("  0x{:08X}_x{:1X}: {eax} {ebx} \n{} {ecx} {edx} {}",
+        format!("  0x{:08X}_x{:1X}: {eax} {ebx} \n{} {ecx} {edx} {}",
             self.leaf, self.sub_leaf,
             " ".repeat(16),
             "\n",

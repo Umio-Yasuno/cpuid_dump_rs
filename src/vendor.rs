@@ -1,10 +1,9 @@
 use crate::{cpuid, CpuidResult};
 
-#[allow(dead_code)]
 pub struct Vendor {
-    ebx: u32,
-    ecx: u32,
-    edx: u32,
+    pub ebx: u32,
+    pub ecx: u32,
+    pub edx: u32,
     pub name: String,
 }
 
