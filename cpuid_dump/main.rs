@@ -111,7 +111,7 @@ fn dump() {
 }
 
 fn raw_dump() {
-    dump_write(&raw_pool());
+    dump_write(&raw_pool())
 }
 
 fn dump_all() {
@@ -129,7 +129,8 @@ fn dump_all() {
             let mut local: Vec<u8> = Vec::new();
             let id = cpuid_asm::CpuCoreCount::get().core_id;
             local.extend(
-                format!("Core ID: {:>3} / Thread: {:>3}\n", id, i).into_bytes()
+                format!("Core ID: {:>3} / Thread: {:>3}\n", id, i)
+                    .into_bytes()
             );
             local.extend(parse_pool());
 

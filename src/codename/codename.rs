@@ -35,6 +35,16 @@ impl FamModStep {
             raw_eax: eax,
         }
     }
+    pub fn rev_dec(f: u32, m: u32, e_f: u32, e_m: u32, step: u32) -> u32 {
+        let mut cpuid = 0u32;
+        cpuid |= step;
+        cpuid |= f << 8;
+        cpuid |= m << 4;
+        cpuid |= e_f << 20;
+        cpuid |= e_m << 16;
+
+        return cpuid;
+    }
     pub fn proc_info(&self) -> ProcInfo {
         let [f, m, s] = [self.syn_fam, self.syn_mod, self.step];
 
@@ -60,4 +70,11 @@ impl FamModStep {
     pub fn process(&self) -> String {
         self.proc_info().process
     }
+}
+
+#[test]
+fn test_rev() {
+    // FamModStep::rev_dec(0x7, 0xB, 0x0, 0x3, 0x0);
+    let cpuid = FamModStep::rev_dec(0xF, 0x0, 0xA, 0x5, 0x0);
+    assert_eq!(0x00A50F00, cpuid);
 }
