@@ -3,9 +3,14 @@
 version = 3
 
 [[package]]
+name = "cpuid-dump-rs"
+version = "0.1.0"
+
+[[package]]
 name = "cpuid_dump"
 version = "0.1.0"
 dependencies = [
+ "cpuid-dump-rs",
  "libc",
  "windows",
 ]
