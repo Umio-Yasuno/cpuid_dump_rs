@@ -6,8 +6,8 @@
 //  Copyright (c) 2021 Umio Yasuno
 //  SPDX-License-Identifier: MIT
 
-extern crate cpuid_asm;
-use cpuid_asm::pin_thread;
+extern crate cpuid_dump_rs;
+use cpuid_dump_rs::pin_thread;
 
 use std::{mem, thread, time};
 use std::sync::Arc;

@@ -3,5 +3,5 @@
 version = 3
 
 [[package]]
-name = "cpuid-dump-rs"
+name = "cpuid_dump_rs"
 version = "0.1.0"

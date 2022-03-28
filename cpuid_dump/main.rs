@@ -3,8 +3,8 @@
 
 use core::arch::x86_64::CpuidResult;
 
-extern crate cpuid_asm;
-use cpuid_asm::{cpuid, Vendor, VendorFlag, _AX};
+extern crate cpuid_dump_rs;
+use cpuid_dump_rs::{cpuid, Vendor, VendorFlag, _AX};
 
 #[path = "./parse_mod.rs"]
 mod parse_mod;
@@ -116,7 +116,7 @@ fn raw_dump() {
 
 fn dump_all() {
     use std::thread;
-    let thread_count = cpuid_asm::CpuCoreCount::get().total_thread as usize;
+    let thread_count = cpuid_dump_rs::CpuCoreCount::get().total_thread as usize;
 
     println!("   {{LEAF}}_x{{SUB}}:  {:<10} {:<10} {:<10} {:<10}\n{}",
             "(out)EAX", "(out)EBX", "(out)ECX", "(out)EDX",
@@ -124,10 +124,10 @@ fn dump_all() {
 
     for i in 0..(thread_count) {
         thread::spawn(move || {
-            cpuid_asm::pin_thread!(i);
+            cpuid_dump_rs::pin_thread!(i);
 
             let mut local: Vec<u8> = Vec::new();
-            let id = cpuid_asm::CpuCoreCount::get().core_id;
+            let id = cpuid_dump_rs::CpuCoreCount::get().core_id;
             local.extend(
                 format!("Core ID: {:>3} / Thread: {:>3}\n", id, i)
                     .into_bytes()
@@ -141,11 +141,11 @@ fn dump_all() {
 
 fn raw_dump_all() {
     use std::thread;
-    let thread_count = cpuid_asm::CpuCoreCount::get().total_thread;
+    let thread_count = cpuid_dump_rs::CpuCoreCount::get().total_thread;
 
     for i in 0..(thread_count) as usize {
         thread::spawn(move || {
-            cpuid_asm::pin_thread!(i);
+            cpuid_dump_rs::pin_thread!(i);
 
             let mut local: Vec<u8> = Vec::new();
             local.extend(
@@ -227,7 +227,7 @@ impl MainOpt {
             raw: false,
             dump_all: false,
             save: (false, format!("{}.txt",
-                cpuid_asm::ProcName::get_trim_name().replace(" ", "_")
+                cpuid_dump_rs::ProcName::get_trim_name().replace(" ", "_")
             )),
             load: (false, "cpuid_dump.txt".to_string()),
             only_leaf: (false, 0x0, 0x0, false),
@@ -287,7 +287,7 @@ impl MainOpt {
                         },
                         // use default path/file name
                         // save_path: format!("{}.txt",
-                        //      cpuid_asm::get_trim_proc_name().replace(" ", "_")
+                        //      cpuid_dump_rs::get_trim_proc_name().replace(" ", "_")
                         _ => continue,
                     };
                 },
@@ -339,7 +339,7 @@ impl MainOpt {
                             continue;
                         },
                     };
-                    cpuid_asm::pin_thread!(cpu);
+                    cpuid_dump_rs::pin_thread!(cpu);
                 },
                 // TODO: "taskset" option?
                 // cpuid_dump --taskset <list>
