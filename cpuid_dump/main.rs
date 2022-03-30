@@ -16,6 +16,8 @@ pub use crate::raw_cpuid::*;
 mod load_file;
 pub use crate::load_file::*;
 
+const VERSION: f32 = 0.0;
+
 fn cpuid_pool() -> Vec<RawCpuid> {
     let mut pool: Vec<RawCpuid> = Vec::new();
 
@@ -248,6 +250,29 @@ impl MainOpt {
                 .expect("Parse error: {msg} <u32>")
         }
     }
+    fn help_msg() {
+        print!("\n\
+            cpuid_dump v{:.1}\n\
+            https://github.com/Umio-Yasuno/cpuid_dump_rs\n\
+            \n\
+            USAGE:\n\
+            \x20    cargo run -- [options ..] or <cpuid_dump> [options ..]\n\
+            \n\
+            OPTIONS:\n\
+            \x20    -a, -all\n\
+            \x20        Display result for all threads.\n\
+            \x20    -r, -raw\n\
+            \x20        Display raw/hex result.\n\
+            \x20    --l <u32>, --leaf <u32>\n\
+            \x20        Display result only for the specified value, the value is Leaf/InputEAX <u32>.\n\
+            \x20    --sub_leaf <u32>, --sub-leaf <u32>\n\
+            \x20        Display result only for the specified value, the value is Sub-Leaf/InputECX <u32>.\n\
+            \x20    -bin\n\
+            \x20        Display binary result, for --leaf/--sub_leaf option.\n\
+            \x20    --pin <usize>, --pin_threads <usize>\n\
+            \x20        Display result for the specified thread.\n\
+        \n", VERSION);
+    }
     pub fn main_parse() -> Self {
         let mut opt = MainOpt::init();
         let mut skip = false;
@@ -340,6 +365,10 @@ impl MainOpt {
                         },
                     };
                     cpuid_dump_rs::pin_thread!(cpu);
+                },
+                "h" | "help" => {
+                    Self::help_msg();
+                    std::process::exit(0);
                 },
                 // TODO: "taskset" option?
                 // cpuid_dump --taskset <list>

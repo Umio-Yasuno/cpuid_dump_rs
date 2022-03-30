@@ -89,8 +89,8 @@ impl MicroArchLevel {
 
         let base_line = mask(&[Self::BASE_LINE], &[cpuid_00_01.edx]);
         let x86_64_v2 = mask(&Self::X86_64_V2, &[cpuid_00_01.ecx, cpuid_80_01.ecx]);
-        let x86_64_v3 =
-            mask(&Self::X86_64_V3, &[cpuid_00_01.ecx, cpuid_00_07.ebx, cpuid_80_01.ecx]);
+        let x86_64_v3 = mask(&Self::X86_64_V3,
+            &[cpuid_00_01.ecx, cpuid_00_07.ebx, cpuid_80_01.ecx]);
         let x86_64_v4 = mask(&[Self::X86_64_V4], &[cpuid_00_07.ebx]);
 
         let mut level = if base_line { 1 } else { 0 };
@@ -120,8 +120,12 @@ impl MicroArchLevel {
 #[test]
 fn test_micro_arch_level() {
     let cpuid_array = [
+        /* Ryzen 5 5600G */
+        /* 00_01 */
         CpuidResult { eax: 0x00A50F00, ebx: 0x0A0C0800, ecx: 0x7EF8320B, edx: 0x178BFBFF },
+        /* 00_07 */
         CpuidResult { eax: 0x00000000, ebx: 0x219C97A9, ecx: 0x0040068C, edx: 0x00000010 },
+        /* 80_01 */
         CpuidResult { eax: 0x00A50F00, ebx: 0x20000000, ecx: 0x75C237FF, edx: 0x2FD3FBFF },
     ];
 
