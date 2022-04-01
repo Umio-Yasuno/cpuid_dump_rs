@@ -110,18 +110,28 @@ pub fn fam06h(m: u32, s: u32) -> Self {
             _   => "",
         }), "Golden Cove + Gracemont", "Intel 7 /10 nm eSF"),
 
+        /* https://review.coreboot.org/c/coreboot/+/63299 */
         0x9A => {
             let (variant, stepping) = match s {
+                /* Alder Lake-M */
                 0x1 | 0x4 => ("M", match s {
+                    0x1 => " (Q0, 2+8)",
                     0x4 => " (R0, 2+8)",
                     _ => " (2+8)",
                 }),
-                _ => ("P", " (L0, 6+8)")
+                /* Alder Lake-P */
+                _ => ("P", match s {
+                    0x0 => " (J0, 6+8)",
+                    0x2 => " (K0, 6+8)",
+                    0x3 => " (L0, 6+8)",
+                    _ => " (6+8)",
+                }),
             };
 
             Self::info(
-                &format!("Alder Lake-{variant} (Mobile){stepping}"),
-                "Golden Cove + Gracemont", "Intel 7 /10 nm eSF",
+                &format!("Alder Lake-{variant} (Mobile)({stepping}"),
+                "Golden Cove + Gracemont",
+                "Intel 7 /10 nm eSF",
             )
         },
         0xBE => Self::info("Alder Lake-N", "Gracemont ?", "Intel 7 /10 nm eSF"),
