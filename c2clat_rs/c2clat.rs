@@ -9,7 +9,7 @@
 extern crate cpuid_dump_rs;
 use cpuid_dump_rs::pin_thread;
 
-use std::{mem, thread, time};
+use std::{thread, time};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicIsize, Ordering};
 
@@ -130,29 +130,7 @@ fn main() {
     let opt = Opt::parse();
     let nsamples = opt.nsamples;
 
-    let mut cpus: Vec<usize> = Vec::new();
-
-    unsafe {
-        use libc::{
-            cpu_set_t, CPU_SET, CPU_ISSET, CPU_ZERO,
-            CPU_SETSIZE, sched_setaffinity, sched_getaffinity
-        };
-
-        let mut set = mem::zeroed::<cpu_set_t>();
-        CPU_ZERO(&mut set);
-
-        let status = sched_getaffinity(0, mem::size_of::<cpu_set_t>(), &mut set);
-        if status == -1 {
-            eprintln!("sched_getaffinity failed");
-            return;
-        }
-
-        for i in 0..CPU_SETSIZE as usize {
-            if CPU_ISSET(i, &set) {
-                cpus.push(i);
-            }
-        }
-    }
+    let cpus = cpuid_dump_rs::cpu_set_list();
 
     let ncpu: usize = cpus.len();
     

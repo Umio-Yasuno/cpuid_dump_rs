@@ -16,7 +16,7 @@ pub use crate::raw_cpuid::*;
 mod load_file;
 pub use crate::load_file::*;
 
-const VERSION: f32 = 0.0;
+const VERSION: f32 = 0.1;
 
 fn cpuid_pool() -> Vec<RawCpuid> {
     let mut pool: Vec<RawCpuid> = Vec::new();
@@ -118,13 +118,13 @@ fn raw_dump() {
 
 fn dump_all() {
     use std::thread;
-    let thread_count = cpuid_dump_rs::CpuCoreCount::get().total_thread as usize;
+    let cpu_list = cpuid_dump_rs::cpu_set_list();
 
     println!("   {{LEAF}}_x{{SUB}}:  {:<10} {:<10} {:<10} {:<10}\n{}",
             "(out)EAX", "(out)EBX", "(out)ECX", "(out)EDX",
             "=".repeat(TOTAL_WIDTH));
 
-    for i in 0..(thread_count) {
+    for i in cpu_list {
         thread::spawn(move || {
             cpuid_dump_rs::pin_thread!(i);
 
@@ -143,9 +143,9 @@ fn dump_all() {
 
 fn raw_dump_all() {
     use std::thread;
-    let thread_count = cpuid_dump_rs::CpuCoreCount::get().total_thread;
+    let cpu_list = cpuid_dump_rs::cpu_set_list();
 
-    for i in 0..(thread_count) as usize {
+    for i in cpu_list {
         thread::spawn(move || {
             cpuid_dump_rs::pin_thread!(i);
 
@@ -253,7 +253,7 @@ impl MainOpt {
     fn help_msg() {
         print!("\n\
             cpuid_dump v{:.1}\n\
-            https://github.com/Umio-Yasuno/cpuid_dump_rs\n\
+            https://github.com/Umio-Yasuno/cpuid_dump_rs/cpuid_dump\n\
             \n\
             USAGE:\n\
             \x20    cargo run -- [options ..] or <cpuid_dump> [options ..]\n\
@@ -265,6 +265,7 @@ impl MainOpt {
             \x20        Display raw/hex result.\n\
             \x20    --l <u32>, --leaf <u32>\n\
             \x20        Display result only for the specified value, the value is Leaf/InputEAX <u32>.\n\
+            \x20        e.g. --leaf 1, --leaf 0x8000_0008,
             \x20    --sub_leaf <u32>, --sub-leaf <u32>\n\
             \x20        Display result only for the specified value, the value is Sub-Leaf/InputECX <u32>.\n\
             \x20    -bin\n\
