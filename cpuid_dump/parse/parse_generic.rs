@@ -16,7 +16,7 @@ pub fn info_00_01h(cpuid: &CpuidResult) -> String {
         padln!(),
         format!(" [APIC ID: {}]", ebx >> 24),
         padln!(),
-        format!(" [Total thread(s): {}T]", (ebx >> 16) & 0xFF),
+        format!(" [Total thread(s): {}]", (ebx >> 16) & 0xFF),
         padln!(),
         format!(" [CLFlush: {}B]", ((ebx >> 8) & 0xFF) * 8),
     ];
@@ -164,10 +164,10 @@ pub fn feature_00_07h_x1(eax: &u32) -> String {
 }
 
 pub fn topo_ext_00_0bh(cpuid: &CpuidResult) -> String {
-    if cpuid.ecx == 0 { return "".to_string() }
-
     let (level_type_str, level_type_val) = {
         let tmp = (cpuid.ecx >> 8) & 0xFF;
+
+        if tmp == 0x0 { return "".to_string(); }
 
         (match tmp {
             0x0 => "Invalid",
