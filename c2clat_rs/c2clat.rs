@@ -139,6 +139,7 @@ fn main() {
 
     for i in 0..(ncpu) {
         let seq1 = Arc::new(AtomicIsize::new(-1));
+        // let _pad = vec![Arc::new(AtomicIsize::new(-1)); 16];
         let seq2 = Arc::new(AtomicIsize::new(-1));
 
         for j in (i+1)..(ncpu) {

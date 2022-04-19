@@ -6,10 +6,11 @@ enum Unit {
     MiB,
     GiB,
 }
+
 impl Unit {
-    const KIB_BYTE: u64 = 1 << 10;
-    const MIB_BYTE: u64 = 1 << 20;
-    const GIB_BYTE: u64 = 1 << 30;
+    pub const KIB_BYTE: u64 = 1 << 10;
+    pub const MIB_BYTE: u64 = 1 << 20;
+    pub const GIB_BYTE: u64 = 1 << 30;
 
     fn from_byte(size: u64) -> Unit {
         if Self::GIB_BYTE < size {
