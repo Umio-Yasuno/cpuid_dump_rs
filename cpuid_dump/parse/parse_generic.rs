@@ -151,17 +151,49 @@ pub fn feature_00_07h_x0(cpuid: &CpuidResult) -> String {
 pub fn feature_00_07h_x1(eax: &u32) -> String {
     // https://github.com/torvalds/linux/commit/b85a0425d8056f3bd8d0a94ecdddf2a39d32a801
     let mut v = [""; 32];
-    v[4] = "AVX_VNNI";
-    v[5] = "AVX512_BF16";
-    v[22] = "HRESET";
-    v[26] = "LAM";
+    {
+        v[4] = "AVX_VNNI";
+        v[5] = "AVX512_BF16";
+        v[22] = "HRESET";
+        v[26] = "LAM";
+    }
 
     let buff = str_detect_ftr(*eax, &v);
 
     return align_mold_ftr(&buff);
 }
 
-pub fn xstate_00_0dh(cpuid: &RawCpuid) -> String {
+pub fn topo_ext_00_0bh(cpuid: &CpuidResult) -> String {
+    if cpuid.ecx == 0 { return "".to_string() }
+
+    let (level_type_str, level_type_val) = {
+        let tmp = (cpuid.ecx >> 8) & 0xFF;
+
+        (match tmp {
+            0x0 => "Invalid",
+            0x1 => "Thread",
+            0x2 => "Processor",
+            _ => "Unknown/Reserved",
+        }, tmp)
+    };
+
+
+    let core_mask_width = cpuid.eax & 0xF;
+    let ext_local_apicid = cpuid.edx;
+
+    let v = [
+        format!(" [LevelType: {} ({:#x})]", level_type_str, level_type_val),
+        padln!(),
+        format!(" [NumProcAtThisLevel: {}]", cpuid.ebx & 0xFFFF),
+        padln!(),
+        format!(" [CoreMaskWidth: {}]", core_mask_width),
+        padln!(),
+        format!(" [ExtAPID_ID: {}]", ext_local_apicid),
+    ];
+    return concat_string_from_slice(&v);
+}
+
+pub fn xstate_00_0dh(raw_cpuid: &RawCpuid) -> String {
     let x0 = |eax: u32| -> String {
         let tmp = align_mold_ftr(&str_detect_ftr(eax, XFEATURE_MASK_00_0D_EAX_X0));
 
@@ -185,9 +217,9 @@ pub fn xstate_00_0dh(cpuid: &RawCpuid) -> String {
         }
     };
 
-    let eax = cpuid.result.eax;
+    let eax = raw_cpuid.result.eax;
 
-    return match cpuid.sub_leaf {
+    return match raw_cpuid.sub_leaf {
         0x0 => x0(eax),
         0x1 => x1(eax),
         0x2 => size(eax, "XSTATE"),
