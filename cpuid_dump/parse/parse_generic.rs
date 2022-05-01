@@ -167,7 +167,7 @@ pub fn topo_ext_00_0bh(cpuid: &CpuidResult) -> String {
     let (level_type_str, level_type_val) = {
         let tmp = (cpuid.ecx >> 8) & 0xFF;
 
-        if tmp == 0x0 { return "".to_string(); }
+        if tmp == 0x0 { return "".to_string() }
 
         (match tmp {
             0x0 => "Invalid",
@@ -177,14 +177,15 @@ pub fn topo_ext_00_0bh(cpuid: &CpuidResult) -> String {
         }, tmp)
     };
 
-
     let core_mask_width = cpuid.eax & 0xF;
+    /* logical processor at this level */
+    let num_proc = cpuid.ebx & 0xFFFF;
     let ext_local_apicid = cpuid.edx;
 
     let v = [
         format!(" [LevelType: {} ({:#x})]", level_type_str, level_type_val),
         padln!(),
-        format!(" [NumProcAtThisLevel: {}]", cpuid.ebx & 0xFFFF),
+        format!(" [NumProcAtThisLevel: {}]", num_proc),
         padln!(),
         format!(" [CoreMaskWidth: {}]", core_mask_width),
         padln!(),
@@ -198,7 +199,7 @@ pub fn xstate_00_0dh(raw_cpuid: &RawCpuid) -> String {
         let tmp = align_mold_ftr(&str_detect_ftr(eax, XFEATURE_MASK_00_0D_EAX_X0));
 
         if !tmp.is_empty() {
-            format!(" [XFEATURE Mask:]{}{}",
+            format!(" [-XFEATURE Mask-]{}{}",
                 padln!(), tmp)
         } else {
             tmp

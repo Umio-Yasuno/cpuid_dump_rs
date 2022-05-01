@@ -135,6 +135,16 @@ pub fn fam06h(m: u32, s: u32) -> Self {
             )
         },
         0xBE => Self::info("Alder Lake-N", "Gracemont ?", "Intel 7 /10 nm eSF"),
+        /*
+        0xBA => Self::info(
+            &format("Raptor Lake-P (Mobile){}",
+                match s {
+                    0x2 => "(J0)",
+                    _ => "",
+                },
+            ),
+            "", ""),
+        */
 
         0x8F => Self::info("Sapphire Rapids (Server)", "Golden Cove", "10nm eSF"),
         /*
