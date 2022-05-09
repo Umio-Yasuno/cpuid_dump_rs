@@ -1,0 +1,26 @@
+[package]
+name = "libcpuid_dump"
+version = "0.1.0"
+authors = ["Umio Yasuno <53935716+Umio-Yasuno@users.noreply.github.com>"]
+edition = "2018"
+license = "MIT"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+#[lib]
+#name = "cpuid_asm"
+#path = "src/lib.rs"
+
+[dependencies]
+libc = "^0.2"
+#
+#[target.'cfg(target_os = "linux")'.dependencies]
+#
+#[target.'cfg(target_os = "windows")'.dependencies]
+#windows-sys = "^0.33.0"
+#
+#[dependencies.windows-sys]
+#features = [
+#   "Win32_Foundation",
+#   "Win32_System_Threading",
+#]

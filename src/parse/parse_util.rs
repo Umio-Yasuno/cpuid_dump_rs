@@ -53,7 +53,7 @@ impl Reg {
 }
 
 pub fn cpu_name(cpuid: &CpuidResult) -> String {
-    let name = cpuid_dump_rs::ProcName::dec_cpuid(*cpuid);
+    let name = libcpuid_dump::ProcName::dec_cpuid(*cpuid);
 
     return String::from_utf8(name).unwrap();
 }
