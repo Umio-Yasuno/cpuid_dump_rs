@@ -1,7 +1,7 @@
 //  Copyright (c) 2021 Umio Yasuno
 //  SPDX-License-Identifier: MIT
 
-// use core::arch::x86_64::{CpuidResult};
+pub use core::arch::x86_64::CpuidResult;
 // use crate::const_cpuid_dump::*;
 
 #[path = "./parse/const_parse.rs"]

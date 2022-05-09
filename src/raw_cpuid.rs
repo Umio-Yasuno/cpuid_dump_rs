@@ -38,42 +38,42 @@ impl RawCpuid {
         */
 
         let parse_result: String = match self.leaf {
-            0x0 => vendor_00_00h(&self.result),
+            0x0 => self.result.vendor_00_00h(),
             0x1 => concat_string_from_slice(&[
-                info_00_01h(&self.result),
+                self.result.info_00_01h(),
                 padln!().to_string(),
-                feature_00_01h(&self.result),
+                self.result.feature_00_01h(),
             ]),
             0x7 => match self.sub_leaf {
-                0x0 => feature_00_07h_x0(&self.result),
-                0x1 => feature_00_07h_x1(&self.result.eax),
+                0x0 => self.result.feature_00_07h_x0(),
+                0x1 => self.result.feature_00_07h_x1(),
                 _ => "".to_string(),
             },
-            0xB => topo_ext_00_0bh(&self.result),
-            0xD => xstate_00_0dh(&self),
+            0xB => self.result.topo_ext_00_0bh(),
+            0xD => self.result.xstate_00_0dh(self.sub_leaf),
             0x1F => if vendor.intel {
-                v2_ext_topo_intel_1fh(&self.result)
+                self.result.v2_ext_topo_intel_1fh()
             } else {
                 "".to_string()
             },
             0x8000_0001 => concat_string_from_slice(&[
                 if vendor.amd {
                     concat_string_from_slice(&[
-                        pkgtype_amd_80_01h(&self.result.ebx),
+                        self.result.pkgtype_amd_80_01h(),
                         padln!().to_string(),
                     ])
                 } else {
                     "".to_string()
                 },
-                feature_80_01h(&self.result),
+                self.result.feature_80_01h(),
             ]),
-            0x8000_0002..=0x8000_0004 => format!(" [{}]", cpu_name(&self.result)),
+            0x8000_0002..=0x8000_0004 => format!(" [{}]", self.result.cpu_name()),
             0x8000_0008 => concat_string_from_slice(&[
-                addr_size_80_08h(&self.result.eax),
+                self.result.addr_size_80_08h(),
                 if vendor.amd {
                     concat_string_from_slice(&[
                         padln!().to_string(),
-                        spec_amd_80_08h(&self.result.ebx),
+                        self.result.spec_amd_80_08h(),
                     ])
                 } else {
                     "".to_string()
@@ -81,27 +81,27 @@ impl RawCpuid {
             ]),
             _ => if vendor.amd {
                 match self.leaf {
-                    0x8000_0005 => l1_amd_80_05h(&self.result),
-                    0x8000_0006 => l2_amd_80_06h(&self.result),
-                    0x8000_0007 => apmi_amd_80_07h(&self.result.edx),
-                    0x8000_000A => rev_id_amd_80_0ah(&self.result),
-                    0x8000_0019 => l1l2tlb_1g_amd_80_19h(&self.result),
-                    0x8000_001A => fpu_width_amd_80_1ah(&self.result.eax),
-                    0x8000_001B => ibs_amd_80_1bh(&self.result.eax),
-                    0x8000_001D => cache_prop(&self.result),
-                    0x8000_001E => cpu_topo_amd_80_1eh(&self.result),
+                    0x8000_0005 => self.result.l1_amd_80_05h(),
+                    0x8000_0006 => self.result.l2_amd_80_06h(),
+                    0x8000_0007 => self.result.apmi_amd_80_07h(),
+                    0x8000_000A => self.result.rev_id_amd_80_0ah(),
+                    0x8000_0019 => self.result.l1l2tlb_1g_amd_80_19h(),
+                    0x8000_001A => self.result.fpu_width_amd_80_1ah(),
+                    0x8000_001B => self.result.ibs_amd_80_1bh(),
+                    0x8000_001D => self.result.cache_prop(),
+                    0x8000_001E => self.result.cpu_topo_amd_80_1eh(),
                     0x8000_001F => concat_string_from_slice(&[
-                        encrypt_ftr_amd_80_1fh(&self.result.eax),
-                        reduction_phys_addr_amd_80_1fh(&self.result.ebx),
+                        self.result.encrypt_ftr_amd_80_1fh(),
+                        self.result.reduction_phys_addr_amd_80_1fh(),
                     ]),
-                    0x8000_0021 => ext_amd_80_21h(&self.result.eax),
+                    0x8000_0021 => self.result.ext_amd_80_21h(),
                     _ => "".to_string(),
                 }
             } else if vendor.intel {
                 match self.leaf {
-                    0x4 => cache_prop(&self.result),
-                    0x16 => clock_speed_intel_00_16h(&self.result),
-                    0x1A => intel_hybrid_1ah(&self.result.eax),
+                    0x4 => self.result.cache_prop(),
+                    0x16 => self.result.clock_speed_intel_00_16h(),
+                    0x1A => self.result.intel_hybrid_1ah(),
                     _ => "".to_string(),
                 }
             } else {

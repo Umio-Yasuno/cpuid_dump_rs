@@ -9,7 +9,7 @@ impl ProcName {
             |&byte| if byte < 0x20 { 0x20 } else { byte }
         ).collect()
     }
-    pub fn dec_cpuid(cpuid: CpuidResult) -> Vec<u8> {
+    pub fn dec_cpuid(cpuid: &CpuidResult) -> Vec<u8> {
         /* u32 ([u8; 4]) * 4 (E{A,B,C,D}X) */
         let mut tmp: Vec<u8> = Vec::with_capacity(16);
 
@@ -31,7 +31,7 @@ impl ProcName {
         let mut name: Vec<u8> = Vec::with_capacity(48);
 
         for cpuid in array {
-            name.extend(Self::dec_cpuid(cpuid));
+            name.extend(Self::dec_cpuid(&cpuid));
         }
 
         return String::from_utf8(name).unwrap();

@@ -52,12 +52,6 @@ impl Reg {
     */
 }
 
-pub fn cpu_name(cpuid: &CpuidResult) -> String {
-    let name = libcpuid_dump::ProcName::dec_cpuid(*cpuid);
-
-    return String::from_utf8(name).unwrap();
-}
-
 pub fn str_detect_ftr(reg: u32, ftr_str: &[&str]) -> Vec<String> {
     //  let len = std::cmp::min(32, ftr_str.len());
     let reg = Reg::new(reg).to_bool_array();

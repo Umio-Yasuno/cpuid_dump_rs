@@ -1,27 +1,42 @@
 use crate::*;
 
-pub fn clock_speed_intel_00_16h(cpuid: &CpuidResult) -> String {
-    format!(" [{}/{}/{} MHz]",
-        cpuid.eax & 0xFFFF,
-        cpuid.ebx & 0xFFFF,
-        cpuid.ecx & 0xFFFF
-    )
+pub trait ParseIntel {
+    fn clock_speed_intel_00_16h(&self) -> String;
+    fn intel_hybrid_1ah(&self) -> String;
+    fn v2_ext_topo_intel_1fh(&self) -> String;
 }
 
-pub fn intel_hybrid_1ah(eax: &u32) -> String {
-    let core_type = match *eax >> 24 {
-        0x10 => "Reserved 1",
-        0x20 => "Atom",
-        0x30 => "Reserved 2",
-        0x40 => "Core",
-        _    => "",
-    }.to_string();
+impl ParseIntel for CpuidResult {
+    fn clock_speed_intel_00_16h(&self) -> String {
+        format!(" [{}/{}/{} MHz]",
+            self.eax & 0xFFFF,
+            self.ebx & 0xFFFF,
+            self.ecx & 0xFFFF
+        )
+    }
 
-    return if core_type.len() != 0 {
-        format!(" [{}]", core_type)
-    } else {
-        core_type.to_string()
-    };
+    fn intel_hybrid_1ah(&self) -> String {
+        let eax = self.eax;
+
+        let core_type = match eax >> 24 {
+            0x10 => "Reserved 1",
+            0x20 => "Atom",
+            0x30 => "Reserved 2",
+            0x40 => "Core",
+            _    => "",
+        }.to_string();
+
+        return if core_type.len() != 0 {
+            format!(" [{}]", core_type)
+        } else {
+            core_type.to_string()
+        };
+    }
+
+    fn v2_ext_topo_intel_1fh(&self) -> String {
+        let topo = IntelExtTopo::dec(self);
+        return format!(" [{}]", topo.level_type_string);
+    }
 }
 
 #[allow(dead_code)]
@@ -53,9 +68,4 @@ impl IntelExtTopo {
             level_type_string,
         }
     }
-}
-
-pub fn v2_ext_topo_intel_1fh(cpuid: &CpuidResult) -> String {
-    let topo = IntelExtTopo::dec(cpuid);
-    return format!(" [{}]", topo.level_type_string);
 }
