@@ -31,15 +31,21 @@ impl Unit {
             Self::GiB => Self::GIB_BYTE,
         }
     }
-    fn to_string(&self) -> String {
+}
+
+use std::fmt;
+
+impl fmt::Display for Unit {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Self::Byte => "Byte",
-            Self::KiB => "KiB",
-            Self::MiB => "MiB",
-            Self::GiB => "GiB",
-        }.to_string()
+            Self::Byte => write!(f,  "Byte"),
+            Self::KiB => write!(f,  "KiB"),
+            Self::MiB => write!(f,  "MiB"),
+            Self::GiB => write!(f,  "GiB"),
+        }
     }
 }
+
 
 #[derive(Debug, PartialEq)]
 pub enum CacheType {
@@ -58,13 +64,16 @@ impl CacheType {
             0x0 | _ => Self::Unknown,
         }
     }
-    pub fn to_string(&self) -> String {
+}
+
+impl fmt::Display for CacheType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Self::Data => "Data",
-            Self::Instruction => "Instruction",
-            Self::Unified => "Unified",
-            Self::Unknown => "Unknown",
-        }.to_string()
+            Self::Data => write!(f,  "Data"),
+            Self::Instruction => write!(f,  "Instruction"),
+            Self::Unified => write!(f,  "Unified"),
+            Self::Unknown => write!(f,  "Unknown"),
+        }
     }
 }
 
