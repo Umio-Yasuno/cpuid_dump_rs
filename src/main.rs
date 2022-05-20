@@ -77,6 +77,7 @@ fn parse_pool() -> Vec<u8> {
         if cpuid.check_result_zero() {
             continue;
         }
+
         parse_pool.extend(
             cpuid.parse_fmt(&vendor).into_bytes()
         );
@@ -214,7 +215,7 @@ struct MainOpt {
     raw: bool,
     dump_all: bool,
     save: (bool, String),
-    load: (bool, String),
+    // load: (bool, String),
     only_leaf: (bool, u32, u32, bool),
 }
 
@@ -235,10 +236,11 @@ impl MainOpt {
             save: (false, format!("{}.txt",
                 libcpuid_dump::ProcName::get_trim_name().replace(" ", "_")
             )),
-            load: (false, "cpuid_dump.txt".to_string()),
+            // load: (false, "cpuid_dump.txt".to_string()),
             only_leaf: (false, 0x0, 0x0, false),
         }
     }
+
     fn parse_value(raw_value: String, msg: &str) -> u32 {
         let raw_value = raw_value.replace("_", "");
         if raw_value.starts_with("-") {
@@ -254,6 +256,7 @@ impl MainOpt {
                 .expect("Parse error: {msg} <u32>")
         }
     }
+
     fn help_msg() {
         print!("\n\
             cpuid_dump v{:.1}\n\
@@ -278,6 +281,7 @@ impl MainOpt {
             \x20        Display result for the specified thread.\n\
         \n", VERSION);
     }
+
     pub fn main_parse() -> Self {
         let mut opt = MainOpt::init();
         let mut skip = false;
@@ -321,6 +325,7 @@ impl MainOpt {
                         _ => continue,
                     };
                 },
+                /*
                 "l" | "load" => {
                     opt.load.0 = true;
                     opt.load.1 = match args.get(idx+1) {
@@ -338,6 +343,7 @@ impl MainOpt {
                         },
                     };
                 },
+                */
                 "leaf" => {
                     opt.only_leaf.0 = true;
                     opt.only_leaf.1 = match args.get(idx+1) {
@@ -400,8 +406,10 @@ fn main() {
     match MainOpt::main_parse() {
         MainOpt { only_leaf: (true, leaf, sub_leaf, use_bin), .. }
             => only_leaf(leaf, sub_leaf, use_bin),
+        /*
         MainOpt { load: (true, load_path), .. }
             => load_file(load_path),
+        */
         MainOpt { raw: true, save: (true, save_path), .. }
             => save_file(save_path, &raw_pool()),
         MainOpt { raw: true, dump_all: true, .. }
