@@ -259,8 +259,8 @@ impl MainOpt {
 
     fn help_msg() {
         print!("\n\
-            cpuid_dump v{:.1}\n\
-            https://github.com/Umio-Yasuno/libcpuid_dump/cpuid_dump\n\
+            cpuid_dump v{VERSION:.1}\n\
+            https://github.com/Umio-Yasuno/cpuid_dump_rs\n\
             \n\
             USAGE:\n\
             \x20    cargo run -- [options ..] or <cpuid_dump> [options ..]\n\
@@ -279,7 +279,10 @@ impl MainOpt {
             \x20        Display binary result, for --leaf/--sub_leaf option.\n\
             \x20    --pin <usize>, --pin_threads <usize>\n\
             \x20        Display result for the specified thread.\n\
-        \n", VERSION);
+            \x20    --s <path/filename>, --save <path/filename>\n\
+            \x20        Save dump result to text file.\n\
+            \x20        If there is no path/filename argument, will be used \"./<processor_name>\".
+        \n");
     }
 
     pub fn main_parse() -> Self {

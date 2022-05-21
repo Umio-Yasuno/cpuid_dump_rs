@@ -18,6 +18,9 @@ OPTIONS:
          Display binary result, for --leaf/--sub_leaf option.
      --pin <usize>, --pin_threads <usize>
          Display result for the specified thread.
+     --s <path/filename>, --save <path/filename>
+         Save dump result to text file.
+         If there is no path/filename argument, will be used "./<processor_name>".
 ```
 
 ## Document
