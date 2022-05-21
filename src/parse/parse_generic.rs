@@ -33,7 +33,7 @@ impl ParseGeneric for CpuidResult {
             padln!(),
             format!(" [Total thread(s): {}]", (ebx >> 16) & 0xFF),
             padln!(),
-            format!(" [CLFlush: {}B]", ((ebx >> 8) & 0xFF) * 8),
+            format!(" [CLFlush (Byte): {}]", ((ebx >> 8) & 0xFF) * 8),
         ];
 
         return concat_string_from_slice(&buff);
@@ -199,13 +199,13 @@ impl ParseGeneric for CpuidResult {
         let ext_local_apicid = self.edx;
 
         let v = [
-            format!(" [LevelType: {} ({:#x})]", level_type_str, level_type_val),
+            format!(" [LevelType: {level_type_str} ({level_type_val:#x})]"),
             padln!(),
-            format!(" [NumProcAtThisLevel: {}]", num_proc),
+            format!(" [NumProcAtThisLevel: {num_proc}]"),
             padln!(),
-            format!(" [CoreMaskWidth: {}]", core_mask_width),
+            format!(" [CoreMaskWidth: {core_mask_width}]"),
             padln!(),
-            format!(" [ExtAPID_ID: {}]", ext_local_apicid),
+            format!(" [ExtAPID_ID: {ext_local_apicid}]"),
         ];
         return concat_string_from_slice(&v);
     }
@@ -221,6 +221,7 @@ impl ParseGeneric for CpuidResult {
                 tmp
             }
         };
+
         let x1 = |eax: u32| -> String {
             align_mold_ftr(&str_detect_ftr(eax, XSAVE_00_0D_EAX_X1))
         };
@@ -255,6 +256,7 @@ impl ParseGeneric for CpuidResult {
 
         // 0x8000_0001_EDX_x0
         let edx = Reg::new(edx).to_bool_array();
+
         if edx[31] {
             let v = [ (edx[30], "EXT") ];
             let tdnow = ftr_variant_expand("3DNow!", &v);

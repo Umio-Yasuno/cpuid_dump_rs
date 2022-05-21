@@ -54,7 +54,7 @@ impl ParseAMD for CpuidResult {
         let v = [
             format!(" [Core ID: {}]", ebx & 0xFF),
             padln!(),
-            format!(" [Thread(s) per core: {}T]", ((ebx >> 8) & 0xFF) + 1),
+            format!(" [Thread(s) per core: {}]", ((ebx >> 8) & 0xFF) + 1),
             padln!(),
             format!(" [Node ID: {}]", ecx & 0xFF),
         ];
