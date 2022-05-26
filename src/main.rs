@@ -9,12 +9,16 @@ use libcpuid_dump::{cpuid, Vendor, VendorFlag, _AX};
 #[path = "./parse_mod.rs"]
 mod parse_mod;
 pub use crate::parse_mod::*;
+
 #[path = "./raw_cpuid.rs"]
 mod raw_cpuid;
 pub use crate::raw_cpuid::*;
+
+/*
 #[path = "./load_file.rs"]
 mod load_file;
 pub use crate::load_file::*;
+*/
 
 const VERSION: f32 = 0.1;
 
@@ -68,24 +72,6 @@ fn cpuid_pool() -> Vec<RawCpuid> {
     return pool;
 }
 
-fn parse_pool() -> Vec<u8> {
-    let mut parse_pool: Vec<u8> = Vec::new();
-    let cpuid_pool = cpuid_pool();
-    let vendor = VendorFlag::check();
-    
-    for cpuid in cpuid_pool {
-        if cpuid.check_result_zero() {
-            continue;
-        }
-
-        parse_pool.extend(
-            cpuid.parse_fmt(&vendor).into_bytes()
-        );
-    }
-
-    return parse_pool;
-}
-
 fn raw_pool() -> Vec<u8> {
     let mut pool: Vec<u8> = Vec::new();
     let cpuid_pool = cpuid_pool();
@@ -99,51 +85,34 @@ fn raw_pool() -> Vec<u8> {
     return pool;
 }
 
-fn dump() {
-    let mut pool: Vec<u8> = Vec::new();
+fn hex_head() -> String {
+    const HEAD: &str = "  {LEAF}_x{SUB}:  (out)EAX   (out)EBX   (out)ECX   (out)EDX";
 
-    pool.extend(
-        format!("  {{LEAF}}_x{{SUB}}:  {:<10} {:<10} {:<10} {:<10}\n",
-        "(out)EAX", "(out)EBX", "(out)ECX", "(out)EDX")
-            .into_bytes()
-    );
-    pool.extend(
-        format!("{}\n", "=".repeat(TOTAL_WIDTH))
-            .into_bytes()
-    );
-    pool.extend(parse_pool());
-    pool.extend(b"\n");
+    format!("{}\n{}\n",
+        HEAD,
+        "=".repeat(TOTAL_WIDTH)
+    )
+}
 
-    dump_write(&pool);
+fn bin_head() -> String {
+    const INPUT_LEN: usize = 16;
+    const OUTPUT_LEN: usize = 35;
+    const PAD_LEN: usize = (OUTPUT_LEN - "(out)EAX / (out)ECX".len()) / 2;
+
+    let pad = " ".repeat(PAD_LEN - 1);
+
+    let head = format!("  {{LEAF}}_x{{SUB}}: {pad} (out)EAX / (out)ECX {pad}{pad} (out)EBX / (out)EDX");
+    let line = format!("{} {} {}",
+        "=".repeat(INPUT_LEN),
+        "=".repeat(OUTPUT_LEN),
+        "=".repeat(OUTPUT_LEN),
+    );
+
+    format!("{head}\n{line}\n")
 }
 
 fn raw_dump() {
     dump_write(&raw_pool())
-}
-
-fn dump_all() {
-    use std::thread;
-    let cpu_list = libcpuid_dump::cpu_set_list();
-
-    println!("   {{LEAF}}_x{{SUB}}:  {:<10} {:<10} {:<10} {:<10}\n{}",
-            "(out)EAX", "(out)EBX", "(out)ECX", "(out)EDX",
-            "=".repeat(TOTAL_WIDTH));
-
-    for i in cpu_list {
-        thread::spawn(move || {
-            libcpuid_dump::pin_thread!(i);
-
-            let mut local: Vec<u8> = Vec::new();
-            let id = libcpuid_dump::CpuCoreCount::get().core_id;
-            local.extend(
-                format!("Core ID: {:>3} / Thread: {:>3}\n", id, i)
-                    .into_bytes()
-            );
-            local.extend(parse_pool());
-
-            dump_write(&local);
-        }).join().unwrap();
-    }
 }
 
 fn raw_dump_all() {
@@ -182,44 +151,18 @@ fn save_file(save_path: String, pool: &[u8]) {
     f.write(pool).unwrap();
 }
 
-fn only_leaf(leaf: u32, sub_leaf: u32, use_bin: bool) {
-    if use_bin {
-        const INPUT_LEN: usize = 16;
-        const OUTPUT_LEN: usize = 35;
-        const PAD_LEN: usize = (OUTPUT_LEN - "(out)EAX / (out)ECX".len()) / 2;
-        let pad = " ".repeat(PAD_LEN - 1);
-        println!("  {{LEAF}}_x{{SUB}}: {pad} (out)EAX / (out)ECX {pad}{pad} (out)EBX / (out)EDX");
-        println!("{} {} {}",
-            "=".repeat(INPUT_LEN),
-            "=".repeat(OUTPUT_LEN),
-            "=".repeat(OUTPUT_LEN),
-        );
-    } else {
-        println!("  {{LEAF}}_x{{SUB}}:  {:<10} {:<10} {:<10} {:<10}\n{}",
-            "(out)EAX", "(out)EBX", "(out)ECX", "(out)EDX",
-            "=".repeat(TOTAL_WIDTH));
-    }
-
-    let tmp = if use_bin {
-        RawCpuid::exe(leaf, sub_leaf)
-            .bin_fmt()
-    } else {
-        RawCpuid::exe(leaf, sub_leaf)
-            .parse_fmt(&VendorFlag::all_true())
-    }.into_bytes();
-
-    dump_write(&tmp)
-}
-
+#[derive(Debug, Clone)]
 struct MainOpt {
     raw: bool,
     dump_all: bool,
     save: (bool, String),
     // load: (bool, String),
     only_leaf: (bool, u32, u32, bool),
+    skip_zero: bool,
 }
 
 /*
+#[derive(Debug, Clone)]
 struct OnlyLeaf {
     flag: bool,
     leaf: bool,
@@ -238,6 +181,7 @@ impl MainOpt {
             )),
             // load: (false, "cpuid_dump.txt".to_string()),
             only_leaf: (false, 0x0, 0x0, false),
+            skip_zero: true,
         }
     }
 
@@ -384,6 +328,9 @@ impl MainOpt {
                     Self::help_msg();
                     std::process::exit(0);
                 },
+                "disp-zero" => {
+                    opt.skip_zero = false
+                },
                 // TODO: "taskset" option?
                 // cpuid_dump --taskset <list>
                 // same `taskset -c <list> cpuid_dump -a`
@@ -392,6 +339,106 @@ impl MainOpt {
         }
 
         return opt;
+    }
+
+    fn only_leaf(&self) {
+        let opt = self.only_leaf;
+        let raw_result = RawCpuid::exe(opt.1, opt.2);
+
+        let tmp = if opt.3 {
+            [
+                bin_head(),
+                raw_result.bin_fmt(),
+            ]
+        } else {
+            [
+                hex_head(),
+                raw_result.parse_fmt(&VendorFlag::all_true()),
+            ]
+        };
+
+        let tmp = concat_string_from_slice(&tmp);
+
+        dump_write(&tmp.into_bytes())
+    }
+
+    fn parse_pool(&self) -> Vec<u8> {
+        let mut parse_pool: Vec<u8> = Vec::new();
+        let cpuid_pool = cpuid_pool();
+        let vendor = VendorFlag::check();
+        
+        for cpuid in cpuid_pool {
+            if self.skip_zero && cpuid.check_result_zero() {
+                continue;
+            }
+
+            parse_pool.extend(
+                cpuid.parse_fmt(&vendor).into_bytes()
+            );
+        }
+
+        return parse_pool;
+    }
+
+    fn dump(&self) {
+        let mut pool: Vec<u8> = Vec::new();
+
+        pool.extend(hex_head().into_bytes());
+        pool.extend(self.parse_pool());
+        pool.extend(b"\n");
+
+        dump_write(&pool);
+    }
+
+    fn dump_all(&self) {
+        use std::thread;
+        let cpu_list = libcpuid_dump::cpu_set_list();
+
+        println!("{}", hex_head());
+
+        for i in cpu_list {
+            let opt = self.clone();
+
+            thread::spawn(move || {
+                libcpuid_dump::pin_thread!(i);
+
+                let mut local: Vec<u8> = Vec::new();
+                let id = libcpuid_dump::CpuCoreCount::get().core_id;
+                let ct_head = format!("Core ID: {:>3} / Thread: {:>3}\n", id, i)
+                    .into_bytes();
+
+                local.extend(ct_head);
+                local.extend(opt.parse_pool());
+
+                dump_write(&local);
+            }).join().unwrap();
+        }
+    }
+
+    fn run(&self) {
+        println!("CPUID Dump v{VERSION:.1}");
+
+        match self {
+            Self { only_leaf: (true, ..), .. }
+                => self.only_leaf(),
+            /*
+            MainOpt { load: (true, load_path), .. }
+                => load_file(load_path),
+            */
+            Self { raw: true, save: (true, save_path), .. }
+                => save_file(save_path.to_string(), &raw_pool()),
+            Self { raw: true, dump_all: true, .. }
+                => raw_dump_all(),
+            Self { dump_all: true, .. }
+                => self.dump_all(),
+            Self { raw: true, .. }
+                => raw_dump(),
+            Self { save: (true, save_path), .. }
+                => save_file(save_path.to_string(), &self.parse_pool()),
+            _ => {
+                self.dump();
+            },
+        }
     }
 }
 
@@ -406,26 +453,5 @@ pub enum CpuidDumpType {
 */
 
 fn main() {
-    match MainOpt::main_parse() {
-        MainOpt { only_leaf: (true, leaf, sub_leaf, use_bin), .. }
-            => only_leaf(leaf, sub_leaf, use_bin),
-        /*
-        MainOpt { load: (true, load_path), .. }
-            => load_file(load_path),
-        */
-        MainOpt { raw: true, save: (true, save_path), .. }
-            => save_file(save_path, &raw_pool()),
-        MainOpt { raw: true, dump_all: true, .. }
-            => raw_dump_all(),
-        MainOpt { dump_all: true, .. }
-            => dump_all(),
-        MainOpt { raw: true, .. }
-            => raw_dump(),
-        MainOpt { save: (true, save_path), .. }
-            => save_file(save_path, &parse_pool()),
-        _ => {
-            println!("CPUID Dump");
-            dump();
-        },
-    }
+    MainOpt::main_parse().run();
 }

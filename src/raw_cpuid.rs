@@ -15,6 +15,7 @@ impl RawCpuid {
             result: cpuid!(leaf, sub_leaf),
         }
     }
+
     pub fn zero() -> Self {
         Self {
             leaf: 0x0,
@@ -24,12 +25,15 @@ impl RawCpuid {
             },
         }
     }
+
     pub fn check_result_zero(&self) -> bool {
         self.result == CpuidResult { eax: 0x0, ebx: 0x0, ecx: 0x0, edx: 0x0 }
     }
+
     pub fn check_all_zero(&self) -> bool {
         *self == Self::zero()
     }
+
     fn parse(&self, vendor: &VendorFlag) -> String {
         /*
         if self.check_result_zero() {
@@ -111,6 +115,7 @@ impl RawCpuid {
 
         return format!("{parse_result}\n");
     }
+
     pub fn result(&self, end_str: &str) -> String {
         format!("  0x{:08X}_x{:1X}:  0x{:08X} 0x{:08X} 0x{:08X} 0x{:08X} {}",
             self.leaf, self.sub_leaf,
@@ -118,9 +123,11 @@ impl RawCpuid {
             end_str,
         )
     }
+
     pub fn raw_fmt(&self) -> String {
         self.result("\n")
     }
+
     pub fn parse_fmt(&self, vendor: &VendorFlag) -> String {
         let parsed = &self.parse(&vendor);
 
@@ -130,6 +137,7 @@ impl RawCpuid {
 
         return self.result(parsed);
     }
+
     pub fn bin_fmt(&self) -> String {
         let separate = |reg: u32| -> String {
             let tmp = format!("{:032b}", reg);
