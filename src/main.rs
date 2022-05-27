@@ -72,6 +72,10 @@ fn cpuid_pool() -> Vec<RawCpuid> {
     return pool;
 }
 
+fn version_head() -> String {
+    format!("CPUID Dump v{VERSION:.1}\n")
+}
+
 fn hex_head() -> String {
     const HEAD: &str = "  {LEAF}_x{SUB}:  (out)EAX   (out)EBX   (out)ECX   (out)EDX";
 
@@ -422,22 +426,28 @@ impl MainOpt {
     fn save_file(&self) {
         use std::fs::File;
         use std::io::Write;
+        
+        let mut pool = version_head().into_bytes();
 
-        let pool = if self.raw {
-            self.raw_pool()
-        } else {
-            self.parse_pool()
-        };
+        pool.extend(
+            if self.raw {
+                self.raw_pool()
+            } else {
+                self.parse_pool()
+            }
+        );
 
         let path = &self.save.path;
 
         let mut f = File::create(path).expect("File::create{path} faild.");
 
         f.write(&pool).expect("fs::write() faild.");
+
+        println!("Output to \"{path}\"");
     }
 
     fn run(&self) {
-        println!("CPUID Dump v{VERSION:.1}");
+        print!("{}", version_head());
 
         match self {
             Self { only_leaf: OnlyLeaf { flag: true, .. }, .. }
