@@ -152,11 +152,10 @@ impl RawCpuid {
             self.result.ecx,
             self.result.edx,
         ].map(|reg| separate(reg));
+        let [leaf, sub_leaf] = [self.leaf, self.sub_leaf];
 
-        format!("  0x{:08X}_x{:1X}: {eax} {ebx} \n{} {ecx} {edx} {}",
-            self.leaf, self.sub_leaf,
-            " ".repeat(16),
-            "\n",
+        format!("  0x{leaf:08X}_x{sub_leaf:1X}:  {eax}  {ebx} \n{} {ecx}  {edx} \n",
+            " ".repeat(17),
         )
     }
 }

@@ -72,19 +72,6 @@ fn cpuid_pool() -> Vec<RawCpuid> {
     return pool;
 }
 
-fn raw_pool() -> Vec<u8> {
-    let mut pool: Vec<u8> = Vec::new();
-    let cpuid_pool = cpuid_pool();
-
-    for cpuid in cpuid_pool {
-        pool.extend(
-            cpuid.raw_fmt().into_bytes()
-        );
-    }
-
-    return pool;
-}
-
 fn hex_head() -> String {
     const HEAD: &str = "  {LEAF}_x{SUB}:  (out)EAX   (out)EBX   (out)ECX   (out)EDX";
 
@@ -99,39 +86,16 @@ fn bin_head() -> String {
     const OUTPUT_LEN: usize = 35;
     const PAD_LEN: usize = (OUTPUT_LEN - "(out)EAX / (out)ECX".len()) / 2;
 
-    let pad = " ".repeat(PAD_LEN - 1);
+    let p = " ".repeat(PAD_LEN - 1);
 
-    let head = format!("  {{LEAF}}_x{{SUB}}: {pad} (out)EAX / (out)ECX {pad}{pad} (out)EBX / (out)EDX");
-    let line = format!("{} {} {}",
+    let head = format!("  {{LEAF}}_x{{SUB}}:  {p} (out)EAX / (out)ECX {p} {p}  (out)EBX / (out)EDX");
+    let line = format!("{}  {}  {}",
         "=".repeat(INPUT_LEN),
         "=".repeat(OUTPUT_LEN),
         "=".repeat(OUTPUT_LEN),
     );
 
     format!("{head}\n{line}\n")
-}
-
-fn raw_dump() {
-    dump_write(&raw_pool())
-}
-
-fn raw_dump_all() {
-    use std::thread;
-    let cpu_list = libcpuid_dump::cpu_set_list();
-
-    for i in cpu_list {
-        thread::spawn(move || {
-            libcpuid_dump::pin_thread!(i);
-
-            let mut local: Vec<u8> = Vec::new();
-            local.extend(
-                format!("CPU {:>3}:\n", i).into_bytes()
-            );
-            local.extend(raw_pool());
-
-            dump_write(&local);
-        }).join().unwrap();
-    }
 }
 
 fn dump_write(pool: &[u8]) {
@@ -142,46 +106,48 @@ fn dump_write(pool: &[u8]) {
     out.write(pool).unwrap();
 }
 
-fn save_file(save_path: String, pool: &[u8]) {
-    use std::fs::File;
-    use std::io::Write;
+#[derive(Debug, Clone)]
+struct SaveOpt {
+    flag: bool,
+    path: String,
+}
 
-    let mut f = File::create(save_path).unwrap();
-    //  let pool = parse_pool();
-    f.write(pool).unwrap();
+#[derive(Debug, Clone)]
+struct OnlyLeaf {
+    flag: bool,
+    leaf: u32,
+    sub_leaf: u32,
 }
 
 #[derive(Debug, Clone)]
 struct MainOpt {
     raw: bool,
     dump_all: bool,
-    save: (bool, String),
+    save: SaveOpt,
     // load: (bool, String),
-    only_leaf: (bool, u32, u32, bool),
+    // only_leaf: (bool, u32, u32),
+    only_leaf: OnlyLeaf,
     skip_zero: bool,
-}
-
-/*
-#[derive(Debug, Clone)]
-struct OnlyLeaf {
-    flag: bool,
-    leaf: bool,
-    sub_leaf: bool,
     bin_fmt: bool,
 }
-*/
 
 impl MainOpt {
     fn init() -> Self {
         Self {
             raw: false,
             dump_all: false,
-            save: (false, format!("{}.txt",
-                libcpuid_dump::ProcName::get_trim_name().replace(" ", "_")
-            )),
+            save: SaveOpt {
+                flag: false,
+                path: format!("{}.txt", libcpuid_dump::ProcName::get_trim_name().replace(" ", "_")),
+            },
             // load: (false, "cpuid_dump.txt".to_string()),
-            only_leaf: (false, 0x0, 0x0, false),
+            only_leaf: OnlyLeaf {
+                flag: false,
+                leaf: 0u32,
+                sub_leaf: 0u32,
+            },
             skip_zero: true,
+            bin_fmt: false,
         }
     }
 
@@ -220,7 +186,7 @@ impl MainOpt {
             \x20    --sub_leaf <u32>, --sub-leaf <u32>\n\
             \x20        Display result only for the specified value, the value is Sub-Leaf/InputECX <u32>.\n\
             \x20    -bin\n\
-            \x20        Display binary result, for --leaf/--sub_leaf option.\n\
+            \x20        Display binary result.\n\
             \x20    --pin <usize>, --pin_threads <usize>\n\
             \x20        Display result for the specified thread.\n\
             \x20    --s <path/filename>, --save <path/filename>\n\
@@ -252,8 +218,8 @@ impl MainOpt {
                 "a" | "all" => opt.dump_all = true,
                 "r" | "raw" => opt.raw = true,
                 "s" | "save" => {
-                    opt.save.0 = true;
-                    opt.save.1 = match args.get(idx+1) {
+                    opt.save.flag = true;
+                    opt.save.path = match args.get(idx+1) {
                         Some(v) => {
                             if v.starts_with("-") {
                                 skip = true;
@@ -261,7 +227,7 @@ impl MainOpt {
                             }
 
                             if std::path::Path::new(v).is_dir() {
-                                format!("{}{}", v, opt.save.1)
+                                format!("{}{}", v, opt.save.path)
                             } else {
                                 v.to_string()
                             }
@@ -292,24 +258,24 @@ impl MainOpt {
                 },
                 */
                 "leaf" => {
-                    opt.only_leaf.0 = true;
-                    opt.only_leaf.1 = match args.get(idx+1) {
+                    opt.only_leaf.flag = true;
+                    opt.only_leaf.leaf = match args.get(idx+1) {
                         Some(v) => Self::parse_value(v.to_string(), "leaf"),
                         _ => continue,
                     };
                 },
                 "sub-leaf" | "sub_leaf" => {
-                    if !opt.only_leaf.0 {
+                    if !opt.only_leaf.flag {
                         eprintln!("Please \"--leaf <u32>\" argument");
                         continue;
                     }
-                    opt.only_leaf.2 = match args.get(idx+1) {
+                    opt.only_leaf.sub_leaf = match args.get(idx+1) {
                         Some(v) => Self::parse_value(v.to_string(), "sub-leaf"),
                         _ => continue,
                     };
                 }
                 "bin" => {
-                    opt.only_leaf.3 = true
+                    opt.bin_fmt = true
                 },
                 "pin" | "pin_thread" => {
                     let cpu = match args.get(idx+1) {
@@ -342,10 +308,9 @@ impl MainOpt {
     }
 
     fn only_leaf(&self) {
-        let opt = self.only_leaf;
-        let raw_result = RawCpuid::exe(opt.1, opt.2);
+        let raw_result = RawCpuid::exe(self.only_leaf.leaf, self.only_leaf.sub_leaf);
 
-        let tmp = if opt.3 {
+        let tmp = if self.bin_fmt {
             [
                 bin_head(),
                 raw_result.bin_fmt(),
@@ -362,6 +327,19 @@ impl MainOpt {
         dump_write(&tmp.into_bytes())
     }
 
+    fn raw_pool(&self) -> Vec<u8> {
+        let mut pool: Vec<u8> = Vec::new();
+        let cpuid_pool = cpuid_pool();
+
+        for cpuid in cpuid_pool {
+            pool.extend(
+                cpuid.raw_fmt().into_bytes()
+            );
+        }
+
+        return pool;
+    }
+
     fn parse_pool(&self) -> Vec<u8> {
         let mut parse_pool: Vec<u8> = Vec::new();
         let cpuid_pool = cpuid_pool();
@@ -372,18 +350,31 @@ impl MainOpt {
                 continue;
             }
 
-            parse_pool.extend(
-                cpuid.parse_fmt(&vendor).into_bytes()
-            );
+            let fmt = if self.bin_fmt {
+                cpuid.bin_fmt()
+            } else {
+                cpuid.parse_fmt(&vendor)
+            }.into_bytes();
+
+            parse_pool.extend(fmt);
         }
 
         return parse_pool;
     }
 
+    fn raw_dump(&self) {
+        dump_write(&self.raw_pool())
+    }
+
     fn dump(&self) {
         let mut pool: Vec<u8> = Vec::new();
+        let head = if self.bin_fmt {
+            bin_head()
+        } else {
+            hex_head()
+        };
 
-        pool.extend(hex_head().into_bytes());
+        pool.extend(head.into_bytes());
         pool.extend(self.parse_pool());
         pool.extend(b"\n");
 
@@ -394,7 +385,15 @@ impl MainOpt {
         use std::thread;
         let cpu_list = libcpuid_dump::cpu_set_list();
 
-        println!("{}", hex_head());
+        if !self.raw {
+            let head = if self.bin_fmt {
+                bin_head()
+            } else {
+                hex_head()
+            };
+
+            println!("{head}");
+        }
 
         for i in cpu_list {
             let opt = self.clone();
@@ -406,51 +405,55 @@ impl MainOpt {
                 let id = libcpuid_dump::CpuCoreCount::get().core_id;
                 let ct_head = format!("Core ID: {:>3} / Thread: {:>3}\n", id, i)
                     .into_bytes();
+                let pool = if opt.raw {
+                    opt.raw_pool()
+                } else {
+                    opt.parse_pool()
+                };
 
                 local.extend(ct_head);
-                local.extend(opt.parse_pool());
+                local.extend(pool);
 
                 dump_write(&local);
             }).join().unwrap();
         }
     }
 
+    fn save_file(&self) {
+        use std::fs::File;
+        use std::io::Write;
+
+        let pool = if self.raw {
+            self.raw_pool()
+        } else {
+            self.parse_pool()
+        };
+
+        let path = &self.save.path;
+
+        let mut f = File::create(path).expect("File::create{path} faild.");
+
+        f.write(&pool).expect("fs::write() faild.");
+    }
+
     fn run(&self) {
         println!("CPUID Dump v{VERSION:.1}");
 
         match self {
-            Self { only_leaf: (true, ..), .. }
+            Self { only_leaf: OnlyLeaf { flag: true, .. }, .. }
                 => self.only_leaf(),
-            /*
-            MainOpt { load: (true, load_path), .. }
-                => load_file(load_path),
-            */
-            Self { raw: true, save: (true, save_path), .. }
-                => save_file(save_path.to_string(), &raw_pool()),
-            Self { raw: true, dump_all: true, .. }
-                => raw_dump_all(),
+            Self { save: SaveOpt { flag: true, .. }, .. }
+                => self.save_file(),
             Self { dump_all: true, .. }
                 => self.dump_all(),
             Self { raw: true, .. }
-                => raw_dump(),
-            Self { save: (true, save_path), .. }
-                => save_file(save_path.to_string(), &self.parse_pool()),
+                => self.raw_dump(),
             _ => {
                 self.dump();
             },
         }
     }
 }
-
-/*
-TODO: load & parse,
-pub enum CpuidDumpType {
-    CpuidDumpRs,
-    LibCpuid,
-    EtallenCpuid,
-    Last,
-}
-*/
 
 fn main() {
     MainOpt::main_parse().run();
