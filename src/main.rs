@@ -179,18 +179,22 @@ impl MainOpt {
             USAGE:\n\
             \x20    cargo run -- [options ..] or <cpuid_dump> [options ..]\n\
             \n\
-            OPTIONS:\n\
+            FLAGS:\n\
             \x20    -a, -all\n\
             \x20        Display result for all threads.\n\
             \x20    -r, -raw\n\
             \x20        Display raw/hex result.\n\
-            \x20    --l <u32>, --leaf <u32>\n\
-            \x20        Display result only for the specified value, the value is Leaf/InputEAX <u32>.\n\
-            \x20        e.g. --leaf 1, --leaf 0x8000_0008,
-            \x20    --sub_leaf <u32>, --sub-leaf <u32>\n\
-            \x20        Display result only for the specified value, the value is Sub-Leaf/InputECX <u32>.\n\
             \x20    -bin\n\
             \x20        Display binary result.\n\
+            \x20    -disp-zero\n\
+            \x20        Display result even if E[ABCD]X are zero.\n\
+            \n\
+            OPTIONS:\n\
+            \x20    --l <u32>, --leaf <u32>\n\
+            \x20        Display result only for the specified value, the value is Leaf/InputEAX <u32>.\n\
+            \x20        e.g. --leaf 1, --leaf 0x8000_0008,\n\
+            \x20    --sub_leaf <u32>, --sub-leaf <u32>\n\
+            \x20        Display result only for the specified value, the value is Sub-Leaf/InputECX <u32>.\n\
             \x20    --pin <usize>, --pin_threads <usize>\n\
             \x20        Display result for the specified thread.\n\
             \x20    --s <path/filename>, --save <path/filename>\n\
@@ -458,9 +462,7 @@ impl MainOpt {
                 => self.dump_all(),
             Self { raw: true, .. }
                 => self.raw_dump(),
-            _ => {
-                self.dump();
-            },
+            _ => self.dump(),
         }
     }
 }

@@ -15,7 +15,7 @@ OPTIONS:
                  --sub_leaf <u32>, --sub-leaf <u32>
          Display result only for the specified value, the value is Sub-Leaf/InputECX <u32>.
      -bin
-         Display binary result, for --leaf/--sub_leaf option.
+         Display binary result.
      --pin <usize>, --pin_threads <usize>
          Display result for the specified thread.
      --s <path/filename>, --save <path/filename>
