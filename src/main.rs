@@ -315,6 +315,14 @@ impl MainOpt {
         return opt;
     }
 
+    fn head_fmt(&self) -> String {
+        if self.bin_fmt {
+            bin_head()
+        } else {
+            hex_head()
+        }
+    }
+
     fn only_leaf(&self) {
         let raw_result = RawCpuid::exe(self.only_leaf.leaf, self.only_leaf.sub_leaf);
 
@@ -377,11 +385,7 @@ impl MainOpt {
         let opt = self.clone();
         let cpu_list = libcpuid_dump::cpu_set_list().unwrap();
 
-        let v = if opt.bin_fmt {
-            bin_head()
-        } else {
-            hex_head()
-        }.into_bytes();
+        let v = self.head_fmt().into_bytes();
 
         let v = Arc::new(Mutex::new(v));
 
@@ -397,6 +401,7 @@ impl MainOpt {
                 let id = libcpuid_dump::CpuCoreCount::get().core_id;
                 let ct_head = format!("Core ID: {:>3} / Thread: {:>3}\n", id, i)
                     .into_bytes();
+
                 let pool = if opt_1.raw {
                     opt_1.raw_pool()
                 } else {
@@ -413,27 +418,23 @@ impl MainOpt {
         return Arc::try_unwrap(v).unwrap().into_inner().unwrap();
     }
 
-    fn raw_dump(&self) {
-        dump_write(&self.raw_pool())
+    fn pool_select(&self) -> Vec<u8> {
+        if self.dump_all {
+            self.pool_all_thread()
+        } else if self.raw {
+            self.raw_pool()
+        } else {
+            self.parse_pool()
+        }
     }
 
     fn dump(&self) {
         let mut pool: Vec<u8> = Vec::new();
-        let head = if self.bin_fmt {
-            bin_head()
-        } else {
-            hex_head()
-        };
 
-        pool.extend(head.into_bytes());
-        pool.extend(self.parse_pool());
-        pool.extend(b"\n");
+        pool.extend(self.head_fmt().into_bytes());
+        pool.extend(self.pool_select());
 
         dump_write(&pool);
-    }
-
-    fn dump_all(&self) {
-        dump_write(&self.pool_all_thread());
     }
 
     fn save_file(&self) {
@@ -442,15 +443,9 @@ impl MainOpt {
         
         let mut pool = version_head().into_bytes();
 
-        pool.extend(
-            if self.dump_all {
-                self.pool_all_thread()
-            } else if self.raw {
-                self.raw_pool()
-            } else {
-                self.parse_pool()
-            }
-        );
+        pool.extend(self.head_fmt().into_bytes());
+
+        pool.extend(self.pool_select());
 
         let path = &self.save.path;
 
@@ -469,10 +464,6 @@ impl MainOpt {
                 => self.only_leaf(),
             Self { save: SaveOpt { flag: true, .. }, .. }
                 => self.save_file(),
-            Self { dump_all: true, .. }
-                => self.dump_all(),
-            Self { raw: true, .. }
-                => self.raw_dump(),
             _ => self.dump(),
         }
     }
