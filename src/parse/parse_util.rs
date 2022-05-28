@@ -1,5 +1,6 @@
 use crate::*;
 
+/*
 #[macro_export]
 macro_rules! has_ftr {
     ($ftr_bool: expr, $name_str: expr) => {
@@ -10,6 +11,7 @@ macro_rules! has_ftr {
         }
     };
 }
+*/
 
 pub const PAD_WIDTH: usize = INPUT_WIDTH + OUTPUT_WIDTH + 1;
 
@@ -91,16 +93,16 @@ pub fn align_mold_ftr(buff: &[String]) -> String {
             _inner = format!(" [{}]", v);
             rest -= len;
         } else {
+            _inner = format!("{} [{}]", padln!(), v);
             if PARSE_WIDTH < len {
                 /*
                 _inner = format!(" [{}{}  {}]",
                     &v[..rest], padln!(), &v[rest..]);
                 rest = PARSE_WIDTH - (len - rest);
                 */
-                _inner = format!("{} [{}]", padln!(), v);
                 rest = 0;
             } else {
-                _inner = format!("{} [{}]", padln!(), v);
+                // _inner = format!("{} [{}]", padln!(), v);
                 rest = PARSE_WIDTH - len;
             };
         }

@@ -296,7 +296,7 @@ impl MainOpt {
                             continue;
                         },
                     };
-                    libcpuid_dump::pin_thread!(cpu);
+                    libcpuid_dump::pin_thread(cpu).unwrap();
                 },
                 "h" | "help" => {
                     Self::help_msg();
@@ -370,6 +370,49 @@ impl MainOpt {
         return parse_pool;
     }
 
+    fn pool_all_thread(&self) -> Vec<u8> {
+        use std::thread;
+        use std::sync::{Arc, Mutex};
+
+        let opt = self.clone();
+        let cpu_list = libcpuid_dump::cpu_set_list().unwrap();
+
+        let v = if opt.bin_fmt {
+            bin_head()
+        } else {
+            hex_head()
+        }.into_bytes();
+
+        let v = Arc::new(Mutex::new(v));
+
+        let opt_0 = Arc::new(opt);
+
+        for i in cpu_list {
+            let v_1 = Arc::clone(&v);
+            let opt_1 = Arc::clone(&opt_0);
+
+            thread::spawn(move || {
+                libcpuid_dump::pin_thread(i).unwrap();
+
+                let id = libcpuid_dump::CpuCoreCount::get().core_id;
+                let ct_head = format!("Core ID: {:>3} / Thread: {:>3}\n", id, i)
+                    .into_bytes();
+                let pool = if opt_1.raw {
+                    opt_1.raw_pool()
+                } else {
+                    opt_1.parse_pool()
+                };
+
+                let mut v_1 = v_1.lock().unwrap();
+
+                v_1.extend(ct_head);
+                v_1.extend(pool);
+            }).join().unwrap();
+        }
+
+        return Arc::try_unwrap(v).unwrap().into_inner().unwrap();
+    }
+
     fn raw_dump(&self) {
         dump_write(&self.raw_pool())
     }
@@ -390,41 +433,7 @@ impl MainOpt {
     }
 
     fn dump_all(&self) {
-        use std::thread;
-        let cpu_list = libcpuid_dump::cpu_set_list();
-
-        if !self.raw {
-            let head = if self.bin_fmt {
-                bin_head()
-            } else {
-                hex_head()
-            };
-
-            println!("{head}");
-        }
-
-        for i in cpu_list {
-            let opt = self.clone();
-
-            thread::spawn(move || {
-                libcpuid_dump::pin_thread!(i);
-
-                let mut local: Vec<u8> = Vec::new();
-                let id = libcpuid_dump::CpuCoreCount::get().core_id;
-                let ct_head = format!("Core ID: {:>3} / Thread: {:>3}\n", id, i)
-                    .into_bytes();
-                let pool = if opt.raw {
-                    opt.raw_pool()
-                } else {
-                    opt.parse_pool()
-                };
-
-                local.extend(ct_head);
-                local.extend(pool);
-
-                dump_write(&local);
-            }).join().unwrap();
-        }
+        dump_write(&self.pool_all_thread());
     }
 
     fn save_file(&self) {
@@ -434,7 +443,9 @@ impl MainOpt {
         let mut pool = version_head().into_bytes();
 
         pool.extend(
-            if self.raw {
+            if self.dump_all {
+                self.pool_all_thread()
+            } else if self.raw {
                 self.raw_pool()
             } else {
                 self.parse_pool()

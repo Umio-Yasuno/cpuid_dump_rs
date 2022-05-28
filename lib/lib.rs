@@ -65,7 +65,42 @@ macro_rules! pin_thread {
     };
 }
 
-pub fn cpu_set_list() -> Vec<usize> {
+pub fn pin_thread(cpu: usize) -> Result<(), i32> {
+    #[cfg(unix)]
+    unsafe {
+        use libc::{
+            cpu_set_t,
+            // sched_getaffinity,
+            sched_setaffinity,
+            // CPU_ALLOC_SIZE,
+            CPU_SET,
+            CPU_ZERO
+        };
+
+        let mut set = std::mem::zeroed::<cpu_set_t>();
+        CPU_ZERO(&mut set);
+        CPU_SET(cpu, &mut set);
+
+        let status = sched_setaffinity(0, std::mem::size_of::<cpu_set_t>(), &set);
+        if status == -1 {
+            eprintln!("sched_setaffinity failed.");
+            return Err(status);
+        }
+    }
+
+    #[cfg(windows)]
+    unsafe {
+        use windows::Win32::System::Threading::{
+            GetCurrentThread,
+            SetThreadAffinityMask,
+        };
+        SetThreadAffinityMask(GetCurrentThread(), 1 << cpu);
+    }
+
+    return Ok(());
+}
+
+pub fn cpu_set_list() -> Result<Vec<usize>, i32> {
     let mut cpus: Vec<usize> = Vec::new();
     
     #[cfg(unix)]
@@ -82,6 +117,7 @@ pub fn cpu_set_list() -> Vec<usize> {
         let status = sched_getaffinity(0, mem::size_of::<cpu_set_t>(), &mut set);
         if status == -1 {
             eprintln!("sched_getaffinity failed");
+            return Err(status);
         }
 
         for i in 0..CPU_SETSIZE as usize {
@@ -102,7 +138,7 @@ pub fn cpu_set_list() -> Vec<usize> {
         }
     }
 
-    return cpus;
+    return Ok(cpus);
 }
 
 /*
