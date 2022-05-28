@@ -43,11 +43,11 @@ impl RawCpuid {
 
         let parse_result: String = match self.leaf {
             0x0 => self.result.vendor_00_00h(),
-            0x1 => concat_string_from_slice(&[
+            0x1 => [
                 self.result.info_00_01h(),
                 padln!().to_string(),
                 self.result.feature_00_01h(),
-            ]),
+            ].concat(),
             0x7 => match self.sub_leaf {
                 0x0 => self.result.feature_00_07h_x0(),
                 0x1 => self.result.feature_00_07h_x1(),
@@ -60,29 +60,29 @@ impl RawCpuid {
             } else {
                 "".to_string()
             },
-            0x8000_0001 => concat_string_from_slice(&[
+            0x8000_0001 => [
                 if vendor.amd {
-                    concat_string_from_slice(&[
+                    [
                         self.result.pkgtype_amd_80_01h(),
                         padln!().to_string(),
-                    ])
+                    ].concat()
                 } else {
                     "".to_string()
                 },
                 self.result.feature_80_01h(),
-            ]),
+            ].concat(),
             0x8000_0002..=0x8000_0004 => format!(" [{}]", self.result.cpu_name()),
-            0x8000_0008 => concat_string_from_slice(&[
+            0x8000_0008 => [
                 self.result.addr_size_80_08h(),
                 if vendor.amd {
-                    concat_string_from_slice(&[
+                    [
                         padln!().to_string(),
                         self.result.spec_amd_80_08h(),
-                    ])
+                    ].concat()
                 } else {
                     "".to_string()
                 },
-            ]),
+            ].concat(),
             _ => if vendor.amd {
                 match self.leaf {
                     0x8000_0005 => self.result.l1_amd_80_05h(),
@@ -94,10 +94,10 @@ impl RawCpuid {
                     0x8000_001B => self.result.ibs_amd_80_1bh(),
                     0x8000_001D => self.result.cache_prop(),
                     0x8000_001E => self.result.cpu_topo_amd_80_1eh(),
-                    0x8000_001F => concat_string_from_slice(&[
+                    0x8000_001F => [
                         self.result.encrypt_ftr_amd_80_1fh(),
                         self.result.reduction_phys_addr_amd_80_1fh(),
-                    ]),
+                    ].concat(),
                     0x8000_0021 => self.result.ext_amd_80_21h(),
                     _ => "".to_string(),
                 }

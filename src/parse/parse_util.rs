@@ -68,16 +68,6 @@ pub fn str_detect_ftr(reg: u32, ftr_str: &[&str]) -> Vec<String> {
     return buff;
 }
 
-pub fn concat_string_from_slice(src: &[String]) -> String {
-    let mut dst = String::new();
-
-    src.iter().for_each(
-        |val| dst.push_str(&val)
-    );
-
-    return dst;
-}
-
 pub fn align_mold_ftr(buff: &[String]) -> String {
     let mut rest: usize = PARSE_WIDTH;
     // let mut len: usize;

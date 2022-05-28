@@ -24,7 +24,7 @@ impl ParseGeneric for CpuidResult {
 
         let fms = libcpuid_dump::FamModStep::from_cpuid(eax);
 
-        let buff = [
+        return [
             format!(" [F: 0x{:X}, M: 0x{:X}, S: 0x{:X}]", fms.syn_fam, fms.syn_mod, fms.step),
             padln!(),
             format!(" [Codename: {}]", fms.codename()),
@@ -34,9 +34,7 @@ impl ParseGeneric for CpuidResult {
             format!(" [Total thread(s): {}]", (ebx >> 16) & 0xFF),
             padln!(),
             format!(" [CLFlush (Byte): {}]", ((ebx >> 8) & 0xFF) * 8),
-        ];
-
-        return concat_string_from_slice(&buff);
+        ].concat();
     }
 
     fn feature_00_01h(&self) -> String {
@@ -198,7 +196,7 @@ impl ParseGeneric for CpuidResult {
         let num_proc = self.ebx & 0xFFFF;
         let ext_local_apicid = self.edx;
 
-        let v = [
+        return [
             format!(" [LevelType: {level_type_str} ({level_type_val:#x})]"),
             padln!(),
             format!(" [NumProcAtThisLevel: {num_proc}]"),
@@ -206,8 +204,7 @@ impl ParseGeneric for CpuidResult {
             format!(" [CoreMaskWidth: {core_mask_width}]"),
             padln!(),
             format!(" [ExtAPID_ID: {ext_local_apicid}]"),
-        ];
-        return concat_string_from_slice(&v);
+        ].concat();
     }
 
     fn xstate_00_0dh(&self, sub_leaf: u32) -> String {
@@ -285,7 +282,7 @@ impl ParseGeneric for CpuidResult {
 
         if cache.level == 0 { return "".to_string(); }
 
-        let v = [
+        return [
             format!(" [L{}{}, {:>3}-way, {:>4}-{}]",
                 cache.level, &cache.cache_type_string[..1], cache.way,
                 cache.size / cache.size_unit_byte, cache.size_unit_string),
@@ -293,8 +290,6 @@ impl ParseGeneric for CpuidResult {
             format!(" [Shared {}T]", cache.share_thread),
             if cache.inclusive { " [Inclusive]" } else { "" }.to_string(),
             // has_ftr!(cache.inclusive, " [Inclusive]").to_string(),
-        ];
-
-        return concat_string_from_slice(&v);
+        ].concat();
     }
 }

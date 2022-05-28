@@ -36,7 +36,7 @@ impl ParseAMD for CpuidResult {
 
         /* Inst TLB number of entries for 1-GB pages, size: Bit00-11, assoc: Bit12-15 */
         /* Data TLB number of entries for 1-GB pages, size: Bit16-27, assoc: Bit28-31 */
-        let v = [
+        return [
             format!(" [L1TLB 1G: Data {:>4}, Inst {:>4}]",
                 (eax >> 16) & 0xFFF, eax & 0xFFF,
             ),
@@ -44,22 +44,18 @@ impl ParseAMD for CpuidResult {
             format!(" [L2TLB 1G: Data {:>4}, Inst {:>4}]",
                 (ebx >> 16) & 0xFFF, ebx & 0xFFF,
             ),
-        ];
-
-        return concat_string_from_slice(&v);
+        ].concat();
     }
 
     fn cpu_topo_amd_80_1eh(&self) -> String {
         let [ebx, ecx] = [self.ebx, self.ecx];
-        let v = [
+        return [
             format!(" [Core ID: {}]", ebx & 0xFF),
             padln!(),
             format!(" [Thread(s) per core: {}]", ((ebx >> 8) & 0xFF) + 1),
             padln!(),
             format!(" [Node ID: {}]", ecx & 0xFF),
-        ];
-
-        return concat_string_from_slice(&v);
+        ].concat();
     }
 
     fn l1_amd_80_05h(&self) -> String {
@@ -69,7 +65,7 @@ impl ParseAMD for CpuidResult {
             self.ecx,
             self.edx,
         ];
-        let v = [
+        return [
             format!(" [L1D {}K/L1I {}K]",
                 ecx >> 24, (edx >> 24) & 0xFF,
             ),
@@ -81,9 +77,7 @@ impl ParseAMD for CpuidResult {
             format!(" [L1iTLB: 4K {:>4}, 2M/4M {:>4}]",
                 ebx & 0xFF, eax & 0xFF,
             ),
-        ];
-
-        return concat_string_from_slice(&v);
+        ].concat();
     }
 
     fn l2_amd_80_06h(&self) -> String {
@@ -94,7 +88,7 @@ impl ParseAMD for CpuidResult {
             self.edx,
         ];
 
-        let v = [
+        return [
             format!(" [L2 {}K/L3 {}M]",
                 (ecx >> 16), (edx >> 18) / 2,
             ),
@@ -116,9 +110,7 @@ impl ParseAMD for CpuidResult {
                 " ".repeat(9),
                 (eax & 0xFFF) / 2
             ),
-        ];
-
-        return concat_string_from_slice(&v);
+        ].concat();
     }
 
     fn apmi_amd_80_07h(&self) -> String {

@@ -336,9 +336,7 @@ impl MainOpt {
                 hex_head(),
                 raw_result.parse_fmt(&VendorFlag::all_true()),
             ]
-        };
-
-        let tmp = concat_string_from_slice(&tmp);
+        }.concat();
 
         dump_write(&tmp.into_bytes())
     }
@@ -444,7 +442,6 @@ impl MainOpt {
         let mut pool = version_head().into_bytes();
 
         pool.extend(self.head_fmt().into_bytes());
-
         pool.extend(self.pool_select());
 
         let path = &self.save.path;
