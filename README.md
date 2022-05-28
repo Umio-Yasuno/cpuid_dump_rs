@@ -4,18 +4,22 @@
 USAGE:
      cargo run -- [options ..] or <cpuid_dump> [options ..]
 
-OPTIONS:
+FLAGS:
      -a, -all
          Display result for all threads.
      -r, -raw
          Display raw/hex result.
+     -bin
+         Display binary result.
+     -disp-zero
+         Display result even if E[ABCD]X are zero.
+
+OPTIONS:
      --l <u32>, --leaf <u32>
          Display result only for the specified value, the value is Leaf/InputEAX <u32>.
          e.g. --leaf 1, --leaf 0x8000_0008,
-                 --sub_leaf <u32>, --sub-leaf <u32>
+     --sub_leaf <u32>, --sub-leaf <u32>
          Display result only for the specified value, the value is Sub-Leaf/InputECX <u32>.
-     -bin
-         Display binary result.
      --pin <usize>, --pin_threads <usize>
          Display result for the specified thread.
      --s <path/filename>, --save <path/filename>
