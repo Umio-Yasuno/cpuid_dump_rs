@@ -72,6 +72,8 @@ impl RawCpuid {
                     [
                         padln!().to_string(),
                         self.result.spec_amd_80_08h(),
+                        padln!().to_string(),
+                        self.result.size_amd_80_08h(),
                     ].concat()
                 } else {
                     "".to_string()
