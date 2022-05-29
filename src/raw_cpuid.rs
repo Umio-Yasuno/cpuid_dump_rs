@@ -137,10 +137,10 @@ impl RawCpuid {
             let tmp = format!("{:032b}", reg);
 
             format!("{}_{}_{}_{}",
-                &tmp[24..32],
-                &tmp[16..24],
-                &tmp[8..16],
                 &tmp[..8],
+                &tmp[8..16],
+                &tmp[16..24],
+                &tmp[24..32],
             )
         };
 
