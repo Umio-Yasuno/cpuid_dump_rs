@@ -7,12 +7,9 @@ license = "MIT"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-# [dependencies]
-# cpuid_dump_rs = { path = "./lib/" }
-
 [lib]
 name = "libcpuid_dump"
-path = "./lib/lib.rs"
+path = "lib/lib.rs"
 
 [[bin]]
 name = "cpuid_dump"

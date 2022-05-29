@@ -35,12 +35,6 @@ impl RawCpuid {
     }
 
     fn parse(&self, vendor: &VendorFlag) -> String {
-        /*
-        if self.check_result_zero() {
-            return "".to_string();
-        }
-        */
-
         let parse_result: String = match self.leaf {
             0x0 => self.result.vendor_00_00h(),
             0x1 => [
@@ -150,13 +144,13 @@ impl RawCpuid {
             )
         };
 
+        let [leaf, sub_leaf] = [self.leaf, self.sub_leaf];
         let [eax, ebx, ecx, edx] = [
             self.result.eax,
             self.result.ebx,
             self.result.ecx,
             self.result.edx,
         ].map(|reg| separate(reg));
-        let [leaf, sub_leaf] = [self.leaf, self.sub_leaf];
 
         format!("  0x{leaf:08X}_x{sub_leaf:1X}:  {eax}  {ebx} \n{} {ecx}  {edx} \n",
             " ".repeat(17),

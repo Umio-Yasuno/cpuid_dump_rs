@@ -49,9 +49,13 @@ impl ParseGeneric for CpuidResult {
             Reg::new(edx).to_bool_array(),
         ];
 
+        /* SSE */
         if edx[25] {
             let v = [
-                (edx[26], "2"), (ecx[0], "3"), (ecx[19], "4.1"), (ecx[20], "4.2"),
+                (edx[26], "2"),
+                (ecx[0], "3"),
+                (ecx[19], "4.1"),
+                (ecx[20], "4.2"),
             ];
             let sse = ftr_variant_expand("SSE", &v);
 
@@ -71,10 +75,8 @@ impl ParseGeneric for CpuidResult {
         buff.extend(str_detect_ftr(edx, FTR_00_07_EDX_X0));
 
         let [ebx, ecx, edx] = [
-            Reg::new(ebx).to_bool_array(),
-            Reg::new(ecx).to_bool_array(),
-            Reg::new(edx).to_bool_array(),
-        ];
+            ebx, ecx, edx,
+        ].map(|reg| Reg::new(reg).to_bool_array());
 
         let avx512_f    = ebx[16];
         let avx512_dq   = ebx[17];
