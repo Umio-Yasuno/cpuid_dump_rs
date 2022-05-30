@@ -80,15 +80,15 @@ impl Tlb {
     }
 
     fn disp(&self) -> String {
-        let pad = " ".repeat(9);
+        let pad = " ".repeat(8);
 
         return [
             padln!(),
-            format!(" [{}TLB: 4K {}", self.type_, self.page_4k),
+            format!(" [{}TLB 4K: {}", self.type_, self.page_4k),
             padln!(),
-            format!("{pad} 2M {}", self.page_2m),
+            format!("{pad} 2M: {}", self.page_2m),
             padln!(),
-            format!("{pad} 4M {}]", self.page_4m),
+            format!("{pad} 4M: {}]", self.page_4m),
         ].concat();
     }
 }
@@ -126,17 +126,23 @@ impl ParseAMD for CpuidResult {
 
     fn l1l2tlb_1g_amd_80_19h(&self) -> String {
         let [eax, ebx] = [self.eax, self.ebx];
-
         /* Inst TLB number of entries for 1-GB pages, size: Bit00-11, assoc: Bit12-15 */
         /* Data TLB number of entries for 1-GB pages, size: Bit16-27, assoc: Bit28-31 */
+
+        let l1dtlb = TlbInfo::from_reg((eax >> 16) as u16, 0xFFF);
+        let l1itlb = TlbInfo::from_reg((eax & 0xFFFF) as u16, 0xFFF);
+
+        let l2dtlb = TlbInfo::from_reg((ebx >> 16) as u16, 0xFFF);
+        let l2itlb = TlbInfo::from_reg((ebx & 0xFFFF) as u16, 0xFFF);
+
         return [
-            format!(" [L1TLB 1G: Data {:>4}, Inst {:>4}]",
-                (eax >> 16) & 0xFFF, eax & 0xFFF,
-            ),
+            format!(" [L1dTLB 1G: {}]", l1dtlb),
             padln!(),
-            format!(" [L2TLB 1G: Data {:>4}, Inst {:>4}]",
-                (ebx >> 16) & 0xFFF, ebx & 0xFFF,
-            ),
+            format!(" [L1iTLB 1G: {}]", l1itlb),
+            padln!(),
+            format!(" [L2dTLB 1G: {}]", l2dtlb),
+            padln!(),
+            format!(" [L2iTLB 1G: {}]", l2itlb),
         ].concat();
     }
 
