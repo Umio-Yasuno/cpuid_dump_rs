@@ -1,4 +1,97 @@
 use crate::*;
+use std::fmt;
+
+#[derive(Debug, Clone)]
+enum TlbType {
+    L1d,
+    L1i,
+    L2d,
+    L2i,
+}
+
+impl TlbType {
+    fn get_offset(&self) -> u16 {
+        match self {
+            Self::L1d |
+            Self::L1i => 0xFF,
+            Self::L2d |
+            Self::L2i => 0xFFF,
+        }
+    }
+}
+
+impl fmt::Display for TlbType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::L1d => write!(f, "L1d"),
+            Self::L1i => write!(f, "L1i"),
+            Self::L2d => write!(f, "L2d"),
+            Self::L2i => write!(f, "L2i"),
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+struct TlbInfo {
+    size: u16,
+    assoc: u16,
+}
+
+impl TlbInfo {
+    fn from_reg(reg: u16, offset: u16) -> Self {
+        Self {
+            size: reg & offset,
+            assoc: reg >> offset.trailing_ones(),
+        }
+    }
+}
+
+impl fmt::Display for TlbInfo {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:>4}_entries, {:>3}_way", self.size, self.assoc)
+    }
+}
+
+#[derive(Debug, Clone)]
+struct Tlb {
+    type_: TlbType,
+    page_4k: TlbInfo,
+    page_2m: TlbInfo,
+    page_4m: TlbInfo,
+    // page_1g
+}
+
+impl Tlb {
+    fn reg(type_: TlbType, reg_4k: u16, reg_2m4m: u16) -> Self {
+        let offset = type_.get_offset();
+        let page_4k = TlbInfo::from_reg(reg_4k, offset);
+        let page_2m = TlbInfo::from_reg(reg_2m4m, offset);
+        let page_4m = TlbInfo {
+            size: page_2m.size / 2,
+            assoc: page_2m.assoc,
+        };
+
+        Self {
+            type_,
+            page_4k,
+            page_2m,
+            page_4m,
+        }
+    }
+
+    fn disp(&self) -> String {
+        let pad = " ".repeat(9);
+
+        return [
+            padln!(),
+            format!(" [{}TLB: 4K {}", self.type_, self.page_4k),
+            padln!(),
+            format!("{pad} 2M {}", self.page_2m),
+            padln!(),
+            format!("{pad} 4M {}]", self.page_4m),
+        ].concat();
+    }
+}
 
 pub trait ParseAMD {
     fn pkgtype_amd_80_01h(&self) -> String;
@@ -65,18 +158,17 @@ impl ParseAMD for CpuidResult {
             self.ecx,
             self.edx,
         ];
+
+        let l1d_size = ecx >> 24;
+        let l1i_size = edx >> 24;
+
+        let l1dtlb = Tlb::reg(TlbType::L1d, (ebx >> 16) as u16, (eax >> 16) as u16);
+        let l1itlb = Tlb::reg(TlbType::L1i, (ebx & 0xFFFF) as u16, (eax & 0xFFFF) as u16);
+
         return [
-            format!(" [L1D {}K/L1I {}K]",
-                ecx >> 24, (edx >> 24) & 0xFF,
-            ),
-            padln!(),
-            format!(" [L1dTLB: 4K {:>4}, 2M/4M {:>4}]",
-                (ebx >> 16) & 0xFF, (eax >> 16) & 0xFF,
-            ),
-            padln!(),
-            format!(" [L1iTLB: 4K {:>4}, 2M/4M {:>4}]",
-                ebx & 0xFF, eax & 0xFF,
-            ),
+            format!(" [L1D {l1d_size}K/L1I {l1i_size}K]"),
+            l1dtlb.disp(),
+            l1itlb.disp(),
         ].concat();
     }
 
@@ -88,28 +180,16 @@ impl ParseAMD for CpuidResult {
             self.edx,
         ];
 
+        let l2_size = ecx >> 16;
+        let l3_size = (edx >> 18) / 2;
+
+        let l2dtlb = Tlb::reg(TlbType::L2d, (ebx >> 16) as u16, (eax >> 16) as u16);
+        let l2itlb = Tlb::reg(TlbType::L2i, (ebx & 0xFFFF) as u16, (eax & 0xFFFF) as u16);
+
         return [
-            format!(" [L2 {}K/L3 {}M]",
-                (ecx >> 16), (edx >> 18) / 2,
-            ),
-            padln!(),
-            format!(" [L2dTLB: 4K {:>4}, 2M {:>4}",
-                (ebx >> 16) & 0xFFF, (eax >> 16) & 0xFFF,
-            ),
-            padln!(), 
-            format!("{} 4M {:>4}]",
-                " ".repeat(9),
-                ((eax >> 16) & 0xFFF) / 2,
-            ),
-            padln!(),
-            format!(" [L2iTLB: 4K {:>4}, 2M {:>4}",
-                ebx & 0xFFF, eax & 0xFFF,
-            ),
-            padln!(), 
-            format!("{} 4M {:>4}]",
-                " ".repeat(9),
-                (eax & 0xFFF) / 2
-            ),
+            format!(" [L2 {l2_size}K/L3 {l3_size}M]"),
+            l2dtlb.disp(),
+            l2itlb.disp(),
         ].concat();
     }
 
@@ -122,7 +202,7 @@ impl ParseAMD for CpuidResult {
     }
 
     fn size_amd_80_08h(&self) -> String {
-        format!(" [NC: {}]", (self.ecx & 0xFF) + 1)
+        format!(" [Num threads: {}]", (self.ecx & 0xFF) + 1)
     }
 
     fn rev_id_amd_80_0ah(&self) -> String {
