@@ -48,7 +48,7 @@ impl TlbInfo {
 
 impl fmt::Display for TlbInfo {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:>4}_entries, {:>3}_way", self.size, self.assoc)
+        write!(f, "{:>4}_entry, {:>3}_way", self.size, self.assoc)
     }
 }
 

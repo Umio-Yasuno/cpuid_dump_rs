@@ -66,6 +66,22 @@ impl Vendor {
     pub fn check_intel(&self) -> bool {
         self.ebx == Self::INTEL_EBX
     }
+    pub fn reg_to_name(ebx: u32, edx: u32, ecx: u32) -> String {
+        let dec = |reg: u32| -> String {
+            let tmp = reg.to_le_bytes().iter().map(|&byte|
+                if char::from(byte).is_control() { 0x20 } else { byte }
+            ).collect::<Vec<u8>>();
+
+            String::from_utf8(tmp).unwrap()
+        };
+        let [ebx, edx, ecx] = [
+            ebx,
+            edx,
+            ecx,
+        ].map(|reg| dec(reg) );
+
+        format!("{ebx}{edx}{ecx}")
+    }
 }
 
 pub struct VendorFlag {

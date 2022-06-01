@@ -24,16 +24,20 @@ impl ParseGeneric for CpuidResult {
 
         let fms = libcpuid_dump::FamModStep::from_cpuid(eax);
 
+        let apic_id = ebx >> 24;
+        let total_thread = (ebx >> 16) & 0xFF;
+        let clflush_size = ((ebx >> 8) & 0xFF) * 8;
+
         return [
             format!(" [F: 0x{:X}, M: 0x{:X}, S: 0x{:X}]", fms.syn_fam, fms.syn_mod, fms.step),
             padln!(),
             format!(" [Codename: {}]", fms.codename()),
             padln!(),
-            format!(" [APIC ID: {}]", ebx >> 24),
+            format!(" [APIC ID: {apic_id}]"),
             padln!(),
-            format!(" [Total thread(s): {}]", (ebx >> 16) & 0xFF),
+            format!(" [Total thread(s): {total_thread}]"),
             padln!(),
-            format!(" [CLFlush (Byte): {}]", ((ebx >> 8) & 0xFF) * 8),
+            format!(" [CLFlush (Byte): {clflush_size}]"),
         ].concat();
     }
 
@@ -266,11 +270,14 @@ impl ParseGeneric for CpuidResult {
     }
 
     fn addr_size_80_08h(&self) -> String {
-        let eax = self.eax;
-        let pad = format!("{}{}", padln!(), " ".repeat(" [Address size:".len()));
+        const LEN: usize = " [Address size:".len();
+        let pad = format!("{}{}", padln!(), " ".repeat(LEN));
 
-        format!(" [Address size: {:2}-bits physical {} {:2}-bits virtual]",
-            eax & 0xFF, pad, (eax >> 8) & 0xFF)
+        let eax = self.eax;
+        let p_size = eax & 0xFF;
+        let v_size = (eax >> 8) & 0xFF;
+
+        format!(" [Address size: {p_size:2}-bits physical {pad} {v_size:2}-bits virtual]")
     }
 
     fn cpu_name(&self) -> String {
@@ -285,7 +292,7 @@ impl ParseGeneric for CpuidResult {
         if cache.level == 0 { return "".to_string(); }
 
         return [
-            format!(" [L{}{}, {:>3}-way, {:>4}-{}]",
+            format!(" [L{}{}, {:>3}_way, {:>4}_{}]",
                 cache.level, &cache.cache_type_string[..1], cache.way,
                 cache.size / cache.size_unit_byte, cache.size_unit_string),
             padln!(),
