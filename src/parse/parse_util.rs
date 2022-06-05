@@ -55,33 +55,27 @@ pub fn str_detect_ftr(reg: u32, ftr_str: &[&str]) -> Vec<String> {
 
 pub fn align_mold_ftr(buff: &[String]) -> String {
     let mut rest: usize = PARSE_WIDTH;
-    // let mut len: usize;
-    let mut mold = String::new();
+    let mut mold = String::with_capacity(buff.len() * 48);
     let mut inner: String;
 
     const DECO_LEN: usize = " []".len();
+    let pad = padln!();
     
     for v in buff {
         let len = v.len() + DECO_LEN;
 
         if len <= rest {
-            inner = format!(" [{}]", v);
+            inner = format!(" [{v}]");
             rest -= len;
         } else {
-            inner = format!("{} [{}]", padln!(), v);
-            if PARSE_WIDTH < len {
-                /*
-                inner = format!(" [{}{}  {}]",
-                    &v[..rest], padln!(), &v[rest..]);
-                rest = PARSE_WIDTH - (len - rest);
-                */
-                rest = 0;
+            inner = format!("{pad} [{v}]");
+            rest = if PARSE_WIDTH < len {
+                0
             } else {
-                // inner = format!("{} [{}]", padln!(), v);
-                rest = PARSE_WIDTH - len;
+                PARSE_WIDTH - len
             };
         }
-        // mold.push_str(&inner);
+
         write!(mold, "{inner}").unwrap();
     }
 
@@ -93,13 +87,11 @@ pub fn ftr_variant_expand(base_name: &str, flag_str: &[(bool, &str)]) -> String 
 
     for (flag, name) in flag_str {
         if *flag {
-            // base.push_str(&format!("{name},"));
             write!(base, "{name},").unwrap();
         }
     }
     
     base.pop();
-    // base.push_str("}");
     write!(base, "}}").unwrap();
 
     return base;

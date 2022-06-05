@@ -380,25 +380,22 @@ impl MainOpt {
         use std::thread;
         use std::sync::{Arc, Mutex};
 
-        let opt = self.clone();
         let cpu_list = libcpuid_dump::cpu_set_list().unwrap();
 
-        let v = self.head_fmt().into_bytes();
+        let v_0 = self.head_fmt().into_bytes();
+        let v_0 = Arc::new(Mutex::new(v_0));
 
-        let v = Arc::new(Mutex::new(v));
-
-        let opt_0 = Arc::new(opt);
+        let opt_0 = Arc::new(self.clone());
 
         for i in cpu_list {
-            let v_1 = Arc::clone(&v);
+            let v_1 = Arc::clone(&v_0);
             let opt_1 = Arc::clone(&opt_0);
 
             thread::spawn(move || {
                 libcpuid_dump::pin_thread(i).unwrap();
 
                 let id = libcpuid_dump::CpuCoreCount::get().core_id;
-                let ct_head = format!("Core ID: {:>3} / Thread: {:>3}\n", id, i)
-                    .into_bytes();
+                let ct_head = format!("Core ID: {id:>3} / Thread: {i:>3}\n").into_bytes();
 
                 let pool = if opt_1.raw {
                     opt_1.raw_pool()
@@ -413,7 +410,7 @@ impl MainOpt {
             }).join().unwrap();
         }
 
-        return Arc::try_unwrap(v).unwrap().into_inner().unwrap();
+        return Arc::try_unwrap(v_0).unwrap().into_inner().unwrap();
     }
 
     fn pool_select(&self) -> Vec<u8> {
@@ -427,10 +424,10 @@ impl MainOpt {
     }
 
     fn dump(&self) {
-        let mut pool: Vec<u8> = Vec::new();
-
-        pool.extend(self.head_fmt().into_bytes());
-        pool.extend(self.pool_select());
+        let pool = [
+            self.head_fmt().into_bytes(),
+            self.pool_select(),
+        ].concat();
 
         dump_write(&pool);
     }
@@ -439,14 +436,15 @@ impl MainOpt {
         use std::fs::File;
         use std::io::Write;
         
-        let mut pool = version_head().into_bytes();
-
-        pool.extend(self.head_fmt().into_bytes());
-        pool.extend(self.pool_select());
+        let pool = [
+            version_head().into_bytes(),
+            self.head_fmt().into_bytes(),
+            self.pool_select(),
+        ].concat();
 
         let path = &self.save.path;
 
-        let mut f = File::create(path).expect("File::create{path} faild.");
+        let mut f = File::create(path).expect("File::create {path} faild.");
 
         f.write(&pool).expect("fs::write() faild.");
 
