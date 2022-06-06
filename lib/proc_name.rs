@@ -5,8 +5,8 @@ pub struct ProcName;
 impl ProcName {
     pub fn dec_reg(reg: u32) -> Vec<u8> {
         reg.to_le_bytes().iter().map(
-            /* replace from \u0000..\u001F (<Control>) to \u0020 (<Space>) */
-            |&byte| if byte < 0x20 { 0x20 } else { byte }
+            /* replace from <Control> to \u0020 (<Space>) */
+            |&byte| if char::from(byte).is_control() { 0x20 } else { byte }
         ).collect()
     }
     pub fn dec_cpuid(cpuid: &CpuidResult) -> Vec<u8> {

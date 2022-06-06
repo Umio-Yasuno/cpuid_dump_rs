@@ -23,7 +23,7 @@ pub use crate::load_file::*;
 const VERSION: f32 = 0.1;
 
 fn cpuid_pool() -> Vec<RawCpuid> {
-    let mut pool: Vec<RawCpuid> = Vec::new();
+    let mut pool: Vec<RawCpuid> = Vec::with_capacity(64);
 
     /* Base */
     for leaf in 0x0..=0xC {
@@ -342,7 +342,7 @@ impl MainOpt {
     }
 
     fn raw_pool(&self) -> Vec<u8> {
-        let mut pool: Vec<u8> = Vec::new();
+        let mut pool: Vec<u8> = Vec::with_capacity(4096);
         let cpuid_pool = cpuid_pool();
 
         for cpuid in cpuid_pool {
@@ -355,7 +355,7 @@ impl MainOpt {
     }
 
     fn parse_pool(&self) -> Vec<u8> {
-        let mut parse_pool: Vec<u8> = Vec::new();
+        let mut parse_pool: Vec<u8> = Vec::with_capacity(16384);
         let cpuid_pool = cpuid_pool();
         let vendor = VendorFlag::check();
         
@@ -382,8 +382,11 @@ impl MainOpt {
 
         let cpu_list = libcpuid_dump::cpu_set_list().unwrap();
 
-        let v_0 = self.head_fmt().into_bytes();
-        let v_0 = Arc::new(Mutex::new(v_0));
+        let v_0 = {
+            let tmp: Vec<u8> = Vec::with_capacity(16384 * cpu_list.len());
+
+            Arc::new(Mutex::new(tmp))
+        };
 
         let opt_0 = Arc::new(self.clone());
 
