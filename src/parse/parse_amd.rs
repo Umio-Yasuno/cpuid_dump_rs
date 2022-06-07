@@ -120,8 +120,8 @@ impl ParseAMD for CpuidResult {
             0x2 => "AM4",
             _ => return "".to_string(),
         };
-        return format!(" [PkgType: {}({:#X})]",
-            pkg_dec, pkg_type);
+
+        return format!(" [PkgType: {pkg_dec}({pkg_type:#X})]")
     }
 
     fn l1l2tlb_1g_amd_80_19h(&self) -> String {
@@ -148,12 +148,17 @@ impl ParseAMD for CpuidResult {
 
     fn cpu_topo_amd_80_1eh(&self) -> String {
         let [ebx, ecx] = [self.ebx, self.ecx];
+
+        let core_id = ebx & 0xFF;
+        let th_per_core = ((ebx >> 8) & 0xFF) + 1;
+        let node_id = ecx & 0xFF;
+
         return [
-            format!(" [Core ID: {}]", ebx & 0xFF),
+            format!(" [Core ID: {core_id}]"),
             padln!(),
-            format!(" [Thread(s) per core: {}]", ((ebx >> 8) & 0xFF) + 1),
+            format!(" [Thread(s) per core: {th_per_core}]"),
             padln!(),
-            format!(" [Node ID: {}]", ecx & 0xFF),
+            format!(" [Node ID: {node_id}]"),
         ].concat();
     }
 
@@ -237,8 +242,7 @@ impl ParseAMD for CpuidResult {
         let reduction_size = (self.ebx >> 6) & 0x3F;
 
         if 0 < reduction_size {
-            format!("{} [MemEncryptPhysAddWidth: {}-bits]",
-                padln!(), reduction_size)
+            format!("{} [MemEncryptPhysAddWidth: {reduction_size}-bits]", padln!())
         } else {
             "".to_string()
         }

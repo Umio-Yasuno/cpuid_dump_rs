@@ -341,9 +341,8 @@ impl MainOpt {
         dump_write(&tmp.into_bytes())
     }
 
-    fn raw_pool(&self) -> Vec<u8> {
+    fn raw_pool(&self, cpuid_pool: &[RawCpuid]) -> Vec<u8> {
         let mut pool: Vec<u8> = Vec::with_capacity(4096);
-        let cpuid_pool = cpuid_pool();
 
         for cpuid in cpuid_pool {
             pool.extend(
@@ -354,9 +353,8 @@ impl MainOpt {
         return pool;
     }
 
-    fn parse_pool(&self) -> Vec<u8> {
+    fn parse_pool(&self, cpuid_pool: &[RawCpuid]) -> Vec<u8> {
         let mut parse_pool: Vec<u8> = Vec::with_capacity(16384);
-        let cpuid_pool = cpuid_pool();
         let vendor = VendorFlag::check();
         
         for cpuid in cpuid_pool {
@@ -376,23 +374,40 @@ impl MainOpt {
         return parse_pool;
     }
 
+    fn pool_select(&self, cpuid_pool: &[RawCpuid]) -> Vec<u8> {
+        if self.raw {
+            self.raw_pool(cpuid_pool)
+        } else {
+            self.parse_pool(cpuid_pool)
+        }
+    }
+
     fn pool_all_thread(&self) -> Vec<u8> {
         use std::thread;
         use std::sync::{Arc, Mutex};
 
+        let opt_0 = Arc::new(self.clone());
+
         let cpu_list = libcpuid_dump::cpu_set_list().unwrap();
 
+        let first_pool = {
+            libcpuid_dump::pin_thread(cpu_list[0]).unwrap();
+
+            Arc::new(cpuid_pool())
+        };
+
         let v_0 = {
-            let tmp: Vec<u8> = Vec::with_capacity(16384 * cpu_list.len());
+            let mut tmp: Vec<u8> = Vec::with_capacity(16384 * cpu_list.len());
+            tmp.extend(opt_0.pool_select(&first_pool));
 
             Arc::new(Mutex::new(tmp))
         };
 
-        let opt_0 = Arc::new(self.clone());
-
-        for i in cpu_list {
+        for i in &cpu_list[1..] {
+            let i = *i;
             let v_1 = Arc::clone(&v_0);
             let opt_1 = Arc::clone(&opt_0);
+            let first_pool = Arc::clone(&first_pool);
 
             thread::spawn(move || {
                 libcpuid_dump::pin_thread(i).unwrap();
@@ -400,11 +415,14 @@ impl MainOpt {
                 let id = libcpuid_dump::CpuCoreCount::get().core_id;
                 let ct_head = format!("Core ID: {id:>3} / Thread: {i:>3}\n").into_bytes();
 
-                let pool = if opt_1.raw {
-                    opt_1.raw_pool()
-                } else {
-                    opt_1.parse_pool()
-                };
+                let sub_pool = cpuid_pool();
+
+                let mut diff: Vec<RawCpuid> = Vec::with_capacity(32);
+                for (x, y) in first_pool.iter().zip(sub_pool) {
+                    if *x != y { diff.push(y) }
+                }
+
+                let pool = opt_1.pool_select(&diff);
 
                 let mut v_1 = v_1.lock().unwrap();
 
@@ -416,20 +434,14 @@ impl MainOpt {
         return Arc::try_unwrap(v_0).unwrap().into_inner().unwrap();
     }
 
-    fn pool_select(&self) -> Vec<u8> {
-        if self.dump_all {
-            self.pool_all_thread()
-        } else if self.raw {
-            self.raw_pool()
-        } else {
-            self.parse_pool()
-        }
-    }
-
     fn dump(&self) {
         let pool = [
             self.head_fmt().into_bytes(),
-            self.pool_select(),
+            if self.dump_all {
+                self.pool_all_thread()
+            } else {
+                self.pool_select(&cpuid_pool())
+            },
         ].concat();
 
         dump_write(&pool);
@@ -442,7 +454,11 @@ impl MainOpt {
         let pool = [
             version_head().into_bytes(),
             self.head_fmt().into_bytes(),
-            self.pool_select(),
+            if self.dump_all {
+                self.pool_all_thread()
+            } else {
+                self.pool_select(&cpuid_pool())
+            },
         ].concat();
 
         let path = &self.save.path;

@@ -39,7 +39,7 @@ impl RawCpuid {
             0x0 => self.result.vendor_00_00h(),
             0x1 => [
                 self.result.info_00_01h(),
-                padln!().to_string(),
+                padln!(),
                 self.result.feature_00_01h(),
             ].concat(),
             0x7 => match self.sub_leaf {
@@ -58,21 +58,21 @@ impl RawCpuid {
                 if vendor.amd {
                     [
                         self.result.pkgtype_amd_80_01h(),
-                        padln!().to_string(),
+                        padln!(),
                     ].concat()
                 } else {
                     "".to_string()
                 },
                 self.result.feature_80_01h(),
             ].concat(),
-            0x8000_0002..=0x8000_0004 => format!(" [{}]", self.result.cpu_name()),
+            0x8000_0002..=0x8000_0004 => format!(" [\"{}\"]", self.result.cpu_name()),
             0x8000_0008 => [
                 self.result.addr_size_80_08h(),
                 if vendor.amd {
                     [
-                        padln!().to_string(),
+                        padln!(),
                         self.result.spec_amd_80_08h(),
-                        padln!().to_string(),
+                        padln!(),
                         self.result.size_amd_80_08h(),
                     ].concat()
                 } else {
