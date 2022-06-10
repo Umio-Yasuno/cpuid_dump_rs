@@ -55,15 +55,15 @@ impl ParseGeneric for CpuidResult {
 
         /* SSE */
         if edx[25] {
-            let v = [
+            let ftr_map = [
                 (edx[26], "2"),
                 (ecx[0], "3"),
                 (ecx[19], "4.1"),
                 (ecx[20], "4.2"),
             ];
-            let sse = ftr_variant_expand("SSE", &v);
+            let sse = ftr_variant_expand("SSE", &ftr_map);
 
-            buff.push(sse.to_string());
+            buff.push(sse);
         }
         if ecx[9] { buff.push("SSSE3".to_string()); }
 
@@ -190,7 +190,7 @@ impl ParseGeneric for CpuidResult {
             if tmp == 0x0 { return "".to_string() }
 
             (match tmp {
-                0x0 => "Invalid",
+                // 0x0 => "Invalid",
                 0x1 => "Thread",
                 0x2 => "Processor",
                 _ => "Unknown/Reserved",
@@ -200,7 +200,7 @@ impl ParseGeneric for CpuidResult {
         let core_mask_width = self.eax & 0xF;
         /* logical processor at this level */
         let num_proc = self.ebx & 0xFFFF;
-        let ext_local_apicid = self.edx;
+        // let ext_local_apicid = self.edx;
 
         return [
             format!(" [LevelType: {level_type_str} ({level_type_val:#x})]"),
@@ -208,8 +208,10 @@ impl ParseGeneric for CpuidResult {
             format!(" [NumProcAtThisLevel: {num_proc}]"),
             padln!(),
             format!(" [CoreMaskWidth: {core_mask_width}]"),
+            /*
             padln!(),
             format!(" [ExtAPID_ID: {ext_local_apicid}]"),
+            */
         ].concat();
     }
 
@@ -292,13 +294,15 @@ impl ParseGeneric for CpuidResult {
         if cache.level == 0 { return "".to_string(); }
 
         return [
-            format!(" [L{}{}, {:>3}_way, {:>4}_{}]",
+            format!(" [L{}{},{:>3}_way,{:>4}_{}]",
                 cache.level, &cache.cache_type_string[..1], cache.way,
-                cache.size / cache.size_unit_byte, cache.size_unit_string),
-            padln!(),
+                cache.size / cache.size_unit_byte, &cache.size_unit_string[..1]),
             format!(" [Shared {}T]", cache.share_thread),
-            if cache.inclusive { " [Inclusive]" } else { "" }.to_string(),
-            // has_ftr!(cache.inclusive, " [Inclusive]").to_string(),
+            if cache.inclusive {
+                format!("{} [Inclusive]", padln!())
+            } else {
+                "".to_string()
+            }
         ].concat();
     }
 }

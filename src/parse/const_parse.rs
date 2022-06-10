@@ -1,6 +1,6 @@
 pub const INPUT_WIDTH: usize = "  0x00000000_x0: ".len();
 pub const OUTPUT_WIDTH: usize = "0x00000000 ".len() * 4;
-pub const PARSE_WIDTH: usize = 32;
+pub const PARSE_WIDTH: usize = 36;
 pub const TOTAL_WIDTH: usize = PARSE_WIDTH + INPUT_WIDTH + OUTPUT_WIDTH;
 
 /** FTR_{leaf first 2}_{leaf last 2}_{register}_{sub-leaf}
@@ -15,15 +15,18 @@ pub const TOTAL_WIDTH: usize = PARSE_WIDTH + INPUT_WIDTH + OUTPUT_WIDTH;
 */
 
 pub const FTR_00_01_EDX_X0: &[&str] = &[
-    "FPU", "VME", "DebugExt", "PSE",
+    "FPU", "VME", "DE", "PSE",
     "TSC", "MSR", "PAE", "MCE",
-    "CMPXCHG8B", "APIC", "", "SysCallSysRet",
+    "CX8", "APIC", "", "SYSCALL",
     "MTRR", "PGE", "MCA", "CMOV",
     "PAT", "PSE36", "", "",
     "", "", "", "MMX",
-    "FXSR", "", "",  "",
+    "FXSR", "", "",  "SS",
     "HTT",
     /*
+        Bit02 => DebugExt
+        Bit08 => CMPXCHG8B,
+
         Bit25 => SSE,
         Bit26 => SSE2,
 
@@ -31,15 +34,17 @@ pub const FTR_00_01_EDX_X0: &[&str] = &[
     */
 ];
 pub const FTR_00_01_ECX_X0: &[&str] = &[
-    "", "PCLMULQDQ", "", "Monitor/Mwait",
+    "", "PCLMULQDQ", "", "MONITOR",
     "", "", "", "",
     "", "", "", "",
-    "FMA", "CMPXCHG16B", "", "",
+    "FMA", "CX16", "", "",
     "", "PCID", "", "",
     "", "X2APIC", "MOVBE", "POPCNT",
     "", "AES", "XSAVE", "OSXSAVE",
     "AVX", "F16C", "RDRAND", "",
     /*
+        Bit13 => CMPXCHG16B,
+
         Bit00 => SSE3,
         Bit19 => SSE41,
         Bit24 => SSE42,
