@@ -102,6 +102,12 @@ fn bin_head() -> String {
     format!("{head}\n{line}\n")
 }
 
+fn core_thread_head(thread_id: usize) -> String {
+    let core_id = libcpuid_dump::CpuCoreCount::get().core_id;
+
+    format!("[Core ID: {core_id:>3} / Thread: {thread_id:>3}]\n")
+}
+
 fn dump_write(pool: &[u8]) {
     use std::io::{BufWriter, Write, stdout};
     let out = stdout();
@@ -147,8 +153,8 @@ impl MainOpt {
             // load: (false, "cpuid_dump.txt".to_string()),
             only_leaf: OnlyLeaf {
                 flag: false,
-                leaf: 0u32,
-                sub_leaf: 0u32,
+                leaf: 0x0,
+                sub_leaf: 0x0,
             },
             skip_zero: true,
             bin_fmt: false,
@@ -398,6 +404,7 @@ impl MainOpt {
 
         let v_0 = {
             let mut tmp: Vec<u8> = Vec::with_capacity(16384 * cpu_list.len());
+            tmp.extend(core_thread_head(cpu_list[0]).into_bytes());
             tmp.extend(opt_0.pool_select(&first_pool));
 
             Arc::new(Mutex::new(tmp))
@@ -412,15 +419,19 @@ impl MainOpt {
             thread::spawn(move || {
                 libcpuid_dump::pin_thread(i).unwrap();
 
-                let id = libcpuid_dump::CpuCoreCount::get().core_id;
-                let ct_head = format!("Core ID: {id:>3} / Thread: {i:>3}\n").into_bytes();
+                let ct_head = core_thread_head(i).into_bytes();
 
-                let sub_pool = cpuid_pool();
+                let diff = {
+                    let sub_pool = cpuid_pool();
 
-                let mut diff: Vec<RawCpuid> = Vec::with_capacity(32);
-                for (x, y) in first_pool.iter().zip(sub_pool) {
-                    if *x != y { diff.push(y) }
-                }
+                    let mut tmp: Vec<RawCpuid> = Vec::with_capacity(32);
+
+                    for (first, sub) in first_pool.iter().zip(sub_pool) {
+                        if *first != sub { tmp.push(sub) }
+                    }
+
+                    tmp
+                };
 
                 let pool = opt_1.pool_select(&diff);
 
