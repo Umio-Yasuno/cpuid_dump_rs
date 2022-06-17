@@ -380,7 +380,7 @@ impl MainOpt {
         return parse_pool;
     }
 
-    fn pool_select(&self, cpuid_pool: &[RawCpuid]) -> Vec<u8> {
+    fn select_pool(&self, cpuid_pool: &[RawCpuid]) -> Vec<u8> {
         if self.raw {
             self.raw_pool(cpuid_pool)
         } else {
@@ -405,7 +405,7 @@ impl MainOpt {
         let v_0 = {
             let mut tmp: Vec<u8> = Vec::with_capacity(16384 * cpu_list.len());
             tmp.extend(core_thread_head(cpu_list[0]).into_bytes());
-            tmp.extend(opt_0.pool_select(&first_pool));
+            tmp.extend(opt_0.select_pool(&first_pool));
 
             Arc::new(Mutex::new(tmp))
         };
@@ -422,18 +422,17 @@ impl MainOpt {
                 let ct_head = core_thread_head(i).into_bytes();
 
                 let diff = {
-                    let sub_pool = cpuid_pool();
+                    let mut first_pool = first_pool.iter();
+                    let mut sub_pool = cpuid_pool();
+                    sub_pool.retain(|sub| first_pool.next().unwrap() != sub );
 
-                    let mut tmp: Vec<RawCpuid> = Vec::with_capacity(32);
-
-                    for (first, sub) in first_pool.iter().zip(sub_pool) {
-                        if *first != sub { tmp.push(sub) }
-                    }
-
-                    tmp
+                    sub_pool
                 };
 
-                let pool = opt_1.pool_select(&diff);
+                /* for simulator, like Intel SDE */
+                if diff.is_empty() { return }
+
+                let pool = opt_1.select_pool(&diff);
 
                 let mut v_1 = v_1.lock().unwrap();
 
@@ -451,7 +450,7 @@ impl MainOpt {
             if self.dump_all {
                 self.pool_all_thread()
             } else {
-                self.pool_select(&cpuid_pool())
+                self.select_pool(&cpuid_pool())
             },
         ].concat();
 
@@ -468,7 +467,7 @@ impl MainOpt {
             if self.dump_all {
                 self.pool_all_thread()
             } else {
-                self.pool_select(&cpuid_pool())
+                self.select_pool(&cpuid_pool())
             },
         ].concat();
 

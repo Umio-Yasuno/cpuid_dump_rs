@@ -19,9 +19,9 @@ impl ParseIntel for CpuidResult {
         let eax = self.eax;
 
         let core_type = match eax >> 24 {
-            0x10 => "Reserved 1",
+            0x10 => "Reserved_1",
             0x20 => "Atom",
-            0x30 => "Reserved 2",
+            0x30 => "Reserved_2",
             0x40 => "Core",
             _    => "",
         }.to_string();
