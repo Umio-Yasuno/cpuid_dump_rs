@@ -167,7 +167,7 @@ pub const FTR_AMD_80_08_EBX_X0: &[&str] = &[
     "PSFD", "", "", "BranchSampling"
 ];
 
-pub const FTR_AMD_80_0A_EBX_X0: &[&str] = &[
+pub const FTR_AMD_80_0A_EDX_X0: &[&str] = &[
     "NestedPage", "LbrVirt", "SvmLock", "NRIP Save",
     "TscRateMsr", "VmcbClean", "FlushByAsid", "DecodeAssists",
     "", "", "PauseFilter", "",
