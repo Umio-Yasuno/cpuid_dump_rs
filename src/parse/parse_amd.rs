@@ -217,7 +217,7 @@ impl ParseAMD for CpuidResult {
     }
 
     fn rev_id_amd_80_0ah(&self) -> String {
-        align_mold_ftr(&str_detect_ftr(self.edx, FTR_AMD_80_0A_EBX_X0))
+        align_mold_ftr(&str_detect_ftr(self.ebx, FTR_AMD_80_0A_EBX_X0))
     }
 
     fn fpu_width_amd_80_1ah(&self) -> String {
