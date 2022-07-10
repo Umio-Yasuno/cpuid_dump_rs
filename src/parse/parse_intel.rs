@@ -30,38 +30,76 @@ impl ParseIntel for CpuidResult {
     }
 
     fn v2_ext_topo_intel_1fh(&self) -> String {
-        let topo = IntelExtTopo::dec(self);
-        return format!(" [{}]", topo.level_type_string);
+        return IntelExtTopo::dec(self).disp();
+    }
+}
+
+#[repr(u8)]
+enum IntelLevelType {
+    Invalid,
+    SMT,
+    Core,
+    Module,
+    Tile,
+    Die,
+}
+
+impl IntelLevelType {
+    fn from_reg(reg: u8) -> Self {
+        match reg {
+            0x1 => Self::SMT,
+            0x2 => Self::Core,
+            0x3 => Self::Module,
+            0x4 => Self::Tile,
+            0x5 => Self::Die,
+            0x0 |
+            _ => Self::Invalid,
+        }
+    }
+}
+
+use std::fmt;
+impl fmt::Display for IntelLevelType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::SMT => write!(f, "SMT"),
+            Self::Core => write!(f, "Core"),
+            Self::Module => write!(f, "Module"),
+            Self::Tile => write!(f, "Tile"),
+            Self::Die => write!(f, "Die"),
+            Self::Invalid => write!(f, "Invalid"),
+        }
     }
 }
 
 #[allow(dead_code)]
 struct IntelExtTopo {
-    //  x2apic_id: u32,
-    level_number: u32,
-    level_type: u32,
-    level_type_string: String,
+    next_level: u32,
+    x2apic_id: u32,
+    level_type: IntelLevelType,
 }
 
 impl IntelExtTopo {
     fn dec(cpuid: &CpuidResult) -> IntelExtTopo {
-
-        let level_number = cpuid.ecx & 0xFF;
-        let level_type = (cpuid.ecx >> 8) & 0xFF;
-        let level_type_string = match level_type {
-            // 0x0 => "Invalid",
-            0x1 => "SMT",
-            0x2 => "Core",
-            0x3 => "Module",
-            0x4 => "Tile",
-            0x5 => "Die",
-            _ => "", /* Invalid or Reserved */
-        }.to_string();
+        let next_level = cpuid.eax & 0xF;
+        let x2apic_id = cpuid.edx;
+        let level_type = {
+            let reg = (cpuid.ecx >> 8) & 0xFF;
+            IntelLevelType::from_reg(reg as u8)
+        };
 
         IntelExtTopo {
-            level_number,
+            next_level,
+            x2apic_id,
             level_type,
-            level_type_string,
         }
+    }
+
+    fn disp(&self) -> String {
+        return [
+            format!(" [{}]", self.level_type.to_string()),
+            padln!(),
+            format!(" [x2APIC ID: {}]", self.x2apic_id),
+        ].concat();
     }
 }
