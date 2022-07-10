@@ -23,14 +23,10 @@ impl ParseIntel for CpuidResult {
             0x20 => "Atom",
             0x30 => "Reserved_2",
             0x40 => "Core",
-            _    => "",
-        }.to_string();
-
-        return if core_type.len() != 0 {
-            format!(" [{}]", core_type)
-        } else {
-            core_type.to_string()
+            _    => return "".to_string(),
         };
+
+        return format!(" [{}]", core_type);
     }
 
     fn v2_ext_topo_intel_1fh(&self) -> String {
