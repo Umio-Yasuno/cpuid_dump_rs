@@ -241,6 +241,7 @@ impl CpuCoreCount {
         let phy_core = total_thread / thread_per_core;
         let apic_id = (lf_01h.ebx >> 24) & 0xFF;
         // TODO: CoreID for Intel CPU
+        // arch/x86/kernel/cpu/topology.c
         let core_id = lf_80_1eh.ebx & 0xFF;
 
         CpuCoreCount {
