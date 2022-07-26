@@ -20,8 +20,6 @@ mod load_file;
 pub use crate::load_file::*;
 */
 
-const VERSION: f32 = 0.1;
-
 fn cpuid_pool() -> Vec<RawCpuid> {
     let mut pool: Vec<RawCpuid> = Vec::with_capacity(64);
 
@@ -73,7 +71,7 @@ fn cpuid_pool() -> Vec<RawCpuid> {
 }
 
 fn version_head() -> String {
-    format!("CPUID Dump v{VERSION:.1}\n")
+    format!("CPUID Dump {}\n", env!("CARGO_PKG_VERSION"))
 }
 
 fn hex_head() -> String {
@@ -178,8 +176,10 @@ impl MainOpt {
     }
 
     fn help_msg() {
+        let version = version_head();
+
         print!("\n\
-            cpuid_dump v{VERSION:.1}\n\
+            {version}\
             https://github.com/Umio-Yasuno/cpuid_dump_rs\n\
             \n\
             USAGE:\n\
