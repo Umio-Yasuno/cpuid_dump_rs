@@ -19,7 +19,7 @@ impl Reg {
         Reg(reg)
     }
 
-    pub fn to_bit_array(&self) -> [u8; 32] {
+    fn to_bit_array(&self) -> [u8; 32] {
         let mut array = [0u8; 32];
 
         for (pos, v) in array.iter_mut().enumerate() {
