@@ -44,11 +44,9 @@ impl TlbInfo {
             assoc: reg >> offset.trailing_ones(),
         }
     }
-}
 
-impl fmt::Display for TlbInfo {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:>4}_entry, {:>3}_way", self.size, self.assoc)
+    fn print_entry_way(&self) -> String {
+        format!("{:>4}_entry, {:>3}_way", self.size, self.assoc)
     }
 }
 
@@ -84,11 +82,11 @@ impl Tlb {
 
         return [
             padln!(),
-            format!(" [{}TLB 4K: {}", self.type_, self.page_4k),
+            format!(" [{}TLB 4K: {}", self.type_, self.page_4k.print_entry_way()),
             padln!(),
-            format!("{pad} 2M: {}", self.page_2m),
+            format!("{pad} 2M: {}", self.page_2m.print_entry_way()),
             padln!(),
-            format!("{pad} 4M: {}]", self.page_4m),
+            format!("{pad} 4M: {}]", self.page_4m.print_entry_way()),
         ].concat();
     }
 }
@@ -126,14 +124,15 @@ impl ParseAMD for CpuidResult {
 
     fn l1l2tlb_1g_amd_80_19h(&self) -> String {
         let [eax, ebx] = [self.eax, self.ebx];
+
         /* Inst TLB number of entries for 1-GB pages, size: Bit00-11, assoc: Bit12-15 */
         /* Data TLB number of entries for 1-GB pages, size: Bit16-27, assoc: Bit28-31 */
-
-        let l1dtlb = TlbInfo::from_reg((eax >> 16) as u16, 0xFFF);
-        let l1itlb = TlbInfo::from_reg((eax & 0xFFFF) as u16, 0xFFF);
-
-        let l2dtlb = TlbInfo::from_reg((ebx >> 16) as u16, 0xFFF);
-        let l2itlb = TlbInfo::from_reg((ebx & 0xFFFF) as u16, 0xFFF);
+        let [l1dtlb, l1itlb, l2dtlb, l2itlb] = [
+            TlbInfo::from_reg((eax >> 16) as u16, 0xFFF),
+            TlbInfo::from_reg((eax & 0xFFFF) as u16, 0xFFF),
+            TlbInfo::from_reg((ebx >> 16) as u16, 0xFFF),
+            TlbInfo::from_reg((ebx & 0xFFFF) as u16, 0xFFF),
+        ].map(|tlbinfo| tlbinfo.print_entry_way());
 
         return [
             format!(" [L1dTLB 1G: {}]", l1dtlb),
