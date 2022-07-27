@@ -77,8 +77,7 @@ fn version_head() -> String {
 fn hex_head() -> String {
     const HEAD: &str = "  {LEAF}_x{SUB}:  (out)EAX   (out)EBX   (out)ECX   (out)EDX";
 
-    format!("{}\n{}\n",
-        HEAD,
+    format!("{HEAD}\n{}\n",
         "=".repeat(TOTAL_WIDTH)
     )
 }
@@ -402,7 +401,7 @@ impl MainOpt {
             Arc::new(cpuid_pool())
         };
 
-        let v_0 = {
+        let main_pool = {
             let mut tmp: Vec<u8> = Vec::with_capacity(16384 * cpu_list.len());
             tmp.extend(core_thread_head(cpu_list[0]).into_bytes());
             tmp.extend(opt_0.select_pool(&first_pool));
@@ -412,8 +411,8 @@ impl MainOpt {
 
         for i in &cpu_list[1..] {
             let i = *i;
-            let v_1 = Arc::clone(&v_0);
-            let opt_1 = Arc::clone(&opt_0);
+            let main_pool = Arc::clone(&main_pool);
+            let opt = Arc::clone(&opt_0);
             let first_pool = Arc::clone(&first_pool);
 
             thread::spawn(move || {
@@ -432,16 +431,16 @@ impl MainOpt {
                 /* for simulator, like Intel SDE */
                 if diff.is_empty() { return }
 
-                let pool = opt_1.select_pool(&diff);
+                let pool = opt.select_pool(&diff);
 
-                let mut v_1 = v_1.lock().unwrap();
+                let mut main_pool = main_pool.lock().unwrap();
 
-                v_1.extend(ct_head);
-                v_1.extend(pool);
+                main_pool.extend(ct_head);
+                main_pool.extend(pool);
             }).join().unwrap();
         }
 
-        return Arc::try_unwrap(v_0).unwrap().into_inner().unwrap();
+        return Arc::try_unwrap(main_pool).unwrap().into_inner().unwrap();
     }
 
     fn dump(&self) {

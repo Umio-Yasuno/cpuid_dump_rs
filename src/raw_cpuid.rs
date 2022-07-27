@@ -16,7 +16,12 @@ impl RawCpuid {
         }
     }
 
-    pub fn zero() -> Self {
+    pub fn check_result_zero(&self) -> bool {
+        self.result == CpuidResult { eax: 0x0, ebx: 0x0, ecx: 0x0, edx: 0x0 }
+    }
+
+/*
+    fn zero() -> Self {
         Self {
             leaf: 0x0,
             sub_leaf: 0x0,
@@ -26,14 +31,10 @@ impl RawCpuid {
         }
     }
 
-    pub fn check_result_zero(&self) -> bool {
-        self.result == CpuidResult { eax: 0x0, ebx: 0x0, ecx: 0x0, edx: 0x0 }
-    }
-
-    pub fn check_all_zero(&self) -> bool {
+    fn check_all_zero(&self) -> bool {
         *self == Self::zero()
     }
-
+*/
     fn parse(&self, vendor: &VendorFlag) -> String {
         let parse_result: String = match self.leaf {
             0x0 => self.result.vendor_00_00h(),
@@ -154,8 +155,8 @@ impl RawCpuid {
             self.result.edx,
         ].map(|reg| separate(reg));
 
-        format!("  0x{leaf:08X}_x{sub_leaf:1X}:  {eax}  {ebx} \n{} {ecx}  {edx} \n",
-            " ".repeat(17),
-        )
+        let pad = " ".repeat(17);
+
+        format!("  0x{leaf:08X}_x{sub_leaf:1X}:  {eax}  {ebx} \n{pad} {ecx}  {edx} \n")
     }
 }
