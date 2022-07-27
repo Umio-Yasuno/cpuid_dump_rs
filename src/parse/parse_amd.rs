@@ -128,11 +128,13 @@ impl ParseAMD for CpuidResult {
         /* Inst TLB number of entries for 1-GB pages, size: Bit00-11, assoc: Bit12-15 */
         /* Data TLB number of entries for 1-GB pages, size: Bit16-27, assoc: Bit28-31 */
         let [l1dtlb, l1itlb, l2dtlb, l2itlb] = [
-            TlbInfo::from_reg((eax >> 16) as u16, 0xFFF),
-            TlbInfo::from_reg((eax & 0xFFFF) as u16, 0xFFF),
-            TlbInfo::from_reg((ebx >> 16) as u16, 0xFFF),
-            TlbInfo::from_reg((ebx & 0xFFFF) as u16, 0xFFF),
-        ].map(|tlbinfo| tlbinfo.print_entry_way());
+            (eax >> 16),
+            (eax & 0xFFFF),
+            (ebx >> 16),
+            (ebx & 0xFFFF),
+        ].map(|reg|
+            TlbInfo::from_reg(reg as u16, 0xFFF).print_entry_way()
+        );
 
         return [
             format!(" [L1dTLB 1G: {}]", l1dtlb),
