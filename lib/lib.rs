@@ -23,6 +23,10 @@ pub use proc_name::*;
 mod cache_prop;
 pub use cache_prop::*;
 
+#[path = "./intel_ext_topo.rs"]
+mod intel_ext_topo;
+pub use intel_ext_topo::*;
+
 pub mod cpuid_macro;
 
 pub const _AX: u32 = 0x8000_0000;
