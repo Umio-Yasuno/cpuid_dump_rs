@@ -145,7 +145,7 @@ impl MainOpt {
             dump_all: false,
             save: SaveOpt {
                 flag: false,
-                path: format!("{}.txt", libcpuid_dump::ProcName::get_trim_name().replace(" ", "_")),
+                path: Self::init_name(),
             },
             // load: (false, "cpuid_dump.txt".to_string()),
             only_leaf: OnlyLeaf {
@@ -156,6 +156,14 @@ impl MainOpt {
             skip_zero: true,
             bin_fmt: false,
         }
+    }
+
+    fn init_name() -> String {
+        let proc_name = libcpuid_dump::ProcName::get_trim_name().replace(" ", "_");
+        /* Family, Model, Stepping */
+        let fms = cpuid!(0x1, 0x0).eax;
+
+        format!("{proc_name}_{fms:X}.txt")
     }
 
     fn parse_value(raw_value: String, msg: &str) -> u32 {

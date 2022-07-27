@@ -28,9 +28,9 @@ OPTIONS:
 ```
 
 ## Dump Results
- * [AMD Ryzen 5 2600](./dump_result/AMD_Ryzen_5_2600_00800F82h.txt)
- * [AMD Ryzen 5 5600G with Radeon Graphics](./dump_result/AMD_Ryzen_5_5600G_with_Radeon_Graphics.txt)
- * [AMD Ryzen 5 5600G with Radeon Graphics (bin fmt)](./dump_result/AMD_Ryzen_5_5600G_with_Radeon_Graphics_bin.txt)
+ * [AMD_Ryzen_5_2600_00800F82h](./dump_result/AMD_Ryzen_5_2600_00800F82h.txt)
+ * [AMD_Ryzen_5_5600G_with_Radeon_Graphics](./dump_result/AMD_Ryzen_5_5600G_with_Radeon_Graphics.txt)
+ * [AMD_Ryzen_5_5600G_with_Radeon_Graphics (bin fmt)](./dump_result/AMD_Ryzen_5_5600G_with_Radeon_Graphics_bin.txt)
 
 ## Document
 ### Rust
