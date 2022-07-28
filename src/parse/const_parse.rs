@@ -1,8 +1,3 @@
-pub const INPUT_WIDTH: usize = "  0x00000000_x0: ".len();
-pub const OUTPUT_WIDTH: usize = "0x00000000 ".len() * 4;
-pub const PARSE_WIDTH: usize = 36;
-pub const TOTAL_WIDTH: usize = PARSE_WIDTH + INPUT_WIDTH + OUTPUT_WIDTH;
-
 /** FTR_{leaf first 2}_{leaf last 2}_{register}_{sub-leaf}
     Bit00-03
     Bit04-07

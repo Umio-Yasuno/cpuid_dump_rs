@@ -6,6 +6,11 @@ use core::arch::x86_64::CpuidResult;
 // extern crate libcpuid_dump;
 use libcpuid_dump::{cpuid, Vendor, VendorFlag, _AX};
 
+pub const INPUT_WIDTH: usize = "  0x00000000_x0: ".len();
+pub const OUTPUT_WIDTH: usize = "0x00000000 ".len() * 4;
+pub const PARSE_WIDTH: usize = 36;
+pub const TOTAL_WIDTH: usize = PARSE_WIDTH + INPUT_WIDTH + OUTPUT_WIDTH;
+
 #[path = "./parse_mod.rs"]
 mod parse_mod;
 pub use crate::parse_mod::*;

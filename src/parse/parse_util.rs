@@ -5,12 +5,12 @@ pub const PAD_WIDTH: usize = INPUT_WIDTH + OUTPUT_WIDTH + 1;
 
 #[macro_export]
 macro_rules! pad {
-    () => { " ".repeat(PAD_WIDTH) };
+    () => { &[" "; PAD_WIDTH].concat() };
 }
 
 #[macro_export]
 macro_rules! padln {
-    () => { format!("\n{}", pad!()) };
+    () => { "\n".to_owned() + pad!() };
 }
 
 pub struct Reg(u32);
