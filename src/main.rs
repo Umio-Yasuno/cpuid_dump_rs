@@ -163,6 +163,7 @@ impl MainOpt {
         /* Family, Model, Stepping */
         let fms = cpuid!(0x1, 0x0).eax;
 
+        /* like "AMD_Ryzen_5_5600G_with_Radeon_Graphics_A50F00.txt" */
         format!("{proc_name}_{fms:X}.txt")
     }
 
