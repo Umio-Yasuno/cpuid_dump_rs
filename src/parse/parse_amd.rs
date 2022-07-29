@@ -81,11 +81,11 @@ impl Tlb {
         let pad = " ".repeat(8);
 
         return [
-            padln!(),
+            lnpad!(),
             format!(" [{}TLB 4K: {}", self.type_, self.page_4k.print_entry_way()),
-            padln!(),
+            lnpad!(),
             format!("{pad} 2M: {}", self.page_2m.print_entry_way()),
-            padln!(),
+            lnpad!(),
             format!("{pad} 4M: {}]", self.page_4m.print_entry_way()),
         ].concat();
     }
@@ -138,11 +138,11 @@ impl ParseAMD for CpuidResult {
 
         return [
             format!(" [L1dTLB 1G: {}]", l1dtlb),
-            padln!(),
+            lnpad!(),
             format!(" [L1iTLB 1G: {}]", l1itlb),
-            padln!(),
+            lnpad!(),
             format!(" [L2dTLB 1G: {}]", l2dtlb),
-            padln!(),
+            lnpad!(),
             format!(" [L2iTLB 1G: {}]", l2itlb),
         ].concat();
     }
@@ -156,9 +156,9 @@ impl ParseAMD for CpuidResult {
 
         return [
             format!(" [Core ID: {core_id}]"),
-            padln!(),
+            lnpad!(),
             format!(" [Thread(s) per core: {th_per_core}]"),
-            padln!(),
+            lnpad!(),
             format!(" [Node ID: {node_id}]"),
         ].concat();
     }
@@ -243,7 +243,7 @@ impl ParseAMD for CpuidResult {
         let reduction_size = (self.ebx >> 6) & 0x3F;
 
         if 0 < reduction_size {
-            format!("{} [MemEncryptPhysAddWidth: {reduction_size}-bits]", padln!())
+            format!("{} [MemEncryptPhysAddWidth: {reduction_size}-bits]", lnpad!())
         } else {
             "".to_string()
         }

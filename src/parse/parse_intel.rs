@@ -34,7 +34,7 @@ impl ParseIntel for CpuidResult {
 
         return [
             format!(" [{}]", topo.level_type.to_string()),
-            padln!(),
+            lnpad!(),
             format!(" [x2apic id: {}]", topo.x2apic_id),
         ].concat();
     }

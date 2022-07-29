@@ -4,19 +4,19 @@ use std::fmt::Write;
 pub const PAD_WIDTH: usize = INPUT_WIDTH + OUTPUT_WIDTH + 1;
 // pub const PAD: &str = unsafe { std::str::from_utf8_unchecked(&[b' '; PAD_WIDTH]) };
 
-const fn pad_ln() -> [u8; PAD_WIDTH+1] {
+const fn ln_pad() -> [u8; PAD_WIDTH+1] {
     let mut tmp = [b' '; PAD_WIDTH+1];
     tmp[0] = b'\n';
 
     return tmp;
 }
 
-pub const PAD_LN: &str = unsafe { std::str::from_utf8_unchecked(&pad_ln()) };
+pub const LN_PAD: &str = unsafe { std::str::from_utf8_unchecked(&ln_pad()) };
 
 #[macro_export]
-macro_rules! padln {
+macro_rules! lnpad {
     () => {
-        PAD_LN.to_string()
+        LN_PAD.to_string()
     };
 }
 
@@ -66,7 +66,7 @@ pub fn align_mold_ftr(buff: &[String]) -> String {
     let mut inner: String;
 
     const DECO_LEN: usize = " []".len();
-    let pad = padln!();
+    let pad = lnpad!();
     
     for v in buff {
         let len = v.len() + DECO_LEN;

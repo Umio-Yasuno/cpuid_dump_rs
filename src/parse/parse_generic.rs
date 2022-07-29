@@ -30,13 +30,13 @@ impl ParseGeneric for CpuidResult {
 
         return [
             format!(" [F: 0x{:X}, M: 0x{:X}, S: 0x{:X}]", fms.syn_fam, fms.syn_mod, fms.step),
-            padln!(),
+            lnpad!(),
             format!(" [Codename: {}]", fms.codename()),
-            padln!(),
+            lnpad!(),
             format!(" [APIC ID: {apic_id}]"),
-            padln!(),
+            lnpad!(),
             format!(" [Total thread(s): {total_thread}]"),
-            padln!(),
+            lnpad!(),
             format!(" [CLFlush (Byte): {clflush_size}]"),
         ].concat();
     }
@@ -204,12 +204,12 @@ impl ParseGeneric for CpuidResult {
 
         return [
             format!(" [LevelType: {level_type_str} ({level_type_val:#x})]"),
-            padln!(),
+            lnpad!(),
             format!(" [NumProcAtThisLevel: {num_proc}]"),
-            padln!(),
+            lnpad!(),
             format!(" [CoreMaskWidth: {core_mask_width}]"),
             /*
-            padln!(),
+            lnpad!(),
             format!(" [ExtAPID_ID: {ext_local_apicid}]"),
             */
         ].concat();
@@ -221,7 +221,7 @@ impl ParseGeneric for CpuidResult {
 
             if !tmp.is_empty() {
                 format!(" [-XFEATURE Mask-]{}{}",
-                    padln!(), tmp)
+                    lnpad!(), tmp)
             } else {
                 tmp
             }
@@ -273,7 +273,7 @@ impl ParseGeneric for CpuidResult {
 
     fn addr_size_80_08h(&self) -> String {
         const LEN: usize = " [Address size:".len();
-        let pad = format!("{}{}", padln!(), " ".repeat(LEN));
+        let pad = format!("{}{}", lnpad!(), " ".repeat(LEN));
 
         let eax = self.eax;
         let p_size = eax & 0xFF;
@@ -299,7 +299,7 @@ impl ParseGeneric for CpuidResult {
                 cache.size / cache.size_unit_byte, &cache.size_unit_string[..1]),
             format!(" [Shared {}T]", cache.share_thread),
             if cache.inclusive {
-                format!("{} [Inclusive]", padln!())
+                format!("{} [Inclusive]", lnpad!())
             } else {
                 "".to_string()
             }
