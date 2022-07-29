@@ -78,15 +78,15 @@ impl Tlb {
     }
 
     fn disp(&self) -> String {
-        let pad = " ".repeat(8);
+        const PAD: &str = unsafe { std::str::from_utf8_unchecked(&[b' '; 8]) };
 
         return [
             lnpad!(),
             format!(" [{}TLB 4K: {}", self.type_, self.page_4k.print_entry_way()),
             lnpad!(),
-            format!("{pad} 2M: {}", self.page_2m.print_entry_way()),
+            format!("{PAD} 2M: {}", self.page_2m.print_entry_way()),
             lnpad!(),
-            format!("{pad} 4M: {}]", self.page_4m.print_entry_way()),
+            format!("{PAD} 4M: {}]", self.page_4m.print_entry_way()),
         ].concat();
     }
 }
@@ -243,7 +243,7 @@ impl ParseAMD for CpuidResult {
         let reduction_size = (self.ebx >> 6) & 0x3F;
 
         if 0 < reduction_size {
-            format!("{} [MemEncryptPhysAddWidth: {reduction_size}-bits]", lnpad!())
+            format!("{LN_PAD} [MemEncryptPhysAddWidth: {reduction_size}-bits]")
         } else {
             "".to_string()
         }

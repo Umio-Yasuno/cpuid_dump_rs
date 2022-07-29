@@ -155,8 +155,8 @@ impl RawCpuid {
             self.result.edx,
         ].map(|reg| separate(reg));
 
-        let pad = " ".repeat(17);
+        const PAD: &str = unsafe { std::str::from_utf8_unchecked(&[b' '; 17]) };
 
-        format!("  0x{leaf:08X}_x{sub_leaf:1X}:  {eax}  {ebx} \n{pad} {ecx}  {edx} \n")
+        format!("  0x{leaf:08X}_x{sub_leaf:1X}:  {eax}  {ebx} \n{PAD} {ecx}  {edx} \n")
     }
 }

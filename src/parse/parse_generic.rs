@@ -220,8 +220,7 @@ impl ParseGeneric for CpuidResult {
             let tmp = align_mold_ftr(&str_detect_ftr(eax, XFEATURE_MASK_00_0D_EAX_X0));
 
             if !tmp.is_empty() {
-                format!(" [-XFEATURE Mask-]{}{}",
-                    lnpad!(), tmp)
+                format!(" [-XFEATURE Mask-]{LN_PAD}{}", tmp)
             } else {
                 tmp
             }
@@ -273,7 +272,8 @@ impl ParseGeneric for CpuidResult {
 
     fn addr_size_80_08h(&self) -> String {
         const LEN: usize = " [Address size:".len();
-        let pad = format!("{}{}", lnpad!(), " ".repeat(LEN));
+        const PAD: &str = unsafe { std::str::from_utf8_unchecked(&[b' '; LEN]) };
+        let pad = format!("{LN_PAD}{PAD}");
 
         let eax = self.eax;
         let p_size = eax & 0xFF;
@@ -299,7 +299,7 @@ impl ParseGeneric for CpuidResult {
                 cache.size / cache.size_unit_byte, &cache.size_unit_string[..1]),
             format!(" [Shared {}T]", cache.share_thread),
             if cache.inclusive {
-                format!("{} [Inclusive]", lnpad!())
+                format!("{LN_PAD} [Inclusive]")
             } else {
                 "".to_string()
             }

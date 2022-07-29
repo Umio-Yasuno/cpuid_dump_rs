@@ -81,10 +81,9 @@ fn version_head() -> String {
 
 fn hex_head() -> String {
     const HEAD: &str = "  {LEAF}_x{SUB}:  (out)EAX   (out)EBX   (out)ECX   (out)EDX";
+    const LINE: &str = unsafe { std::str::from_utf8_unchecked(&[b'='; TOTAL_WIDTH]) };
 
-    format!("{HEAD}\n{}\n",
-        "=".repeat(TOTAL_WIDTH)
-    )
+    format!("{HEAD}\n{LINE}\n")
 }
 
 fn bin_head() -> String {
@@ -92,14 +91,12 @@ fn bin_head() -> String {
     const OUTPUT_LEN: usize = 35;
     const PAD_LEN: usize = (OUTPUT_LEN - "(out)EAX / (out)ECX".len()) / 2;
 
-    let p = " ".repeat(PAD_LEN - 1);
+    const PAD: &str = unsafe { std::str::from_utf8_unchecked(&[b' '; PAD_LEN-1]) };
+    const INPUT_LINE: &str = unsafe { std::str::from_utf8_unchecked(&[b'='; INPUT_LEN]) };
+    const OUTPUT_LINE: &str = unsafe { std::str::from_utf8_unchecked(&[b'='; OUTPUT_LEN]) };
 
-    let head = format!("  {{LEAF}}_x{{SUB}}:  {p} (out)EAX / (out)ECX {p} {p}  (out)EBX / (out)EDX");
-    let line = format!("{}  {}  {}",
-        "=".repeat(INPUT_LEN),
-        "=".repeat(OUTPUT_LEN),
-        "=".repeat(OUTPUT_LEN),
-    );
+    let head = format!("  {{LEAF}}_x{{SUB}}:  {PAD} (out)EAX / (out)ECX {PAD} {PAD}  (out)EBX / (out)EDX");
+    let line = format!("{INPUT_LINE}  {OUTPUT_LINE}  {OUTPUT_LINE}");
 
     format!("{head}\n{line}\n")
 }

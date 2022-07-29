@@ -66,7 +66,6 @@ pub fn align_mold_ftr(buff: &[String]) -> String {
     let mut inner: String;
 
     const DECO_LEN: usize = " []".len();
-    let pad = lnpad!();
     
     for v in buff {
         let len = v.len() + DECO_LEN;
@@ -75,7 +74,7 @@ pub fn align_mold_ftr(buff: &[String]) -> String {
             inner = format!(" [{v}]");
             rest -= len;
         } else {
-            inner = format!("{pad} [{v}]");
+            inner = format!("{LN_PAD} [{v}]");
             rest = if PARSE_WIDTH < len {
                 0
             } else {
