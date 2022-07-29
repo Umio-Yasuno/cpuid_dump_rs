@@ -1,4 +1,5 @@
 use crate::*;
+use libcpuid_dump::Vendor;
 
 pub trait ParseGeneric {
     fn vendor_00_00h(&self) -> String;
@@ -16,7 +17,7 @@ pub trait ParseGeneric {
 
 impl ParseGeneric for CpuidResult {
     fn vendor_00_00h(&self) -> String {
-        format!(" [{}]", Vendor::from_cpuid(self).name)
+        format!(" [{}]", Vendor::from_cpuid(self).get_name())
     }
 
     fn info_00_01h(&self) -> String {
@@ -169,7 +170,7 @@ impl ParseGeneric for CpuidResult {
 
     fn feature_00_07h_x1(&self) -> String {
         let eax = self.eax;
-        // https://github.com/torvalds/linux/commit/b85a0425d8056f3bd8d0a94ecdddf2a39d32a801
+        /* https://github.com/torvalds/linux/commit/b85a0425d8056f3bd8d0a94ecdddf2a39d32a801 */
         let mut v = [""; 32];
         {
             v[4] = "AVX_VNNI";
@@ -220,7 +221,7 @@ impl ParseGeneric for CpuidResult {
             let tmp = align_mold_ftr(&str_detect_ftr(eax, XFEATURE_MASK_00_0D_EAX_X0));
 
             if !tmp.is_empty() {
-                format!(" [-XFEATURE Mask-]{LN_PAD}{}", tmp)
+                format!(" [-XFEATURE Mask-]{LN_PAD}{tmp}")
             } else {
                 tmp
             }
@@ -295,8 +296,8 @@ impl ParseGeneric for CpuidResult {
 
         return [
             format!(" [L{}{},{:>3}_way,{:>4}_{}]",
-                cache.level, &cache.cache_type_string[..1], cache.way,
-                cache.size / cache.size_unit_byte, &cache.size_unit_string[..1]),
+                cache.level, &cache.cache_type.to_string()[..1], cache.way,
+                cache.size / cache.size_unit.to_byte(), &cache.size_unit.to_string()[..1]),
             format!(" [Shared {}T]", cache.share_thread),
             if cache.inclusive {
                 format!("{LN_PAD} [Inclusive]")

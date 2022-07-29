@@ -38,37 +38,6 @@ macro_rules! cpuid {
     };
 }
 
-#[macro_export]
-macro_rules! pin_thread {
-    ($cpu: expr) => {
-        #[cfg(unix)]
-        unsafe {
-            use libc::{
-                cpu_set_t, sched_getaffinity, sched_setaffinity,
-                CPU_ALLOC_SIZE, CPU_SET, CPU_ZERO
-            };
-
-            let mut set = std::mem::zeroed::<cpu_set_t>();
-            CPU_ZERO(&mut set);
-            CPU_SET($cpu, &mut set);
-
-            let status = sched_setaffinity(0, std::mem::size_of::<cpu_set_t>(), &set);
-            if status == -1 {
-                eprintln!("sched_setaffinity failed.");
-            }
-        }
-
-        #[cfg(windows)]
-        unsafe {
-            use windows::Win32::System::Threading::{
-                GetCurrentThread,
-                SetThreadAffinityMask,
-            };
-            SetThreadAffinityMask(GetCurrentThread(), 1 << $cpu);
-        }
-    };
-}
-
 pub fn pin_thread(cpu: usize) -> Result<(), i32> {
     #[cfg(unix)]
     unsafe {

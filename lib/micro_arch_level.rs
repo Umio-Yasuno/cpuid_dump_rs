@@ -74,6 +74,7 @@ impl MicroArchLevel {
             cpuid!(_AX+0x1, 0x0),
         ]
     }
+
     fn from_cpuid_array(cpuid_array: [CpuidResult; 3]) -> Self {
         let [cpuid_00_01, cpuid_00_07, cpuid_80_01] = cpuid_array;
 

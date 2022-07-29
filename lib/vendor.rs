@@ -4,9 +4,10 @@ pub struct Vendor {
     pub ebx: u32,
     pub ecx: u32,
     pub edx: u32,
-    pub name: String,
+//    pub name: String,
 }
 
+#[allow(dead_code)]
 impl Vendor {
     const AMD_EBX: u32 = 0x6874_7541;
     const AMD_ECX: u32 = 0x444D_4163;
@@ -18,55 +19,17 @@ impl Vendor {
     const INTEL_EDX: u32 = 0x6C65_746E;
     const INTEL_NAME_BYTE: [u8; 12] = *b"GenuineIntel";
 
-    fn name_to_string(byte: &[u8]) -> String {
-        String::from_utf8(byte.to_vec()).unwrap()
-    }
-    fn name_from_ebx(ebx: u32) -> String {
-        Self::name_to_string(
-            match ebx {
-                Self::AMD_EBX => &Self::AMD_NAME_BYTE,
-                Self::INTEL_EBX => &Self::INTEL_NAME_BYTE,
-                _ => b"Unknown",
-            }
-        )
-    }
     pub fn from_cpuid(cpuid: &CpuidResult) -> Vendor {
         Vendor {
             ebx: cpuid.ebx,
             ecx: cpuid.ecx,
             edx: cpuid.edx,
-            name: Self::name_from_ebx(cpuid.ebx),
         }
     }
     pub fn get() -> Vendor {
         Self::from_cpuid(&cpuid!(0x0, 0x0))
     }
-    pub fn get_name() -> String {
-        Self::get().name
-    }
-    pub fn amd() -> Vendor {
-        Vendor {
-            ebx: Self::AMD_EBX,
-            ecx: Self::AMD_ECX,
-            edx: Self::AMD_EDX,
-            name: Self::name_to_string(&Self::AMD_NAME_BYTE),
-        }
-    }
-    pub fn intel() -> Vendor {
-        Vendor {
-            ebx: Self::INTEL_EBX,
-            ecx: Self::INTEL_ECX,
-            edx: Self::INTEL_EDX,
-            name: Self::name_to_string(&Self::INTEL_NAME_BYTE),
-        }
-    }
-    pub fn check_amd(&self) -> bool {
-        self.ebx == Self::AMD_EBX
-    }
-    pub fn check_intel(&self) -> bool {
-        self.ebx == Self::INTEL_EBX
-    }
-    pub fn reg_to_name(ebx: u32, edx: u32, ecx: u32) -> String {
+    pub fn get_name(&self) -> String {
         let dec = |reg: u32| -> String {
             let tmp = reg.to_le_bytes().iter().map(|&byte|
                 if char::from(byte).is_control() { 0x20 } else { byte }
@@ -75,12 +38,18 @@ impl Vendor {
             String::from_utf8(tmp).unwrap()
         };
         let [ebx, edx, ecx] = [
-            ebx,
-            edx,
-            ecx,
+            self.ebx,
+            self.edx,
+            self.ecx,
         ].map(|reg| dec(reg) );
 
         format!("{ebx}{edx}{ecx}")
+    }
+    fn check_amd(&self) -> bool {
+        self.ebx == Self::AMD_EBX
+    }
+    fn check_intel(&self) -> bool {
+        self.ebx == Self::INTEL_EBX
     }
 }
 
@@ -90,31 +59,21 @@ pub struct VendorFlag {
 }
 
 impl VendorFlag {
-    pub fn check() -> VendorFlag {
+    pub fn check() -> Self {
         let vendor = Vendor::get();
         let amd = vendor.check_amd();
         let intel = vendor.check_intel() && !amd;
 
-        VendorFlag {
+        Self {
             amd,
             intel,
         }
     }
-    pub fn all_true() -> VendorFlag {
-        VendorFlag {
+
+    pub fn all_true() -> Self {
+        Self {
             amd: true,
             intel: true,
         }
     }
 }
-
-pub fn get_vendor_name() -> String {
-    Vendor::get().name
-}
-
-/*
-#[test]
-fn test_vendor_name() {
-    println!("Vendor Name: [{}]", Vendor::get_name());
-}
-*/

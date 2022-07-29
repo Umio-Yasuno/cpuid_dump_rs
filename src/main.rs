@@ -4,7 +4,7 @@
 use core::arch::x86_64::CpuidResult;
 
 // extern crate libcpuid_dump;
-use libcpuid_dump::{cpuid, Vendor, VendorFlag, _AX};
+use libcpuid_dump::{cpuid, VendorFlag, _AX};
 
 pub const INPUT_WIDTH: usize = "  0x00000000_x0: ".len();
 pub const OUTPUT_WIDTH: usize = "0x00000000 ".len() * 4;
@@ -350,7 +350,7 @@ impl MainOpt {
         } else {
             [
                 hex_head(),
-                raw_result.parse_fmt(&VendorFlag::all_true()),
+                raw_result.parse_fmt(&VendorFlag::check()),
             ]
         }.concat();
 

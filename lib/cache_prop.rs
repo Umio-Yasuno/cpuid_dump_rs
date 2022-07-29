@@ -1,6 +1,7 @@
 use crate::{CpuidResult};
 
-enum Unit {
+#[derive(Debug, PartialEq)]
+pub enum Unit {
     Byte,
     KiB,
     MiB,
@@ -12,7 +13,7 @@ impl Unit {
     pub const MIB_BYTE: u64 = 1 << 20;
     pub const GIB_BYTE: u64 = 1 << 30;
 
-    fn from_byte(size: u64) -> Unit {
+    pub fn from_byte(size: u64) -> Unit {
         if Self::GIB_BYTE < size {
             Self::GiB
         } else if Self::MIB_BYTE < size {
@@ -23,7 +24,7 @@ impl Unit {
             Self::Byte
         }
     }
-    fn to_byte(&self) -> u64 {
+    pub fn to_byte(&self) -> u64 {
         match self {
             Self::Byte => 1,
             Self::KiB => Self::KIB_BYTE,
@@ -56,7 +57,7 @@ pub enum CacheType {
 }
 
 impl CacheType {
-    pub fn from_reg(reg: u32) -> CacheType {
+    pub fn from_reg(reg: u32) -> Self {
         match reg {
             0x1 => Self::Data,
             0x2 => Self::Instruction,
@@ -80,15 +81,13 @@ impl fmt::Display for CacheType {
 #[derive(Debug, PartialEq)]
 pub struct CacheProp {
     pub cache_type: CacheType,
-    pub cache_type_string: String,
     pub level: u32,
     pub line_size: u32,
     pub way: u32,
     pub set: u32,
     pub size: u64,
+    pub size_unit: Unit,
     pub share_thread: u32,
-    pub size_unit_byte: u64,
-    pub size_unit_string: String,
     pub inclusive: bool,
 }
 
@@ -97,7 +96,6 @@ impl CacheProp {
         let [eax, ebx, ecx, edx] = [cpuid.eax, cpuid.ebx, cpuid.ecx, cpuid.edx];
 
         let cache_type = CacheType::from_reg(eax & 0x1F);
-        let cache_type_string = cache_type.to_string();
 
         let level = (eax >> 5) & 0b111;
         let line_size = (ebx & 0xFFF) + 1;
@@ -107,25 +105,19 @@ impl CacheProp {
 
         let share_thread = ((eax >> 14) & 0xFFF) + 1;
 
-        let (size_unit_byte, size_unit_string) = {
-            let unit = Unit::from_byte(size);
-
-            (unit.to_byte(), unit.to_string())
-        };
+        let size_unit = Unit::from_byte(size);
 
         let inclusive = (edx & 0b10) != 0;
 
         CacheProp {
             cache_type,
-            cache_type_string,
             level,
             line_size,
             way,
             set,
             size,
+            size_unit,
             share_thread,
-            size_unit_byte,
-            size_unit_string,
             inclusive,
         }
     }
@@ -145,20 +137,17 @@ fn test_cache_prop() {
 
     let test = {
         let cache_type = CacheType::Unified;
-        let cache_type_string = cache_type.to_string();
         let unit = Unit::MiB;
 
         CacheProp {
             cache_type,
-            cache_type_string,
             level: 3,
             line_size: 64,
             way: 16,
             set: 16384,
             size: 16 * unit.to_byte(),
+            size_unit: unit,
             share_thread: 12,
-            size_unit_byte: unit.to_byte(),
-            size_unit_string: unit.to_string(),
             inclusive: false,
         }
     };
@@ -166,8 +155,8 @@ fn test_cache_prop() {
     assert_eq!(cache, test);
 
     println!("CacheProp: [L{} {}, {:>3}-way, {:>4}-{}]",
-        cache.level, cache.cache_type_string, cache.way,
-        cache.size / cache.size_unit_byte, cache.size_unit_string);
+        cache.level, cache.cache_type, cache.way,
+        cache.size / cache.size_unit.to_byte(), cache.size_unit);
     println!("CacheProp: [Shared {}T] [Inclusive: {}]",
         cache.share_thread, cache.inclusive);
 }
