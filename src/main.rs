@@ -409,15 +409,19 @@ impl MainOpt {
 
         let cpu_list = libcpuid_dump::cpu_set_list().unwrap();
 
-        let first_pool = {
-            libcpuid_dump::pin_thread(cpu_list[0]).unwrap();
+        let (first_pool, ct_head) = {
+            let cpu = cpu_list[0];
+            libcpuid_dump::pin_thread(cpu).unwrap();
 
-            Arc::new(cpuid_pool())
+            (
+                Arc::new(cpuid_pool()),
+                core_thread_head(cpu),
+            )
         };
 
         let main_pool = {
             let mut tmp: Vec<u8> = Vec::with_capacity(16384 * cpu_list.len());
-            tmp.extend(core_thread_head(cpu_list[0]).into_bytes());
+            tmp.extend(ct_head.into_bytes());
             tmp.extend(opt_0.select_pool(&first_pool));
 
             Arc::new(Mutex::new(tmp))

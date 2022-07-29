@@ -2,11 +2,22 @@ use crate::*;
 use std::fmt::Write;
 
 pub const PAD_WIDTH: usize = INPUT_WIDTH + OUTPUT_WIDTH + 1;
-pub const PAD: &str = unsafe { std::str::from_utf8_unchecked(&[b' '; PAD_WIDTH]) };
+// pub const PAD: &str = unsafe { std::str::from_utf8_unchecked(&[b' '; PAD_WIDTH]) };
+
+const fn pad_ln() -> [u8; PAD_WIDTH+1] {
+    let mut tmp = [b' '; PAD_WIDTH+1];
+    tmp[0] = b'\n';
+
+    return tmp;
+}
+
+pub const PAD_LN: &str = unsafe { std::str::from_utf8_unchecked(&pad_ln()) };
 
 #[macro_export]
 macro_rules! padln {
-    () => { ["\n", PAD].concat() };
+    () => {
+        PAD_LN.to_string()
+    };
 }
 
 pub struct Reg(u32);
