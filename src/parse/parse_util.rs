@@ -2,21 +2,22 @@ use crate::*;
 use std::fmt::Write;
 
 pub const PAD_WIDTH: usize = INPUT_WIDTH + OUTPUT_WIDTH + 1;
+pub const PAD_ARRAY: &str = unsafe { std::str::from_utf8_unchecked(&[b' '; PAD_WIDTH]) };
 
 #[macro_export]
 macro_rules! pad {
-    () => { &[" "; PAD_WIDTH].concat() };
+    () => { PAD_ARRAY };
 }
 
 #[macro_export]
 macro_rules! padln {
-    () => { "\n".to_owned() + pad!() };
+    () => { ["\n", pad!()].concat() };
 }
 
 pub struct Reg(u32);
 impl Reg {
-    pub fn new(reg: u32) -> Reg {
-        Reg(reg)
+    pub fn new(reg: u32) -> Self {
+        Self(reg)
     }
 
     fn to_bit_array(&self) -> [u8; 32] {
