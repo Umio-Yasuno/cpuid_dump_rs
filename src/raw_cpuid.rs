@@ -19,7 +19,6 @@ impl RawCpuid {
     pub fn check_result_zero(&self) -> bool {
         self.result == CpuidResult { eax: 0x0, ebx: 0x0, ecx: 0x0, edx: 0x0 }
     }
-
 /*
     fn zero() -> Self {
         Self {
@@ -113,7 +112,7 @@ impl RawCpuid {
         return format!("{parse_result}\n");
     }
 
-    pub fn result(&self, end_str: &str) -> String {
+    fn result(&self, end_str: &str) -> String {
         format!("  0x{:08X}_x{:1X}:  0x{:08X} 0x{:08X} 0x{:08X} 0x{:08X} {}",
             self.leaf, self.sub_leaf,
             self.result.eax, self.result.ebx, self.result.ecx, self.result.edx,

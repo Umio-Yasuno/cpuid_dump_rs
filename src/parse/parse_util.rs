@@ -1,7 +1,7 @@
 use crate::*;
 use std::fmt::Write;
 
-pub const PAD_WIDTH: usize = INPUT_WIDTH + OUTPUT_WIDTH + 1;
+const PAD_WIDTH: usize = INPUT_WIDTH + OUTPUT_WIDTH + 1;
 // pub const PAD: &str = unsafe { std::str::from_utf8_unchecked(&[b' '; PAD_WIDTH]) };
 
 const fn ln_pad() -> [u8; PAD_WIDTH+1] {
@@ -51,7 +51,7 @@ pub fn str_detect_ftr(reg: u32, ftr_str: &[&str]) -> Vec<String> {
     let reg = Reg::new(reg).to_bool_array();
     let mut buff: Vec<String> = Vec::with_capacity(32);
 
-    for (r, ftr) in reg.iter().zip(&ftr_str[..]) {
+    for (r, ftr) in reg.iter().zip(ftr_str.iter()) {
         if *r && 0 < ftr.len() {
             buff.push(ftr.to_string());
         }

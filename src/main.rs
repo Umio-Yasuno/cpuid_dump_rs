@@ -76,7 +76,9 @@ fn cpuid_pool() -> Vec<RawCpuid> {
 }
 
 fn version_head() -> String {
-    format!("CPUID Dump {}\n", env!("CARGO_PKG_VERSION"))
+    const VER: &str = env!("CARGO_PKG_VERSION");
+
+    format!("CPUID Dump {VER}\n")
 }
 
 fn hex_head() -> String {
@@ -219,7 +221,7 @@ impl MainOpt {
         \n");
     }
 
-    pub fn main_parse() -> Self {
+    fn main_parse() -> Self {
         let mut opt = MainOpt::init();
         let mut skip = false;
 
