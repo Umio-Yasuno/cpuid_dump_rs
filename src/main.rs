@@ -45,12 +45,12 @@ pub use crate::load_file::*;
 ///    let parsed_pool: &[u8];
 ///    cpuid_parse: {
 ///        for raw_cpuid in cpuid_pool {
-///            let cpuid_parsed: String = raw_cpuid.result.parse();
+///            let cpuid_parsed: String = raw_cpuid.parse();
 ///            parsed_pool.extend(cpuid_parsed.into_bytes());
 ///        }
 ///    }
 ///            |
-///    dump_write(parsed_pool) // stdout write
+///    dump_write(parsed_pool) // print, write stdout
 ///    
 
 fn cpuid_pool() -> Vec<RawCpuid> {
