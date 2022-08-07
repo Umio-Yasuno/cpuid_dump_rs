@@ -60,44 +60,44 @@ fn cpuid_pool() -> Vec<RawCpuid> {
     let mut pool: Vec<RawCpuid> = Vec::with_capacity(64);
 
     /* Base */
-    for leaf in 0x0..=0xC {
+    for leaf in 0x0..=0xD {
         match leaf {
             /* Cache Properties, Intel */
             0x4 => for sub_leaf in 0..=4 {
-                pool.push(RawCpuid::exe(leaf, sub_leaf));
+                pool.push(RawCpuid::exe(leaf, sub_leaf))
             },
             0x7 => for sub_leaf in 0..=2 {
-                pool.push(RawCpuid::exe(leaf, sub_leaf));
+                pool.push(RawCpuid::exe(leaf, sub_leaf))
             },
             /* Extended Topology Enumeration, Intel, AMD Family19h <= */
             0xB => for sub_leaf in 0..=2 {
-                pool.push(RawCpuid::exe(leaf, sub_leaf));
+                pool.push(RawCpuid::exe(leaf, sub_leaf))
+            },
+            /* 0xD: Processor Extended State Enumeration */
+            0xD => for sub_leaf in [0x0, 0x1, 0x2, 0x9, 0xB, 0xC] {
+                pool.push(RawCpuid::exe(leaf, sub_leaf))
             },
             _ => pool.push(RawCpuid::exe(leaf, 0x0)),
         }
     }
 
-    /* 0xD: Processor Extended State Enumeration */
-    for sub_leaf in [0x0, 0x1, 0x2, 0x9, 0xB, 0xC] {
-        pool.push(RawCpuid::exe(0xD, sub_leaf));
-    }
-
     /* 0x1F: V2 Extended Topology Enumeration Leaf, Intel */
     for sub_leaf in 0..6 {
-        pool.push(RawCpuid::exe(0x1F, sub_leaf));
+        pool.push(RawCpuid::exe(0x1F, sub_leaf))
     }
 
     /* Ext */
     for leaf in _AX+0x0..=_AX+0xA {
-        pool.push(RawCpuid::exe(leaf, 0x0));
+        pool.push(RawCpuid::exe(leaf, 0x0))
     }
+
     for leaf in _AX+0x19..=_AX+0x21 {
         /* Cache Properties, AMD, same format as Intel Leaf:0x4 */
         const LF_80_1D: u32 = _AX + 0x1D;
 
         match leaf {
             LF_80_1D => for sub_leaf in 0x0..=0x4 {
-                pool.push(RawCpuid::exe(leaf, sub_leaf));
+                pool.push(RawCpuid::exe(leaf, sub_leaf))
             },
             _ => pool.push(RawCpuid::exe(leaf, 0x0)),
         }
