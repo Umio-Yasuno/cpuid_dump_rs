@@ -242,8 +242,8 @@ impl MainOpt {
             \x20    --l <u32>, --leaf <u32>\n\
             \x20        Display result only for the specified value, the value is Leaf/InputEAX <u32>.\n\
             \x20        e.g. --leaf 1, --leaf 0x8000_0008,\n\
-            \x20    --sub_leaf <u32>, --sub-leaf <u32>\n\
-            \x20        Display result only for the specified value, the value is Sub-Leaf/InputECX <u32>.\n\
+            \x20    --sub_leaf <u32>, --subleaf <u32>\n\
+            \x20        Display result only for the specified value, the value is Sub_Leaf/InputECX <u32>.\n\
             \x20    --pin <usize>, --pin_threads <usize>\n\
             \x20        Display result for the specified thread.\n\
             \x20    --s <path/filename>, --save <path/filename>\n\
@@ -321,13 +321,13 @@ impl MainOpt {
                         _ => continue,
                     };
                 },
-                "sub-leaf" | "sub_leaf" => {
+                "subleaf" | "sub_leaf" => {
                     if !opt.only_leaf.flag {
                         eprintln!("Please \"--leaf <u32>\" argument");
                         continue;
                     }
                     opt.only_leaf.sub_leaf = match args.get(idx+1) {
-                        Some(v) => Self::parse_value(v.to_string(), "sub-leaf"),
+                        Some(v) => Self::parse_value(v.to_string(), "sub_leaf"),
                         _ => continue,
                     };
                 }
