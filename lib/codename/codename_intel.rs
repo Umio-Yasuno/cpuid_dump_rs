@@ -105,11 +105,11 @@ pub fn fam06h(m: u32, s: u32) -> Self {
 
         /* https://edc.intel.com/content/www/us/en/design/ipla/software-development-platforms/client/platforms/alder-lake-desktop/12th-generation-intel-core-processors-datasheet-volume-1-of-2/005/cpuid/ */
         0x97 => Self::info( &format!("Alder Lake-S (Desktop){}", match s {
+            0x0 => " (A0, ES)",
+            0x1 => " (B0, ES)",
             0x2 => " (C0, ES/QS, 8+8)",
+            0x4 => " (G0, ES)",
             0x5 => " (H0, 6+0)",
-            0x0 |
-            0x1 |
-            0x4 => " (ES)",
             _   => "",
         }), "Golden Cove + Gracemont", "Intel 7 /10 nm eSF"),
 
