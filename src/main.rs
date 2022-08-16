@@ -143,8 +143,8 @@ fn core_thread_head(thread_id: usize) -> String {
 */
 fn topo_info_head() -> String {
     let topo_info = match libcpuid_dump::TopoId::get_topo_info() {
-        Ok(topo) => topo,
-        Err(_) => return "".to_string(),
+        Some(topo) => topo,
+        None => return "".to_string(),
     };
 
     let pkg_id = topo_info.pkg_id;
@@ -157,8 +157,8 @@ fn topo_info_head() -> String {
 
 fn topo_info_with_threadid_head(thread_id: usize) -> String {
     let topo_info = match libcpuid_dump::TopoId::get_topo_info() {
-        Ok(topo) => topo,
-        Err(_) => return format!("[Thread: {thread_id:03}]\n"),
+        Some(topo) => topo,
+        None => return format!("[Thread: {thread_id:03}]\n"),
     };
 
     let pkg_id = topo_info.pkg_id;

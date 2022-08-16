@@ -93,16 +93,16 @@ impl Tlb {
 
 pub trait ParseAMD {
     fn pkgtype_amd_80_01h(&self) -> String;
-    fn l1l2tlb_1g_amd_80_19h(&self) -> String;
-    fn cpu_topo_amd_80_1eh(&self) -> String;
     fn l1_amd_80_05h(&self) -> String;
     fn l2_amd_80_06h(&self) -> String;
     fn apmi_amd_80_07h(&self) -> String;
     fn spec_amd_80_08h(&self) -> String;
     fn size_amd_80_08h(&self) -> String;
     fn rev_id_amd_80_0ah(&self) -> String;
+    fn l1l2tlb_1g_amd_80_19h(&self) -> String;
     fn fpu_width_amd_80_1ah(&self) -> String;
     fn ibs_amd_80_1bh(&self) -> String;
+    fn cpu_topo_amd_80_1eh(&self) -> String;
     fn encrypt_ftr_amd_80_1fh(&self) -> String;
     fn reduction_phys_addr_amd_80_1fh(&self) -> String;
     fn ext_amd_80_21h(&self) -> String;
@@ -250,6 +250,16 @@ impl ParseAMD for CpuidResult {
     }
 
     fn ext_amd_80_21h(&self) -> String {
-        align_mold_ftr(&str_detect_ftr(self.eax, FTR_AMD_80_21_EAX_X0))
+        let ftr = align_mold_ftr(&str_detect_ftr(self.eax, FTR_AMD_80_21_EAX_X0));
+
+        if 0 < self.ebx {
+            [
+                ftr,
+                lnpad!(),
+                format!(" [uCodePatchSize: {}]", self.ebx),
+            ].concat()
+        } else {
+            ftr
+        }
     }
 }
