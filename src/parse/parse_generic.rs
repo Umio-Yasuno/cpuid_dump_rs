@@ -188,10 +188,11 @@ impl ParseGeneric for CpuidResult {
         let (level_type_str, level_type_val) = {
             let tmp = (self.ecx >> 8) & 0xFF;
 
-            if tmp == 0x0 { return "".to_string() }
-
             (match tmp {
-                0x0 => "Invalid",
+                0x0 => {
+                    // "Invalid"
+                    return "".to_string();
+                },
                 0x1 => "Thread",
                 0x2 => "Core",
                 _ => "Reserved",
