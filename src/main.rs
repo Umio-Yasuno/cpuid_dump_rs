@@ -70,6 +70,10 @@ fn cpuid_pool() -> Vec<RawCpuid> {
                 pool.push(RawCpuid::exe(leaf, sub_leaf))
             },
             /* Extended Topology Enumeration, Intel, AMD Family19h <= */
+            /*
+                SMT_LEVEL = 0,
+                CORE_LEVEL = 1,
+            */
             0xB => for sub_leaf in 0..=1 {
                 pool.push(RawCpuid::exe(leaf, sub_leaf))
             },
@@ -82,7 +86,14 @@ fn cpuid_pool() -> Vec<RawCpuid> {
     }
 
     /* 0x1F: V2 Extended Topology Enumeration Leaf, Intel */
-    for sub_leaf in 0..6 {
+    /*
+        SMT_LEVEL = 0,
+        CORE_LEVEL = 1,
+        MODULE_LEVEL = 2,
+        TILE_LEVEL = 3,
+        DIE_LEVEL = 4,
+    */
+    for sub_leaf in 0..=4 {
         pool.push(RawCpuid::exe(0x1F, sub_leaf))
     }
 
