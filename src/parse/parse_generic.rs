@@ -191,14 +191,14 @@ impl ParseGeneric for CpuidResult {
             if tmp == 0x0 { return "".to_string() }
 
             (match tmp {
-                // 0x0 => "Invalid",
+                0x0 => "Invalid",
                 0x1 => "Thread",
-                0x2 => "Processor",
-                _ => "Unknown/Reserved",
+                0x2 => "Core",
+                _ => "Reserved",
             }, tmp)
         };
 
-        let core_mask_width = self.eax & 0xF;
+        // let core_mask_width = self.eax & 0xF;
         /* logical processor at this level */
         let num_proc = self.ebx & 0xFFFF;
         // let ext_local_apicid = self.edx;
@@ -207,9 +207,9 @@ impl ParseGeneric for CpuidResult {
             format!(" [LevelType: {level_type_str} ({level_type_val:#x})]"),
             lnpad!(),
             format!(" [NumProcAtThisLevel: {num_proc}]"),
+            /*
             lnpad!(),
             format!(" [CoreMaskWidth: {core_mask_width}]"),
-            /*
             lnpad!(),
             format!(" [ExtAPID_ID: {ext_local_apicid}]"),
             */

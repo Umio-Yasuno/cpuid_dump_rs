@@ -70,7 +70,7 @@ fn cpuid_pool() -> Vec<RawCpuid> {
                 pool.push(RawCpuid::exe(leaf, sub_leaf))
             },
             /* Extended Topology Enumeration, Intel, AMD Family19h <= */
-            0xB => for sub_leaf in 0..=2 {
+            0xB => for sub_leaf in 0..=1 {
                 pool.push(RawCpuid::exe(leaf, sub_leaf))
             },
             /* 0xD: Processor Extended State Enumeration */
@@ -134,10 +134,39 @@ fn bin_head() -> String {
     format!("{head}\n{line}\n")
 }
 
+/*
 fn core_thread_head(thread_id: usize) -> String {
     let core_id = libcpuid_dump::CpuCoreCount::get().core_id;
 
     format!("[Core ID: {core_id:>3} / Thread: {thread_id:>3}]\n")
+}
+*/
+fn topo_info_head() -> String {
+    let topo_info = match libcpuid_dump::TopoId::get_topo_info() {
+        Ok(topo) => topo,
+        Err(_) => return "".to_string(),
+    };
+
+    let pkg_id = topo_info.pkg_id;
+    let core_id = topo_info.core_id;
+    let smt_id = topo_info.smt_id;
+    // let x2apic_id = topo_info.x2apic_id;
+
+    format!("[Pkg: {pkg_id:03}, Core: {core_id:03}, SMT: {smt_id:03}]\n")
+}
+
+fn topo_info_with_threadid_head(thread_id: usize) -> String {
+    let topo_info = match libcpuid_dump::TopoId::get_topo_info() {
+        Ok(topo) => topo,
+        Err(_) => return format!("[Thread: {thread_id:03}]\n"),
+    };
+
+    let pkg_id = topo_info.pkg_id;
+    let core_id = topo_info.core_id;
+    let smt_id = topo_info.smt_id;
+    // let x2apic_id = topo_info.x2apic_id;
+
+    format!("[Pkg: {pkg_id:03}, Core: {core_id:03}, SMT: {smt_id:03}, Thread: {thread_id:03}]\n")
 }
 
 fn dump_write(pool: &[u8]) {
@@ -321,7 +350,7 @@ impl MainOpt {
                         _ => continue,
                     };
                 },
-                "subleaf" | "sub_leaf" => {
+                "subleaf" | "sub_leaf" | "sub-leaf" => {
                     if !opt.only_leaf.flag {
                         eprintln!("Please \"--leaf <u32>\" argument");
                         continue;
@@ -439,19 +468,20 @@ impl MainOpt {
 
         let cpu_list = libcpuid_dump::cpu_set_list().unwrap();
 
-        let (first_pool, ct_head) = {
+        let (first_pool, topo_head) = {
             let cpu = cpu_list[0];
             libcpuid_dump::pin_thread(cpu).unwrap();
 
             (
                 Arc::new(cpuid_pool()),
-                core_thread_head(cpu),
+                topo_info_with_threadid_head(cpu),
             )
         };
 
         let main_pool = {
             let mut tmp: Vec<u8> = Vec::with_capacity(16384 * cpu_list.len());
-            tmp.extend(ct_head.into_bytes());
+            tmp.extend(topo_head.into_bytes());
+            tmp.extend(opt_0.head_fmt().into_bytes());
             tmp.extend(opt_0.select_pool(&first_pool));
 
             Arc::new(Mutex::new(tmp))
@@ -466,7 +496,7 @@ impl MainOpt {
             thread::spawn(move || {
                 libcpuid_dump::pin_thread(i).unwrap();
 
-                let ct_head = core_thread_head(i).into_bytes();
+                let topo_head = topo_info_with_threadid_head(i).into_bytes();
 
                 let diff = {
                     let mut first_pool = first_pool.iter();
@@ -483,7 +513,7 @@ impl MainOpt {
 
                 let mut main_pool = main_pool.lock().unwrap();
 
-                main_pool.extend(ct_head);
+                main_pool.extend(topo_head);
                 main_pool.extend(pool);
             }).join().unwrap();
         }
@@ -493,11 +523,14 @@ impl MainOpt {
 
     fn dump(&self) {
         let pool = [
-            self.head_fmt().into_bytes(),
             if self.dump_all {
                 self.pool_all_thread()
             } else {
-                self.select_pool(&cpuid_pool())
+                [
+                    topo_info_head().into_bytes(),
+                    self.head_fmt().into_bytes(),
+                    self.select_pool(&cpuid_pool()),
+                ].concat()
             },
         ].concat();
 
