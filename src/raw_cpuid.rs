@@ -42,6 +42,7 @@ impl RawCpuid {
                 lnpad!(),
                 self.result.feature_00_01h(),
             ].concat(),
+            0x5 => self.result.monitor_mwait_00_05h(),
             0x7 => match self.sub_leaf {
                 0x0 => self.result.feature_00_07h_x0(),
                 0x1 => self.result.feature_00_07h_x1(),

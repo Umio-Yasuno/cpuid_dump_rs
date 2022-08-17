@@ -4,6 +4,7 @@ use libcpuid_dump::Vendor;
 pub trait ParseGeneric {
     fn vendor_00_00h(&self) -> String;
     fn info_00_01h(&self) -> String;
+    fn monitor_mwait_00_05h(&self) -> String;
     fn feature_00_01h(&self) -> String;
     fn feature_00_07h_x0(&self) -> String;
     fn feature_00_07h_x1(&self) -> String;
@@ -39,6 +40,46 @@ impl ParseGeneric for CpuidResult {
             format!(" [Total thread(s): {total_thread}]"),
             lnpad!(),
             format!(" [CLFlush (Byte): {clflush_size}]"),
+        ].concat();
+    }
+
+    fn monitor_mwait_00_05h(&self) -> String {
+        let min_mon_line_size = self.eax & 0xFFFF;
+        let max_mon_line_size = self.ebx & 0xFFFF;
+        let ftr = format!("{}{}",
+            if (self.ecx & 0b01) == 0b01 { " [EMX]" } else { "" },
+            if (self.ecx & 0b10) == 0b10 { " [IBE]" } else { "" },
+        );
+        let c_state: String = {
+            let mut c = 0;
+
+            [
+                (self.edx) & 0xF,
+                (self.edx >>  4) & 0xF,
+                (self.edx >>  8) & 0xF,
+                (self.edx >> 12) & 0xF,
+                (self.edx >> 16) & 0xF,
+                (self.edx >> 20) & 0xF,
+                (self.edx >> 24) & 0xF,
+                (self.edx >> 28) & 0xF,
+            ].map(|v| {
+                let parsed = if v != 0 {
+                    format!("{LN_PAD} [C{c} sub-state using MWAIT: {v}]")
+                } else {
+                    "".to_string()
+                };
+
+                c += 1;
+
+                parsed
+            }).concat()
+        };
+        
+        return [
+            format!(" [MonitorLineSize: {min_mon_line_size}(Min), {max_mon_line_size}(Max)]"),
+            lnpad!(),
+            ftr,
+            c_state,
         ].concat();
     }
 
