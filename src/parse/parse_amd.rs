@@ -155,11 +155,9 @@ impl ParseAMD for CpuidResult {
         let node_id = ecx & 0xFF;
 
         return [
-            format!(" [Core ID: {core_id}]"),
+            format!(" [NodeID: {node_id}, CoreID: {core_id}]"),
             lnpad!(),
             format!(" [Thread(s) per core: {th_per_core}]"),
-            lnpad!(),
-            format!(" [Node ID: {node_id}]"),
         ].concat();
     }
 
