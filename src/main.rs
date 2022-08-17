@@ -69,7 +69,7 @@ fn cpuid_pool() -> Vec<RawCpuid> {
             0x7 => for sub_leaf in 0..=2 {
                 pool.push(RawCpuid::exe(leaf, sub_leaf))
             },
-            /* Extended Topology Enumeration, Intel, AMD Family19h <= */
+            /* Extended Topology Enumeration, Intel, AMD Zen 2 <= */
             /*
                 SMT_LEVEL = 0,
                 CORE_LEVEL = 1,
