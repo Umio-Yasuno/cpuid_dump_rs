@@ -548,8 +548,8 @@ impl MainOpt {
         return Arc::try_unwrap(main_pool).unwrap().into_inner().unwrap();
     }
 
-    fn dump(&self) {
-        let pool = [
+    fn dump_pool(&self) -> Vec<u8> {
+        [
             if self.dump_all {
                 self.pool_all_thread()
             } else {
@@ -559,24 +559,14 @@ impl MainOpt {
                     self.select_pool(&cpuid_pool()),
                 ].concat()
             },
-        ].concat();
-
-        dump_write(&pool);
+        ].concat()
     }
 
     fn save_file(&self) {
         use std::fs::File;
         use std::io::Write;
         
-        let pool = [
-            version_head().into_bytes(),
-            self.head_fmt().into_bytes(),
-            if self.dump_all {
-                self.pool_all_thread()
-            } else {
-                self.select_pool(&cpuid_pool())
-            },
-        ].concat();
+        let pool = self.dump_pool();
 
         let path = &self.save.path;
 
@@ -595,7 +585,7 @@ impl MainOpt {
                 => self.only_leaf(),
             Self { save: SaveOpt { flag: true, .. }, .. }
                 => self.save_file(),
-            _ => self.dump(),
+            _ => dump_write(&self.dump_pool()),
         }
     }
 }
