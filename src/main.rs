@@ -210,6 +210,7 @@ struct MainOpt {
     // only_leaf: (bool, u32, u32),
     only_leaf: OnlyLeaf,
     skip_zero: bool,
+    diff: bool,
     bin_fmt: bool,
 }
 
@@ -229,6 +230,7 @@ impl MainOpt {
                 sub_leaf: 0x0,
             },
             skip_zero: true,
+            diff: true,
             bin_fmt: false,
         }
     }
@@ -275,8 +277,12 @@ impl MainOpt {
             \x20        Display raw/hex result.\n\
             \x20    -bin\n\
             \x20        Display binary result.\n\
+            \x20    -full\n\
+            \x20        Combine \"-disp-zero\" and \"-no-diff\"\n\
             \x20    -disp-zero\n\
             \x20        Display result even if E[ABCD]X are zero.\n\
+            \x20    -no-diff\n\
+            \x20        Do not omit diff when all threads execution\n\
             \n\
             OPTIONS:\n\
             \x20    --l <u32>, --leaf <u32>\n\
@@ -394,6 +400,13 @@ impl MainOpt {
                 "disp-zero" => {
                     opt.skip_zero = false
                 },
+                "no-diff" => {
+                    opt.diff = false
+                },
+                "full" => {
+                    opt.skip_zero = false;
+                    opt.diff = false;
+                },
                 // TODO: "taskset" option?
                 // cpuid_dump --taskset <list>
                 // same `taskset -c <list> cpuid_dump -a`
@@ -510,9 +523,12 @@ impl MainOpt {
                 let topo_head = topo_info_with_threadid_head(i).into_bytes();
 
                 let diff = {
-                    let mut first_pool = first_pool.iter();
                     let mut sub_pool = cpuid_pool();
-                    sub_pool.retain(|sub| first_pool.next().unwrap() != sub );
+
+                    if opt.diff {
+                        let mut first_pool = first_pool.iter();
+                        sub_pool.retain(|sub| first_pool.next().unwrap() != sub );
+                    }
 
                     sub_pool
                 };
