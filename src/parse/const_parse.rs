@@ -49,6 +49,15 @@ pub const FTR_00_01_ECX_X0: &[&str] = &[
     /* Bit09 => SSSE3, */
 ];
 
+pub const FTR_00_06_EAX_X0: &[&str] = &[
+    "DiditalTempSensor", "TurboBoost", "ARAT", "",
+    "PLN", "ECMD", "PTM", "HWP",
+    "HWP_Notification", "HWP_Activity_Window", "HWP_Energy_Performance_Preference", "HWP_Package_Level_Request",
+    "", "HDC", "TurboBoostMax", "HWP_Cap",
+    "HWP_PECI", "Flex_HWP", "FastAccessMode", "HFI",
+    "Ignoring Idle Logical Processor HWP req", "", "", "EHFI",
+];
+
 pub const FTR_00_07_EBX_X0: &[&str] = &[
     "FSGSBASE", "", "SGX", "BMI1",
     "HLE", "AVX2", "", "SMEP",

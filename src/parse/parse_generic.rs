@@ -6,6 +6,7 @@ pub trait ParseGeneric {
     fn info_00_01h(&self) -> String;
     fn monitor_mwait_00_05h(&self) -> String;
     fn feature_00_01h(&self) -> String;
+    fn thermal_power_00_06h(&self) -> String;
     fn feature_00_07h_x0(&self) -> String;
     fn feature_00_07h_x1(&self) -> String;
     fn topo_ext_00_0bh(&self) -> String;
@@ -110,6 +111,10 @@ impl ParseGeneric for CpuidResult {
         if ecx[9] { buff.push("SSSE3".to_string()); }
 
         return align_mold_ftr(&buff);
+    }
+
+    fn thermal_power_00_06h(&self) -> String {
+        align_mold_ftr(&str_detect_ftr(self.eax, FTR_00_06_EAX_X0))
     }
 
     fn feature_00_07h_x0(&self) -> String {

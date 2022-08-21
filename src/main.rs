@@ -66,8 +66,16 @@ fn cpuid_pool() -> Vec<RawCpuid> {
             0x4 => for sub_leaf in 0..=4 {
                 pool.push(RawCpuid::exe(leaf, sub_leaf))
             },
-            0x7 => for sub_leaf in 0..=2 {
-                pool.push(RawCpuid::exe(leaf, sub_leaf))
+            0x7 => {
+                let tmp = RawCpuid::exe(leaf, 0x0);
+                /* CPUID[Leaf=0x7, SubLeaf=0x0].EAX, StructExtFeatIdMax */
+                let sub_leaf_c = tmp.result.eax;
+
+                pool.push(tmp);
+
+                for sub_leaf in 1..=sub_leaf_c {
+                    pool.push(RawCpuid::exe(leaf, sub_leaf))
+                }
             },
             /* Extended Topology Enumeration, Intel, AMD Zen 2 <= */
             /*
@@ -86,13 +94,6 @@ fn cpuid_pool() -> Vec<RawCpuid> {
     }
 
     /* 0x1F: V2 Extended Topology Enumeration Leaf, Intel */
-    /*
-        SMT_LEVEL = 0,
-        CORE_LEVEL = 1,
-        MODULE_LEVEL = 2,
-        TILE_LEVEL = 3,
-        DIE_LEVEL = 4,
-    */
     for sub_leaf in 0..=4 {
         pool.push(RawCpuid::exe(0x1F, sub_leaf))
     }
@@ -103,11 +104,16 @@ fn cpuid_pool() -> Vec<RawCpuid> {
     }
 
     for leaf in _AX+0x19..=_AX+0x21 {
-        /* Cache Properties, AMD, same format as Intel Leaf:0x4 */
+        /* Cache Properties, AMD, same format as Intel Leaf 0x4 */
         const LF_80_1D: u32 = _AX + 0x1D;
+        /* AMD Platform QoS Enforcement for Memory Bandwidth */
+        const LF_80_20: u32 = _AX + 0x20;
 
         match leaf {
             LF_80_1D => for sub_leaf in 0x0..=0x4 {
+                pool.push(RawCpuid::exe(leaf, sub_leaf))
+            },
+            LF_80_20 => for sub_leaf in 0x0..=0x1 {
                 pool.push(RawCpuid::exe(leaf, sub_leaf))
             },
             _ => pool.push(RawCpuid::exe(leaf, 0x0)),
