@@ -3,29 +3,26 @@
 
 use core::arch::x86_64::CpuidResult;
 
-#[path = "./codename_mod.rs"]
 mod codename_mod;
 pub use codename_mod::*;
 
-#[path = "./vendor.rs"]
 mod vendor;
 pub use vendor::*;
 
-#[path = "./micro_arch_level.rs"]
 mod micro_arch_level;
 pub use micro_arch_level::*;
 
-#[path = "./proc_name.rs"]
 mod proc_name;
 pub use proc_name::*;
 
-#[path = "./cache_prop.rs"]
 mod cache_prop;
 pub use cache_prop::*;
 
-#[path = "./intel_ext_topo.rs"]
 mod intel_ext_topo;
 pub use intel_ext_topo::*;
+
+mod amd_tlb_info;
+pub use amd_tlb_info::*;
 
 pub mod cpuid_macro;
 

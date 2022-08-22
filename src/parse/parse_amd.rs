@@ -1,83 +1,22 @@
 use crate::*;
-use std::fmt;
+use libcpuid_dump::{TlbType, TlbInfo, Tlb};
 
-#[derive(Debug, Clone)]
-enum TlbType {
-    L1d,
-    L1i,
-    L2d,
-    L2i,
+trait PrintEntryWay {
+    fn print_entry_way(&self) -> String;
 }
 
-impl TlbType {
-    fn get_offset(&self) -> u16 {
-        match self {
-            Self::L1d |
-            Self::L1i => 0xFF,
-            Self::L2d |
-            Self::L2i => 0xFFF,
-        }
-    }
-}
-
-impl fmt::Display for TlbType {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Self::L1d => write!(f, "L1d"),
-            Self::L1i => write!(f, "L1i"),
-            Self::L2d => write!(f, "L2d"),
-            Self::L2i => write!(f, "L2i"),
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
-struct TlbInfo {
-    size: u16,
-    assoc: u16,
-}
-
-impl TlbInfo {
-    fn from_reg(reg: u16, offset: u16) -> Self {
-        Self {
-            size: reg & offset,
-            assoc: reg >> offset.trailing_ones(),
-        }
-    }
-
+impl PrintEntryWay for TlbInfo {
     fn print_entry_way(&self) -> String {
         format!("{:>4}_entry, {:>3}_way", self.size, self.assoc)
     }
 }
 
-#[derive(Debug, Clone)]
-struct Tlb {
-    type_: TlbType,
-    page_4k: TlbInfo,
-    page_2m: TlbInfo,
-    page_4m: TlbInfo,
-    // page_1g
+trait PrintTlb {
+    fn print_tlb(&self) -> String;
 }
 
-impl Tlb {
-    fn reg(type_: TlbType, reg_4k: u16, reg_2m4m: u16) -> Self {
-        let offset = type_.get_offset();
-        let page_4k = TlbInfo::from_reg(reg_4k, offset);
-        let page_2m = TlbInfo::from_reg(reg_2m4m, offset);
-        let page_4m = TlbInfo {
-            size: page_2m.size / 2,
-            assoc: page_2m.assoc,
-        };
-
-        Self {
-            type_,
-            page_4k,
-            page_2m,
-            page_4m,
-        }
-    }
-
-    fn disp(&self) -> String {
+impl PrintTlb for Tlb {
+    fn print_tlb(&self) -> String {
         const PAD: &str = unsafe { std::str::from_utf8_unchecked(&[b' '; 8]) };
 
         return [
@@ -122,6 +61,64 @@ impl ParseAMD for CpuidResult {
         return format!(" [PkgType: {pkg_dec}({pkg_type:#X})]")
     }
 
+    fn l1_amd_80_05h(&self) -> String {
+        let [eax, ebx, ecx, edx] = [
+            self.eax,
+            self.ebx,
+            self.ecx,
+            self.edx,
+        ];
+
+        let l1d_size = ecx >> 24;
+        let l1i_size = edx >> 24;
+
+        let l1dtlb = Tlb::reg(TlbType::L1d, (ebx >> 16) as u16, (eax >> 16) as u16);
+        let l1itlb = Tlb::reg(TlbType::L1i, (ebx & 0xFFFF) as u16, (eax & 0xFFFF) as u16);
+
+        return [
+            format!(" [L1D {l1d_size}K/L1I {l1i_size}K]"),
+            l1dtlb.print_tlb(),
+            l1itlb.print_tlb(),
+        ].concat();
+    }
+
+    fn l2_amd_80_06h(&self) -> String {
+        let [eax, ebx, ecx, edx] = [
+            self.eax,
+            self.ebx,
+            self.ecx,
+            self.edx,
+        ];
+
+        let l2_size = ecx >> 16;
+        let l3_size = (edx >> 18) / 2;
+
+        let l2dtlb = Tlb::reg(TlbType::L2d, (ebx >> 16) as u16, (eax >> 16) as u16);
+        let l2itlb = Tlb::reg(TlbType::L2i, (ebx & 0xFFFF) as u16, (eax & 0xFFFF) as u16);
+
+        return [
+            format!(" [L2 {l2_size}K/L3 {l3_size}M]"),
+            l2dtlb.print_tlb(),
+            l2itlb.print_tlb(),
+        ].concat();
+    }
+
+    fn apmi_amd_80_07h(&self) -> String {
+        align_mold_ftr(&str_detect_ftr(self.edx, FTR_AMD_80_07_EDX_X0))
+    }
+
+    fn spec_amd_80_08h(&self) -> String {
+        align_mold_ftr(&str_detect_ftr(self.ebx, FTR_AMD_80_08_EBX_X0))
+    }
+
+    fn size_amd_80_08h(&self) -> String {
+        format!(" [Num threads: {}]", (self.ecx & 0xFF) + 1)
+    }
+
+    fn rev_id_amd_80_0ah(&self) -> String {
+        align_mold_ftr(&str_detect_ftr(self.edx, FTR_AMD_80_0A_EDX_X0))
+    }
+
     fn l1l2tlb_1g_amd_80_19h(&self) -> String {
         let [eax, ebx] = [self.eax, self.ebx];
 
@@ -147,6 +144,14 @@ impl ParseAMD for CpuidResult {
         ].concat();
     }
 
+    fn fpu_width_amd_80_1ah(&self) -> String {
+        align_mold_ftr(&str_detect_ftr(self.eax, FTR_AMD_80_1A_EAX_X0))
+    }
+
+    fn ibs_amd_80_1bh(&self) -> String {
+        align_mold_ftr(&str_detect_ftr(self.eax, FTR_AMD_80_1B_EAX_X0))
+    }
+
     fn cpu_topo_amd_80_1eh(&self) -> String {
         let [ebx, ecx] = [self.ebx, self.ecx];
 
@@ -159,72 +164,6 @@ impl ParseAMD for CpuidResult {
             lnpad!(),
             format!(" [Thread(s) per core: {th_per_core}]"),
         ].concat();
-    }
-
-    fn l1_amd_80_05h(&self) -> String {
-        let [eax, ebx, ecx, edx] = [
-            self.eax,
-            self.ebx,
-            self.ecx,
-            self.edx,
-        ];
-
-        let l1d_size = ecx >> 24;
-        let l1i_size = edx >> 24;
-
-        let l1dtlb = Tlb::reg(TlbType::L1d, (ebx >> 16) as u16, (eax >> 16) as u16);
-        let l1itlb = Tlb::reg(TlbType::L1i, (ebx & 0xFFFF) as u16, (eax & 0xFFFF) as u16);
-
-        return [
-            format!(" [L1D {l1d_size}K/L1I {l1i_size}K]"),
-            l1dtlb.disp(),
-            l1itlb.disp(),
-        ].concat();
-    }
-
-    fn l2_amd_80_06h(&self) -> String {
-        let [eax, ebx, ecx, edx] = [
-            self.eax,
-            self.ebx,
-            self.ecx,
-            self.edx,
-        ];
-
-        let l2_size = ecx >> 16;
-        let l3_size = (edx >> 18) / 2;
-
-        let l2dtlb = Tlb::reg(TlbType::L2d, (ebx >> 16) as u16, (eax >> 16) as u16);
-        let l2itlb = Tlb::reg(TlbType::L2i, (ebx & 0xFFFF) as u16, (eax & 0xFFFF) as u16);
-
-        return [
-            format!(" [L2 {l2_size}K/L3 {l3_size}M]"),
-            l2dtlb.disp(),
-            l2itlb.disp(),
-        ].concat();
-    }
-
-    fn apmi_amd_80_07h(&self) -> String {
-        align_mold_ftr(&str_detect_ftr(self.edx, FTR_AMD_80_07_EDX_X0))
-    }
-
-    fn spec_amd_80_08h(&self) -> String {
-        align_mold_ftr(&str_detect_ftr(self.ebx, FTR_AMD_80_08_EBX_X0))
-    }
-
-    fn size_amd_80_08h(&self) -> String {
-        format!(" [Num threads: {}]", (self.ecx & 0xFF) + 1)
-    }
-
-    fn rev_id_amd_80_0ah(&self) -> String {
-        align_mold_ftr(&str_detect_ftr(self.edx, FTR_AMD_80_0A_EDX_X0))
-    }
-
-    fn fpu_width_amd_80_1ah(&self) -> String {
-        align_mold_ftr(&str_detect_ftr(self.eax, FTR_AMD_80_1A_EAX_X0))
-    }
-
-    fn ibs_amd_80_1bh(&self) -> String {
-        align_mold_ftr(&str_detect_ftr(self.eax, FTR_AMD_80_1B_EAX_X0))
     }
 
     fn encrypt_ftr_amd_80_1fh(&self) -> String {
