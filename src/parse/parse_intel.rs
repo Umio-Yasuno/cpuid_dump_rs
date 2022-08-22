@@ -27,7 +27,7 @@ impl ParseIntel for CpuidResult {
         };
         let native_model_id = eax & 0x0FFFFFFF;
 
-        return format!(" [{core_type} ({native_model_id:x})]");
+        return format!(" [{core_type} (0x{native_model_id:x})]");
     }
 
     fn v2_ext_topo_intel_1fh(&self) -> String {

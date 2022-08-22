@@ -77,8 +77,8 @@ impl ParseAMD for CpuidResult {
 
         return [
             format!(" [L1D {l1d_size}K/L1I {l1i_size}K]"),
-            l1dtlb.print_tlb(),
             l1itlb.print_tlb(),
+            l1dtlb.print_tlb(),
         ].concat();
     }
 
@@ -98,8 +98,8 @@ impl ParseAMD for CpuidResult {
 
         return [
             format!(" [L2 {l2_size}K/L3 {l3_size}M]"),
-            l2dtlb.print_tlb(),
             l2itlb.print_tlb(),
+            l2dtlb.print_tlb(),
         ].concat();
     }
 
@@ -134,13 +134,13 @@ impl ParseAMD for CpuidResult {
         );
 
         return [
-            format!(" [L1dTLB 1G: {}]", l1dtlb),
-            lnpad!(),
             format!(" [L1iTLB 1G: {}]", l1itlb),
             lnpad!(),
-            format!(" [L2dTLB 1G: {}]", l2dtlb),
+            format!(" [L1dTLB 1G: {}]", l1dtlb),
             lnpad!(),
             format!(" [L2iTLB 1G: {}]", l2itlb),
+            lnpad!(),
+            format!(" [L2dTLB 1G: {}]", l2dtlb),
         ].concat();
     }
 
