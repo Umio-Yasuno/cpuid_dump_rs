@@ -16,16 +16,13 @@ impl ParseIntel for CpuidResult {
     }
 
     fn intel_hybrid_1ah(&self) -> String {
-        let eax = self.eax;
+        let (core_type, native_model_id) =
+            libcpuid_dump::HybridInfo::get_hybrid_info_from_cpuid(*self);
 
-        let core_type = match eax >> 24 {
-            0x10 => "Reserved_1",
-            0x20 => "Atom",
-            0x30 => "Reserved_2",
-            0x40 => "Core",
-            _    => return "".to_string(),
+        let core_type = match core_type {
+            Some(v) => v,
+            None => return "".to_string(),
         };
-        let native_model_id = eax & 0x0FFFFFFF;
 
         return format!(" [{core_type} (0x{native_model_id:x})]");
     }

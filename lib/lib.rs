@@ -24,6 +24,9 @@ pub use intel_ext_topo::*;
 mod amd_tlb_info;
 pub use amd_tlb_info::*;
 
+mod hybrid_info_00_1ah;
+pub use hybrid_info_00_1ah::*;
+
 pub mod cpuid_macro;
 
 pub const _AX: u32 = 0x8000_0000;

@@ -63,7 +63,7 @@ fn cpuid_pool() -> Vec<RawCpuid> {
     for leaf in 0x0..=0xD {
         match leaf {
             /* Cache Properties, Intel */
-            0x4 => for sub_leaf in 0..=4 {
+            0x4 => for sub_leaf in 0x0..=0x4 {
                 pool.push(RawCpuid::exe(leaf, sub_leaf))
             },
             0x7 => {
@@ -73,7 +73,7 @@ fn cpuid_pool() -> Vec<RawCpuid> {
 
                 pool.push(tmp);
 
-                for sub_leaf in 1..=sub_leaf_c {
+                for sub_leaf in 0x1..=sub_leaf_c {
                     pool.push(RawCpuid::exe(leaf, sub_leaf))
                 }
             },
@@ -82,11 +82,11 @@ fn cpuid_pool() -> Vec<RawCpuid> {
                 SMT_LEVEL = 0,
                 CORE_LEVEL = 1,
             */
-            0xB => for sub_leaf in 0..=1 {
+            0xB => for sub_leaf in 0x0..=0x1 {
                 pool.push(RawCpuid::exe(leaf, sub_leaf))
             },
             /* 0xD: Processor Extended State Enumeration */
-            0xD => for sub_leaf in [0x0, 0x1, 0x2, 0x9, 0xB, 0xC] {
+            0xD => for sub_leaf in 0x0..0xF {
                 pool.push(RawCpuid::exe(leaf, sub_leaf))
             },
             _ => pool.push(RawCpuid::exe(leaf, 0x0)),
@@ -94,7 +94,7 @@ fn cpuid_pool() -> Vec<RawCpuid> {
     }
 
     /* 0x1F: V2 Extended Topology Enumeration Leaf, Intel */
-    for sub_leaf in 0..=4 {
+    for sub_leaf in 0x0..=0x4 {
         pool.push(RawCpuid::exe(0x1F, sub_leaf))
     }
 
@@ -145,10 +145,10 @@ fn bin_head() -> String {
     const INPUT_LINE: &str = unsafe { std::str::from_utf8_unchecked(&[b'='; INPUT_LEN]) };
     const OUTPUT_LINE: &str = unsafe { std::str::from_utf8_unchecked(&[b'='; OUTPUT_LEN]) };
 
-    let head = format!("  {{LEAF}}_x{{SUB}}:  {PAD} (out)EAX / (out)ECX {PAD} {PAD}  (out)EBX / (out)EDX");
-    let line = format!("{INPUT_LINE}  {OUTPUT_LINE}  {OUTPUT_LINE}");
-
-    format!("{head}\n{line}\n")
+    [
+        format!("  {{LEAF}}_x{{SUB}}:  {PAD} (out)EAX / (out)ECX {PAD} {PAD}  (out)EBX / (out)EDX\n"),
+        format!("{INPUT_LINE}  {OUTPUT_LINE}  {OUTPUT_LINE}\n"),
+    ].concat()
 }
 
 /*
