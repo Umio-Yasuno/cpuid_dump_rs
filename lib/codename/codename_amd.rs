@@ -1,7 +1,7 @@
 use crate::ProcInfo;
 
 impl ProcInfo {
-pub fn fam17h(m: u32, s: u32) -> Self {
+pub(super) fn fam17h(m: u32, s: u32) -> Self {
     match m {
         // Zen
         0x01 => match s {
@@ -33,12 +33,13 @@ pub fn fam17h(m: u32, s: u32) -> Self {
         0x68 => Self::info("Lucienne", "Zen 2", "7 nm"),
         0x71 => Self::info("Matisse", "Zen 2", "7 nm"),
         0x90 => Self::info("VanGogh", "Zen 2", "7 nm"),
+        0xA0 => Self::info("Mendocino", "Zen 2", "6 nm"),
 
-        _ => Self::info("{{Zen/+/2}}", "Zen/+/2", ""),
+        _ => Self::info("Family17h", "Zen", ""),
     }
 }
 
-pub fn fam19h(m: u32, s: u32) -> Self {
+pub(super) fn fam19h(m: u32, s: u32) -> Self {
     match m {
         0x01 => Self::info(&format!("Milan{}", match s {
             0x1 => " (B0)", // EPYC 7003
@@ -46,9 +47,10 @@ pub fn fam19h(m: u32, s: u32) -> Self {
             _ => "",
         }), "Zen 3", "7 nm"),
         0x21 => Self::info("Vermeer", "Zen 3", "7 nm"),
+        0x44 => Self::info("Rembrandt", "Zen 3+", "6nm"),
         0x50 => Self::info("Cezanne (A1)", "Zen 3", "7 nm"),
 
-        _ => Self::info("{{Zen 3}}", "Zen 3", ""),
+        _ => Self::info("Family19h", "Zen 3", ""),
     }
 }
 }

@@ -11,9 +11,8 @@ pub const OUTPUT_WIDTH: usize = "0x00000000 ".len() * 4;
 pub const TOTAL_WIDTH: usize = 100;
 pub const PARSE_WIDTH: usize = TOTAL_WIDTH - INPUT_WIDTH - OUTPUT_WIDTH - 1; // " ".len()
 
-#[path = "./parse_mod.rs"]
-mod parse_mod;
-pub use crate::parse_mod::*;
+mod parse;
+pub use crate::parse::*;
 
 #[path = "./raw_cpuid.rs"]
 mod raw_cpuid;
@@ -151,13 +150,6 @@ fn bin_head() -> String {
     ].concat()
 }
 
-/*
-fn core_thread_head(thread_id: usize) -> String {
-    let core_id = libcpuid_dump::CpuCoreCount::get().core_id;
-
-    format!("[Core ID: {core_id:>3} / Thread: {thread_id:>3}]\n")
-}
-*/
 fn topo_info_head() -> String {
     let topo_info = match libcpuid_dump::TopoId::get_topo_info() {
         Some(topo) => topo,
@@ -252,6 +244,7 @@ impl MainOpt {
 
     fn parse_value(raw_value: String, msg: &str) -> u32 {
         let raw_value = raw_value.replace("_", "");
+
         if raw_value.starts_with("-") {
             eprintln!("Please the value of {msg} <u32>");
             return 0u32;

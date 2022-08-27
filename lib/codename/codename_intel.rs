@@ -1,7 +1,9 @@
 use crate::ProcInfo;
 
+// TODO: use enum and fmt::Display
+
 impl ProcInfo {
-pub fn fam06h(m: u32, s: u32) -> Self {
+pub(super) fn fam06h(m: u32, s: u32) -> Self {
     match m {
     /* https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/intel-family.h */
         /*
@@ -60,25 +62,33 @@ pub fn fam06h(m: u32, s: u32) -> Self {
         },
 
         0x9E => match s {
-            0xA | 0xB | 0xC => Self::info("Coffee Lake (Desktop)", "Skylake", "14 nm"),
+            0xA |
+            0xB |
+            0xC => Self::info("Coffee Lake (Desktop)", "Skylake", "14 nm"),
             0xD => Self::info("Comet/Coffee Lake (ES) (Desktop) (R0)", "Skylake", "14 nm"),
             _ => Self::info("Kaby Lake (Desktop)", "Skylake", "14 nm"),
         },
 
-        0xA5 => Self::info( &format!("Comet Lake (Desktop){}", match s {
-            0x0 => " (G0)",
-            0x1 => " (P0)",
-            0x2 => " (R1)",
-            0x3 => " (G1)",
-            0x4 => " (P1)",
-            0x5 => " (Q0)",
-            _ => "",
-        }), "Skylake", "14 nm"),
+        0xA5 => Self::info(&[
+            "Comet Lake (Desktop)",
+            match s {
+                0x0 => " (G0)",
+                0x1 => " (P0)",
+                0x2 => " (R1)",
+                0x3 => " (G1)",
+                0x4 => " (P1)",
+                0x5 => " (Q0)",
+                _ => "",
+            },
+        ].concat(), "Skylake", "14 nm"),
 
-        0xA6 => Self::info( &format!("Comet Lake (Mobile){}", match s {
-            0x0 => " (A0)",
-            _ => "",
-        }), "Skylake", "14 nm"),
+        0xA6 => Self::info(&[
+            "Comet Lake (Mobile)",
+            match s {
+                0x0 => " (A0)",
+                _ => "",
+            }
+        ].concat(), "Skylake", "14 nm"),
 
         0x66 => Self::info("Cannon Lake (Mobile)", "Palm Cove", "10 nm"),
 
@@ -88,36 +98,47 @@ pub fn fam06h(m: u32, s: u32) -> Self {
         0x7E => Self::info("Ice Lake (Mobile)", "Sunny Cove", "10nm"),
         0x9D => Self::info("Ice Lake (NNPI)", "Sunny Cove", "10nm"),
 
-        0xA7 => Self::info( &format!("Rocket Lake (Desktop){}", match s {
-            0x1 => " (B0)",
-            _   => "",
-        }), "Cypress Cove", "14 nm"),
+        0xA7 => Self::info(&[
+            "Rocket Lake (Desktop)",
+            match s {
+                0x1 => " (B0)",
+                _   => "",
+            }
+        ].concat(), "Cypress Cove", "14 nm"),
 
-        0x8C => Self::info( &format!("Tiger Lake (Mobile){}", match s {
-            0x1 => " (B0)",
-            0x2 => " (C0)",
-            _   => "",
-        }), "Willow Cove", "10 nm SF"),
+        0x8C => Self::info(&[
+            "Tiger Lake (Mobile)",
+            match s {
+                0x1 => " (B0)",
+                0x2 => " (C0)",
+                _   => "",
+            }
+        ].concat(), "Willow Cove", "10 nm SF"),
+
         0x8D => Self::info("Tiger Lake (Desktop)", "Willow Cove", "10 nm SF"),
 
         /*  Hybrid */
         0x8A => Self::info("Lakefield (1+4)", "Sunny Cove + Tremont", "10 nm"),
 
         /* https://edc.intel.com/content/www/us/en/design/ipla/software-development-platforms/client/platforms/alder-lake-desktop/12th-generation-intel-core-processors-datasheet-volume-1-of-2/005/cpuid/ */
-        0x97 => Self::info( &format!("Alder Lake-S (Desktop){}", match s {
-            0x0 => " (A0, ES)",
-            0x1 => " (B0, ES)",
-            0x2 => " (C0, ES/QS, 8+8)",
-            0x4 => " (G0, ES)",
-            0x5 => " (H0, 6+0)",
-            _   => "",
-        }), "Golden Cove + Gracemont", "Intel 7 /10 nm eSF"),
+        0x97 => Self::info(&[
+            "Alder Lake-S (Desktop)",
+            match s {
+                0x0 => " (A0, ES)",
+                0x1 => " (B0, ES)",
+                0x2 => " (C0, ES/QS, 8+8)",
+                0x4 => " (G0, ES)",
+                0x5 => " (H0, 6+0)",
+                _   => "",
+            }
+        ].concat(), "Golden Cove + Gracemont", "Intel 7 /10 nm eSF"),
 
         /* https://review.coreboot.org/c/coreboot/+/63299 */
         0x9A => {
             let (variant, stepping) = match s {
                 /* Alder Lake-M */
-                0x1 | 0x4 => ("M", match s {
+                0x1 |
+                0x4 => ("M", match s {
                     0x1 => " (Q0, 2+8)",
                     0x4 => " (R0, 2+8)",
                     _ => " (2+8)",
@@ -138,7 +159,7 @@ pub fn fam06h(m: u32, s: u32) -> Self {
                 "Intel 7 /10 nm eSF",
             )
         },
-        0xBE => Self::info("Alder Lake-N", "Gracemont ?", "Intel 7 /10 nm eSF"),
+        0xBE => Self::info("Alder Lake-N", "Gracemont", "Intel 7 /10 nm eSF"),
         /*
         0xBA => Self::info(
             &format("Raptor Lake-P (Mobile){}",

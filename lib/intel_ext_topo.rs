@@ -45,7 +45,7 @@ pub struct IntelExtTopo {
 }
 
 impl IntelExtTopo {
-    pub fn dec(cpuid: &CpuidResult) -> Self {
+    pub fn from_cpuid(cpuid: &CpuidResult) -> Self {
         let next_level = cpuid.eax & 0xF;
         let x2apic_id = cpuid.edx;
         let level_type = {
