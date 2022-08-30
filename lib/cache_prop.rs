@@ -39,10 +39,10 @@ use std::fmt;
 impl fmt::Display for Unit {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Self::Byte => write!(f,  "Byte"),
-            Self::KiB => write!(f,  "KiB"),
-            Self::MiB => write!(f,  "MiB"),
-            Self::GiB => write!(f,  "GiB"),
+            Self::Byte => write!(f, "Byte"),
+            Self::KiB => write!(f, "KiB"),
+            Self::MiB => write!(f, "MiB"),
+            Self::GiB => write!(f, "GiB"),
         }
     }
 }

@@ -14,7 +14,6 @@ pub const PARSE_WIDTH: usize = TOTAL_WIDTH - INPUT_WIDTH - OUTPUT_WIDTH - 1; // 
 mod parse;
 pub use crate::parse::*;
 
-#[path = "./raw_cpuid.rs"]
 mod raw_cpuid;
 pub use crate::raw_cpuid::*;
 
@@ -416,6 +415,16 @@ impl MainOpt {
         return opt;
     }
 
+    fn rawcpuid_pool(&self) -> Vec<RawCpuid> {
+        let mut pool = cpuid_pool();
+
+        if self.skip_zero {
+            pool.retain(|cpuid| !cpuid.check_result_zero() );
+        }
+
+        return pool;
+    }
+
     fn head_fmt(&self) -> String {
         if self.bin_fmt {
             bin_head()
@@ -459,10 +468,6 @@ impl MainOpt {
         let vendor = VendorFlag::check();
         
         for cpuid in cpuid_pool {
-            if self.skip_zero && cpuid.check_result_zero() {
-                continue;
-            }
-
             let fmt = if self.bin_fmt {
                 cpuid.bin_fmt()
             } else {
@@ -496,7 +501,7 @@ impl MainOpt {
             libcpuid_dump::pin_thread(cpu).unwrap();
 
             (
-                Arc::new(cpuid_pool()),
+                Arc::new(opt_0.rawcpuid_pool()),
                 topo_info_with_threadid_head(cpu),
             )
         };
@@ -522,7 +527,7 @@ impl MainOpt {
                 let topo_head = topo_info_with_threadid_head(i).into_bytes();
 
                 let diff = {
-                    let mut sub_pool = cpuid_pool();
+                    let mut sub_pool = opt.rawcpuid_pool();
 
                     if opt.diff {
                         let mut first_pool = first_pool.iter();
@@ -555,7 +560,7 @@ impl MainOpt {
                 [
                     topo_info_head().into_bytes(),
                     self.head_fmt().into_bytes(),
-                    self.select_pool(&cpuid_pool()),
+                    self.select_pool(&self.rawcpuid_pool()),
                 ].concat()
             },
         ].concat()
