@@ -38,7 +38,7 @@ pub use crate::load_file::*;
 ///    // src/main.rs
 ///    MainOpt::parse() -> MainOpt
 ///            |
-///    cpuid_pool() -> Vec<RawCpuid>
+///    opt.rawcpuid_pool() -> Vec<RawCpuid>
 ///            |
 ///    // src/raw_cpuid.rs
 ///    let parsed_pool: Vec<u8>;
@@ -54,51 +54,47 @@ pub use crate::load_file::*;
 ///    dump_write(&parsed_pool) // print, write stdout
 ///    
 
-fn cpuid_pool() -> Vec<RawCpuid> {
-    let mut pool: Vec<RawCpuid> = Vec::with_capacity(64);
+fn leaf_pool() -> Vec<(u32, u32)> {
+    let mut leaf_pool: Vec<(u32, u32)> = Vec::with_capacity(64);
+
+    /* CPUID[Leaf=0x7, SubLeaf=0x0].EAX, StructExtFeatIdMax */
+    let leaf_07h_subc = RawCpuid::exe(0x7, 0x0).result.eax;
 
     /* Base */
     for leaf in 0x0..=0xD {
         match leaf {
             /* Cache Properties, Intel */
             0x4 => for sub_leaf in 0x0..=0x4 {
-                pool.push(RawCpuid::exe(leaf, sub_leaf))
+                leaf_pool.push((leaf, sub_leaf))
             },
             0x7 => {
-                let tmp = RawCpuid::exe(leaf, 0x0);
-                /* CPUID[Leaf=0x7, SubLeaf=0x0].EAX, StructExtFeatIdMax */
-                let sub_leaf_c = tmp.result.eax;
-
-                pool.push(tmp);
-
-                for sub_leaf in 0x1..=sub_leaf_c {
-                    pool.push(RawCpuid::exe(leaf, sub_leaf))
+                for sub_leaf in 0x0..=leaf_07h_subc {
+                    leaf_pool.push((leaf, sub_leaf))
                 }
             },
-            /* Extended Topology Enumeration, Intel, AMD Zen 2 <= */
-            /*
+            /*  Extended Topology Enumeration, Intel, AMD Zen 2 <=
                 SMT_LEVEL = 0,
                 CORE_LEVEL = 1,
             */
             0xB => for sub_leaf in 0x0..=0x1 {
-                pool.push(RawCpuid::exe(leaf, sub_leaf))
+                leaf_pool.push((leaf, sub_leaf))
             },
             /* 0xD: Processor Extended State Enumeration */
             0xD => for sub_leaf in 0x0..0xF {
-                pool.push(RawCpuid::exe(leaf, sub_leaf))
+                leaf_pool.push((leaf, sub_leaf))
             },
-            _ => pool.push(RawCpuid::exe(leaf, 0x0)),
+            _ => leaf_pool.push((leaf, 0x0)),
         }
     }
 
     /* 0x1F: V2 Extended Topology Enumeration Leaf, Intel */
     for sub_leaf in 0x0..=0x4 {
-        pool.push(RawCpuid::exe(0x1F, sub_leaf))
+        leaf_pool.push((0x1F, sub_leaf))
     }
 
     /* Ext */
     for leaf in _AX+0x0..=_AX+0xA {
-        pool.push(RawCpuid::exe(leaf, 0x0))
+        leaf_pool.push((leaf, 0x0))
     }
 
     for leaf in _AX+0x19..=_AX+0x21 {
@@ -109,16 +105,16 @@ fn cpuid_pool() -> Vec<RawCpuid> {
 
         match leaf {
             LF_80_1D => for sub_leaf in 0x0..=0x4 {
-                pool.push(RawCpuid::exe(leaf, sub_leaf))
+                leaf_pool.push((leaf, sub_leaf))
             },
             LF_80_20 => for sub_leaf in 0x0..=0x1 {
-                pool.push(RawCpuid::exe(leaf, sub_leaf))
+                leaf_pool.push((leaf, sub_leaf))
             },
-            _ => pool.push(RawCpuid::exe(leaf, 0x0)),
+            _ => leaf_pool.push((leaf, 0x0)),
         }
     }
 
-    return pool;
+    return leaf_pool;
 }
 
 fn version_head() -> String {
@@ -317,7 +313,10 @@ impl MainOpt {
 
             match arg {
                 "a" | "all" => opt.dump_all = true,
-                "r" | "raw" => opt.raw = true,
+                "r" | "raw" => {
+                    opt.raw = true;
+                    opt.skip_zero = false;
+                },
                 "s" | "save" => {
                     opt.save.flag = true;
                     opt.save.path = match args.get(idx+1) {
@@ -416,13 +415,19 @@ impl MainOpt {
     }
 
     fn rawcpuid_pool(&self) -> Vec<RawCpuid> {
-        let mut pool = cpuid_pool();
+        let mut cpuid_pool: Vec<RawCpuid> = Vec::with_capacity(64);
 
-        if self.skip_zero {
-            pool.retain(|cpuid| !cpuid.check_result_zero() );
+        for (leaf, sub_leaf) in leaf_pool() {
+            let cpuid = RawCpuid::exe(leaf, sub_leaf);
+
+            if self.skip_zero && cpuid.check_result_zero() {
+                continue;
+            }
+
+            cpuid_pool.push(cpuid)
         }
 
-        return pool;
+        return cpuid_pool;
     }
 
     fn head_fmt(&self) -> String {
