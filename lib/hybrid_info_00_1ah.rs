@@ -4,11 +4,11 @@ use std::fmt;
 #[derive(PartialEq)]
 #[repr(u8)]
 pub enum HybridCoreType {
-    Invalid = 0x0,
-    _Reserved1 = 0x10,
-    Atom = 0x20,
-    _Reserved2 = 0x30,
-    Core = 0x40,
+    _Reserved1,
+    Atom,
+    _Reserved2,
+    Core,
+    Invalid,
 }
 
 impl fmt::Display for HybridCoreType {

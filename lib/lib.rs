@@ -137,7 +137,7 @@ pub fn get_total_logical_processor() -> Option<u32> {
         },
     };
     
-    let thread_count = cpuid!(topo_leaf, 0x1).ebx & 0xFFFF;
+    let thread_count = (cpuid!(topo_leaf, 0x1).ebx >> 16) & 0xFF;
     
     return Some(thread_count);
 }
@@ -167,4 +167,28 @@ pub fn get_threads_per_core() -> Option<u32> {
     }
 
     return None;
+}
+
+pub fn initial_apic_id() -> u32 {
+    cpuid!(0x1, 0x0).eax >> 24
+}
+
+#[macro_export]
+macro_rules! initial_apic_id {
+    () => {
+        cpuid!(0x1, 0x0).eax >> 24
+    };
+    ($eax: expr) => {
+        $eax >> 24
+    };
+}
+
+#[macro_export]
+macro_rules! max_apic_id {
+    () => {
+        (cpuid!(0x1, 0x0).eax >> 16) & 0xFF
+    };
+    ($eax: expr) => {
+        ($eax >> 16) & 0xFF
+    };
 }
