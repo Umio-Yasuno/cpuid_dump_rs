@@ -2,7 +2,7 @@ use crate::*;
 
 #[repr(u8)]
 #[allow(dead_code)]
-enum TopoLevelType {
+pub(crate) enum TopoLevelType {
     Invalid = 0,
     SMT = 1, // Thread
     Core = 2,
@@ -22,16 +22,16 @@ impl TopoId {
     fn check_topology_leaf(leaf: u32) -> bool {
         /* Sub-Leaf = 0 (SMT Level) */
         let cpuid = cpuid!(leaf, 0);
+        let level = (cpuid.ecx >> 8) & 0xFF;
 
-        if cpuid.ebx == 0 || ((cpuid.ecx >> 8) & 0xFF) != (TopoLevelType::SMT as u32) {
+        if cpuid.ebx == 0 || level != (TopoLevelType::SMT as u32) {
             return false;
         }
 
         return true;
     }
 
-    /* Page 9: [Detecting Hyper-Threading Technology - kuo-cputopology-rc1-rh1-final-256920.pdf](https://www.intel.com/content/dam/develop/external/us/en/documents/kuo-cputopology-rc1-rh1-final-256920.pdf) */
-    pub fn get_topo_info() -> Option<Self> {
+    pub(crate) fn get_topology_leaf() -> Option<u32> {
         let topo_leaf = if Self::check_topology_leaf(0x1F) {
             0x1F
         } else if Self::check_topology_leaf(0xB) {
@@ -39,6 +39,13 @@ impl TopoId {
         } else {
             return None;
         };
+
+        return Some(topo_leaf);
+    }
+
+    /* Page 9: [Detecting Hyper-Threading Technology - kuo-cputopology-rc1-rh1-final-256920.pdf](https://www.intel.com/content/dam/develop/external/us/en/documents/kuo-cputopology-rc1-rh1-final-256920.pdf) */
+    pub fn get_topo_info() -> Option<Self> {
+        let topo_leaf = Self::get_topology_leaf()?;
 
         let smt_cpuid = cpuid!(topo_leaf, 0x0);
         let core_cpuid = cpuid!(topo_leaf, 0x1);

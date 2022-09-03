@@ -1,4 +1,4 @@
-use crate::{CpuidResult};
+use crate::{cpuid, _AX, CpuidResult, VendorFlag};
 
 #[derive(Debug, PartialEq)]
 pub enum Unit {
@@ -35,7 +35,6 @@ impl Unit {
 }
 
 use std::fmt;
-
 impl fmt::Display for Unit {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
@@ -46,7 +45,6 @@ impl fmt::Display for Unit {
         }
     }
 }
-
 
 #[derive(Debug, PartialEq)]
 pub enum CacheType {
@@ -70,10 +68,10 @@ impl CacheType {
 impl fmt::Display for CacheType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Self::Data => write!(f,  "Data"),
-            Self::Instruction => write!(f,  "Instruction"),
-            Self::Unified => write!(f,  "Unified"),
-            Self::Unknown => write!(f,  "Unknown"),
+            Self::Data => write!(f, "Data"),
+            Self::Instruction => write!(f, "Instruction"),
+            Self::Unified => write!(f, "Unified"),
+            Self::Unknown => write!(f, "Unknown"),
         }
     }
 }
@@ -92,6 +90,25 @@ pub struct CacheProp {
 }
 
 impl CacheProp {
+    pub fn get_cache_prop_leaf() -> Option<u32> {
+        let vendor = VendorFlag::check();
+
+        if vendor.intel {
+            return Some(0x4);
+        }
+        /*
+            CacheType: CPUID[Leaf=0x8000_001D, SubLeaf=0x0].EAX[4:0]
+            0x0 => Null, no more caches
+        */
+        let check_cpuid = (cpuid!(_AX+0x1D, 0x0).eax & 0xF) != 0;
+
+        if vendor.amd && check_cpuid {
+            return Some(_AX+0x1D);
+        }
+
+        return None;
+    }
+    
     pub fn from_cpuid(cpuid: &CpuidResult) -> CacheProp {
         let [eax, ebx, ecx, edx] = [cpuid.eax, cpuid.ebx, cpuid.ecx, cpuid.edx];
 

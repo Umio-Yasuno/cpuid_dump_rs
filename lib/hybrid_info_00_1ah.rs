@@ -1,8 +1,10 @@
 use crate::{cpuid, CpuidResult};
 use std::fmt;
 
+#[derive(PartialEq)]
 #[repr(u8)]
 pub enum HybridCoreType {
+    Invalid = 0x0,
     _Reserved1 = 0x10,
     Atom = 0x20,
     _Reserved2 = 0x30,
@@ -12,6 +14,7 @@ pub enum HybridCoreType {
 impl fmt::Display for HybridCoreType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
+            Self::Invalid => write!(f, "Invalid"),
             Self::_Reserved1 => write!(f, "_Reserved1"),
             Self::Atom => write!(f, "Atom"),
             Self::_Reserved2 => write!(f, "_Reserved2"),

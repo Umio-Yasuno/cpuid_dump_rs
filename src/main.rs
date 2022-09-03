@@ -548,9 +548,9 @@ impl MainOpt {
                 let pool = opt.select_pool(&diff);
 
                 let mut main_pool = main_pool.lock().unwrap();
-
                 main_pool.extend(topo_head);
                 main_pool.extend(pool);
+
             }).join().unwrap();
         }
 

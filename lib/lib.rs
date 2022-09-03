@@ -1,5 +1,17 @@
 use core::arch::x86_64::CpuidResult;
 
+pub const _AX: u32 = 0x8000_0000;
+
+#[macro_export]
+macro_rules! cpuid {
+    ($leaf: expr) => {
+        unsafe { std::arch::x86_64::__cpuid_count($leaf, 0x0) }
+    };
+    ($leaf: expr, $sub_leaf: expr) => {
+        unsafe { std::arch::x86_64::__cpuid_count($leaf, $sub_leaf) }
+    };
+}
+
 mod codename;
 pub use codename::*;
 
@@ -27,16 +39,10 @@ pub use hybrid_info_00_1ah::*;
 mod topo_info;
 pub use topo_info::*;
 
+mod hybrid_topology;
+pub use hybrid_topology::*;
+
 pub mod cpuid_macro;
-
-pub const _AX: u32 = 0x8000_0000;
-
-#[macro_export]
-macro_rules! cpuid {
-    ($leaf: expr, $sub_leaf: expr) => {
-        unsafe { std::arch::x86_64::__cpuid_count($leaf, $sub_leaf) }
-    };
-}
 
 pub fn pin_thread(cpu: usize) -> Result<(), i32> {
     #[cfg(unix)]
@@ -74,14 +80,17 @@ pub fn pin_thread(cpu: usize) -> Result<(), i32> {
 }
 
 pub fn cpu_set_list() -> Result<Vec<usize>, i32> {
-    let mut cpus: Vec<usize> = Vec::new();
+    let mut cpus: Vec<usize> = Vec::with_capacity(256);
     
     #[cfg(unix)]
     unsafe {
         use std::mem;
         use libc::{
-            cpu_set_t, CPU_ISSET, CPU_ZERO,
-            CPU_SETSIZE, sched_getaffinity
+            cpu_set_t,
+            CPU_ISSET,
+            CPU_ZERO,
+            CPU_SETSIZE,
+            sched_getaffinity,
         };
 
         let mut set = mem::zeroed::<cpu_set_t>();
@@ -106,10 +115,56 @@ pub fn cpu_set_list() -> Result<Vec<usize>, i32> {
             GetCurrentProcessorNumber,
         };
 
+        /* TODO: error check */
         for i in 0..GetCurrentProcessorNumber() as usize {
             cpus.push(i);
         }
     }
 
     return Ok(cpus);
+}
+
+pub fn get_total_logical_processor() -> Option<u32> {
+    let topo_leaf = match TopoId::get_topology_leaf() {
+        Some(v) => v,
+        None => {
+            let leaf_01h = cpuid!(0x1, 0x0);
+            let proc_count = ((leaf_01h.ebx >> 16) & 0xFF) + 1;
+
+            if proc_count == 0 { return None; }
+
+            return Some(proc_count);
+        },
+    };
+    
+    let thread_count = cpuid!(topo_leaf, 0x1).ebx & 0xFFFF;
+    
+    return Some(thread_count);
+}
+
+pub fn get_threads_per_core() -> Option<u32> {
+    /* Extended Topology Enumeration */
+    if let Some(topo_leaf) = TopoId::get_topology_leaf() {
+        let cpuid = cpuid!(topo_leaf, 0x0);
+        let level = (cpuid.ecx >> 8) & 0xFF;
+
+        if level == (TopoLevelType::SMT as u32) {
+            return Some(cpuid.ebx & 0xFFFF);
+        }
+    }
+
+    /* Cache Parameters/Properties */
+    if let Some(cache_leaf) = CacheProp::get_cache_prop_leaf() {
+        /* L1 Data Cache? */
+        let cpuid = cpuid!(cache_leaf, 0x0);
+        let cache_prop = CacheProp::from_cpuid(&cpuid);
+
+        if cache_prop.level != 1 {
+            return None;
+        }
+
+        return Some(cache_prop.share_thread);
+    }
+
+    return None;
 }
