@@ -3,6 +3,13 @@ use crate::*;
 use std::sync::{Arc, Mutex};
 use std::{thread};
 
+/*
+struct CachePropCount {
+    pub prop: Option<CacheProp>,
+    pub count: u32,
+}
+*/
+
 pub struct LastLevelCache {
     pub level: u32,
     pub share_thread: u32,
@@ -113,7 +120,7 @@ impl TopoCacheInfo {
 
             thread::spawn(move || {
                 pin_thread(cpu).unwrap();
-                let apicid = initial_apic_id();
+                let apicid = initial_apic_id!();
 
                 /* 0x2..=0x4 (L2 Cache .. L4 Cache) ? */
                 for sub_leaf in 0x0..=0x4 {
@@ -229,7 +236,7 @@ impl TopoCacheInfo {
     */
     /* Linux Kernel: arch/x86/kernel/cpu/cacheinfo.c */
     fn get_cache_id(apicid: u32, num_sharing_thread: u32) -> u32 {
-        /* find last bit set */
+        /* find last set bit */
         let index_msb = u32::BITS - num_sharing_thread.leading_zeros();
 
         return apicid & !((1 << index_msb) - 1);
@@ -265,19 +272,27 @@ impl TopoPartInfo {
         };
     }
     
-    fn get_core_type_only_list(core_type: &HybridCoreType) -> Vec<usize> {
+    fn get_core_type_only_list(core_type: HybridCoreType) -> Vec<usize> {
         let cpu_list = cpu_set_list().unwrap();
-        let mut type_only_list: Vec<usize> = Vec::with_capacity(64);
+        let type_only_list = Arc::new(Mutex::new(Vec::<usize>::with_capacity(64)));
+        let core_type = Arc::new(core_type);
 
         for cpu in cpu_list {
-            pin_thread(cpu).unwrap();
-            let leaf_1ah = cpuid!(0x1A, 0x0);
+            let type_only_list = Arc::clone(&type_only_list);
+            let core_type = Arc::clone(&core_type);
 
-            if HybridInfo::get_core_type(leaf_1ah).as_ref() == Some(core_type) {
-                type_only_list.push(cpu);
-            }
+            thread::spawn(move || {
+                pin_thread(cpu).unwrap();
+                let leaf_1ah = cpuid!(0x1A, 0x0);
+                let core_type = Arc::try_unwrap(core_type).unwrap();
+
+                if HybridInfo::get_core_type(leaf_1ah) == Some(core_type) {
+                    let mut list = type_only_list.lock().unwrap();
+                    list.push(cpu);
+                }
+            }).join().unwrap();
         }
 
-        return type_only_list;
+        return Arc::try_unwrap(type_only_list).unwrap().into_inner().unwrap();
     }
 }

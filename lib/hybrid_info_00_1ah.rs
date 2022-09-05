@@ -1,7 +1,7 @@
 use crate::{cpuid, CpuidResult};
 use std::fmt;
 
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 #[repr(u8)]
 pub enum HybridCoreType {
     _Reserved1,

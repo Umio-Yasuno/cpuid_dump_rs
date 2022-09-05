@@ -169,10 +169,6 @@ pub fn get_threads_per_core() -> Option<u32> {
     return None;
 }
 
-pub fn initial_apic_id() -> u32 {
-    cpuid!(0x1, 0x0).eax >> 24
-}
-
 #[macro_export]
 macro_rules! initial_apic_id {
     () => {

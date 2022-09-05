@@ -453,7 +453,7 @@ impl MainOpt {
             ]
         }.concat();
 
-        dump_write(&tmp.into_bytes())
+        return dump_write(&tmp.into_bytes());
     }
 
     fn raw_pool(&self, cpuid_pool: &[RawCpuid]) -> Vec<u8> {
