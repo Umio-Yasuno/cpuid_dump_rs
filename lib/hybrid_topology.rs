@@ -258,18 +258,12 @@ impl TopoPartInfo {
     }
 
     fn get_core_type() -> HybridCoreType {
-        let hybrid_flag = Self::check_hybrid_flag();
+        let leaf_1ah = cpuid!(0x1A, 0x0);
 
-        return if hybrid_flag {
-            let leaf_1ah = cpuid!(0x1A, 0x0);
-
-            match HybridInfo::get_core_type(leaf_1ah) {
-                Some(t) => t,
-                None => HybridCoreType::Invalid,
-            }
-        } else {
-            HybridCoreType::Invalid
-        };
+        match HybridInfo::get_core_type(leaf_1ah) {
+            Some(t) => t,
+            None => HybridCoreType::Invalid,
+        }
     }
     
     fn get_core_type_only_list(core_type: HybridCoreType) -> Vec<usize> {
@@ -283,10 +277,9 @@ impl TopoPartInfo {
 
             thread::spawn(move || {
                 pin_thread(cpu).unwrap();
-                let leaf_1ah = cpuid!(0x1A, 0x0);
-                let core_type = Arc::try_unwrap(core_type).unwrap();
+                // let core_type = Arc::try_unwrap(core_type).unwrap();
 
-                if HybridInfo::get_core_type(leaf_1ah) == Some(core_type) {
+                if Self::get_core_type() == *core_type {
                     let mut list = type_only_list.lock().unwrap();
                     list.push(cpu);
                 }
