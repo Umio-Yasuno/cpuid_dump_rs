@@ -10,6 +10,7 @@ pub const INPUT_WIDTH: usize = "  0x00000000_x0: ".len();
 pub const OUTPUT_WIDTH: usize = "0x00000000 ".len() * 4;
 pub const TOTAL_WIDTH: usize = 100;
 pub const PARSE_WIDTH: usize = TOTAL_WIDTH - INPUT_WIDTH - OUTPUT_WIDTH - 1; // " ".len()
+pub const VERSION_HEAD: &str = concat!("CPUID Dump ", env!("CARGO_PKG_VERSION"), "\n");
 
 mod parse;
 pub use crate::parse::*;
@@ -115,12 +116,6 @@ fn leaf_pool() -> Vec<(u32, u32)> {
     }
 
     return leaf_pool;
-}
-
-fn version_head() -> String {
-    const VER: &str = env!("CARGO_PKG_VERSION");
-
-    format!("CPUID Dump {VER}\n")
 }
 
 fn hex_head() -> String {
@@ -255,10 +250,8 @@ impl MainOpt {
     }
 
     fn help_msg() {
-        let version = version_head();
-
         print!("\n\
-            {version}\
+            {VERSION_HEAD}\
             https://github.com/Umio-Yasuno/cpuid_dump_rs\n\
             \n\
             USAGE:\n\
@@ -587,7 +580,7 @@ impl MainOpt {
     }
 
     fn run(&self) {
-        print!("{}", version_head());
+        print!("{VERSION_HEAD}");
 
         match self {
             Self { only_leaf: OnlyLeaf { flag: true, .. }, .. }
