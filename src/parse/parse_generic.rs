@@ -97,6 +97,7 @@ impl ParseGeneric for CpuidResult {
         ];
 
         /* SSE */
+        /*
         if edx[25] {
             let ftr_map = [
                 (edx[26], "2"),
@@ -108,6 +109,7 @@ impl ParseGeneric for CpuidResult {
 
             buff.push(sse);
         }
+        */
         // if ecx[9] { buff.push("SSSE3".to_string()); }
 
         return align_mold_ftr(&buff);

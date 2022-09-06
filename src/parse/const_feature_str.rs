@@ -26,8 +26,8 @@ pub(crate) const fn ftr_00_01_edx_x0() -> [&'static str; 32] {
     ftr[22] = "ACPI";
     ftr[23] = "MMX";
     ftr[24] = "FXSR";
-    // ftr[25] = "SSE";
-    // ftr[26] = "SSE2";
+    ftr[25] = "SSE";
+    ftr[26] = "SSE2";
     ftr[27] = "SS"; // Self Snoop
     ftr[28] = "HTT";
     ftr[29] = "TM"; // Thermal Monitor
@@ -40,7 +40,7 @@ pub(crate) const fn ftr_00_01_edx_x0() -> [&'static str; 32] {
 pub(crate) const fn ftr_00_01_ecx_x0() -> [&'static str; 32] {
     let mut ftr = [""; 32];
 
-    // ftr[0] = "SSE3";
+    ftr[0] = "SSE3";
     ftr[1] = "PCLMULQDQ";
     ftr[2] = "DTES64"; // 64-bit DS Area
     ftr[3] = "MONITOR"; // MONITOR/MWAIT
@@ -59,8 +59,8 @@ pub(crate) const fn ftr_00_01_ecx_x0() -> [&'static str; 32] {
     ftr[16] = "";
     ftr[17] = "PCID";
     ftr[18] = "DCA";
-    // ftr[19] = "SSE4.1"; // use ftr_variant_expand
-    // ftr[20] = "SSE4.2"; // use ftr_variant_expand
+    ftr[19] = "SSE4.1";
+    ftr[20] = "SSE4.2";
     ftr[21] = "x2APIC";
     ftr[22] = "MOVBE";
     ftr[23] = "POPCNT";
