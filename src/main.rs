@@ -2,6 +2,7 @@
 //  SPDX-License-Identifier: MIT
 
 use core::arch::x86_64::CpuidResult;
+use std::io;
 
 // extern crate libcpuid_dump;
 use libcpuid_dump::{cpuid, VendorFlag, _AX};
@@ -94,7 +95,7 @@ fn leaf_pool() -> Vec<(u32, u32)> {
     }
 
     /* Ext */
-    for leaf in _AX+0x0..=_AX+0xA {
+    for leaf in _AX..=_AX+0xA {
         leaf_pool.push((leaf, 0x0))
     }
 
@@ -115,7 +116,7 @@ fn leaf_pool() -> Vec<(u32, u32)> {
         }
     }
 
-    return leaf_pool;
+    leaf_pool
 }
 
 fn hex_head() -> String {
@@ -168,11 +169,12 @@ fn topo_info_with_threadid_head(thread_id: usize) -> String {
     format!("[Pkg: {pkg_id:03}, Core: {core_id:03}, SMT: {smt_id:03}, Thread: {thread_id:03}]\n")
 }
 
-fn dump_write(pool: &[u8]) {
+fn dump_write(pool: &[u8]) -> std::io::Result<()> {
     use std::io::{Write, stdout};
     let mut out = stdout().lock();
 
-    out.write(pool).unwrap();
+    out.write_all(pool)?;
+    Ok(())
 }
 
 #[derive(Debug, Clone)]
@@ -223,7 +225,7 @@ impl MainOpt {
     }
 
     fn init_name() -> String {
-        let proc_name = libcpuid_dump::ProcName::get_trim_name().replace(" ", "_");
+        let proc_name = libcpuid_dump::ProcName::get_trim_name().replace(' ', "_");
         /* Family, Model, Stepping */
         let fms = cpuid!(0x1, 0x0).eax;
 
@@ -232,19 +234,17 @@ impl MainOpt {
     }
 
     fn parse_value(raw_value: String, msg: &str) -> u32 {
-        let raw_value = raw_value.replace("_", "");
+        let raw_value = raw_value.replace('_', "");
 
-        if raw_value.starts_with("-") {
+        if raw_value.starts_with('-') {
             eprintln!("Please the value of {msg} <u32>");
             return 0u32;
         }
 
-        if raw_value.starts_with("0x") {
-            u32::from_str_radix(&raw_value[2..], 16)
-                .expect("Parse error: {msg} <u32>")
+        if let Some(stripped) = raw_value.strip_prefix("0x") {
+            u32::from_str_radix(stripped, 16).expect("Parse error: {msg} <u32>")
         } else {
-            raw_value.parse::<u32>()
-                .expect("Parse error: {msg} <u32>")
+            raw_value.parse::<u32>().expect("Parse error: {msg} <u32>")
         }
     }
 
@@ -296,12 +296,12 @@ impl MainOpt {
                 continue;
             }
 
-            if !arg.starts_with("-") {
+            if !arg.starts_with('-') {
                 // eprintln!("Unknown option: {}", args[i]);
                 continue;
             }
 
-            let arg = arg.trim_start_matches("-");
+            let arg = arg.trim_start_matches('-');
 
             match arg {
                 "a" | "all" => opt.dump_all = true,
@@ -313,7 +313,7 @@ impl MainOpt {
                     opt.save.flag = true;
                     opt.save.path = match args.get(idx+1) {
                         Some(v) => {
-                            if v.starts_with("-") {
+                            if v.starts_with('-') {
                                 skip = true;
                                 continue;
                             }
@@ -403,7 +403,7 @@ impl MainOpt {
             }
         }
 
-        return opt;
+        opt
     }
 
     fn rawcpuid_pool(&self) -> Vec<RawCpuid> {
@@ -419,7 +419,7 @@ impl MainOpt {
             cpuid_pool.push(cpuid)
         }
 
-        return cpuid_pool;
+        cpuid_pool
     }
 
     fn head_fmt(&self) -> String {
@@ -430,7 +430,7 @@ impl MainOpt {
         }
     }
 
-    fn only_leaf(&self) {
+    fn only_leaf(&self) -> io::Result<()> {
         let raw_result = RawCpuid::exe(self.only_leaf.leaf, self.only_leaf.sub_leaf);
 
         let tmp = if self.bin_fmt {
@@ -445,7 +445,8 @@ impl MainOpt {
             ]
         }.concat();
 
-        return dump_write(&tmp.into_bytes());
+        dump_write(&tmp.into_bytes())?;
+        Ok(())
     }
 
     fn raw_pool(&self, cpuid_pool: &[RawCpuid]) -> Vec<u8> {
@@ -457,7 +458,7 @@ impl MainOpt {
             );
         }
 
-        return pool;
+        pool
     }
 
     fn parse_pool(&self, cpuid_pool: &[RawCpuid]) -> Vec<u8> {
@@ -474,7 +475,7 @@ impl MainOpt {
             parse_pool.extend(fmt);
         }
 
-        return parse_pool;
+        parse_pool
     }
 
     fn select_pool(&self, cpuid_pool: &[RawCpuid]) -> Vec<u8> {
@@ -546,7 +547,7 @@ impl MainOpt {
             }).join().unwrap();
         }
 
-        return Arc::try_unwrap(main_pool).unwrap().into_inner().unwrap();
+        Arc::try_unwrap(main_pool).unwrap().into_inner().unwrap()
     }
 
     fn dump_pool(&self) -> Vec<u8> {
@@ -563,7 +564,7 @@ impl MainOpt {
         ].concat()
     }
 
-    fn save_file(&self) {
+    fn save_file(&self) -> io::Result<()> {
         use std::fs::File;
         use std::io::Write;
         
@@ -573,12 +574,13 @@ impl MainOpt {
 
         let mut f = File::create(path).expect("File::create {path} faild.");
 
-        f.write(&pool).expect("fs::write() faild.");
-
+        f.write_all(&pool)?;
         println!("Output to \"{path}\"");
+
+        Ok(())
     }
 
-    fn run(&self) {
+    fn run(&self) -> io::Result<()> {
         print!("{VERSION_HEAD}");
 
         match self {
@@ -592,5 +594,5 @@ impl MainOpt {
 }
 
 fn main() {
-    MainOpt::main_parse().run();
+    MainOpt::main_parse().run().unwrap();
 }

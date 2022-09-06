@@ -8,7 +8,7 @@ const fn ln_pad() -> [u8; PAD_WIDTH+1] {
     let mut tmp = [b' '; PAD_WIDTH+1];
     tmp[0] = b'\n';
 
-    return tmp;
+    tmp
 }
 
 pub const LN_PAD: &str = unsafe { std::str::from_utf8_unchecked(&ln_pad()) };
@@ -33,7 +33,7 @@ impl Reg {
             *v = ((self.0 >> pos) & 1) as u8;
         }
 
-        return array;
+        array
     }
 
     pub(crate) fn to_bool_array(&self) -> [bool; 32] {
@@ -43,7 +43,7 @@ impl Reg {
             *flag = *bit != 0;
         }
 
-        return array;
+        array
     }
 }
 
@@ -52,12 +52,12 @@ pub(crate) fn str_detect_ftr(reg: u32, ftr_str: &[&str]) -> Vec<String> {
     let mut buff: Vec<String> = Vec::with_capacity(32);
 
     for (r, ftr) in reg.iter().zip(ftr_str.iter()) {
-        if *r && 0 < ftr.len() {
+        if *r && !ftr.is_empty() {
             buff.push(ftr.to_string());
         }
     }
 
-    return buff;
+    buff
 }
 
 pub(crate) fn align_mold_ftr(buff: &[String]) -> String {
@@ -85,7 +85,7 @@ pub(crate) fn align_mold_ftr(buff: &[String]) -> String {
         write!(mold, "{inner}").unwrap();
     }
 
-    return mold;
+    mold
 }
 
 /*

@@ -76,7 +76,7 @@ pub fn pin_thread(cpu: usize) -> Result<(), i32> {
         SetThreadAffinityMask(GetCurrentThread(), 1 << cpu);
     }
 
-    return Ok(());
+    Ok(())
 }
 
 pub fn cpu_set_list() -> Result<Vec<usize>, i32> {
@@ -121,7 +121,7 @@ pub fn cpu_set_list() -> Result<Vec<usize>, i32> {
         }
     }
 
-    return Ok(cpus);
+    Ok(cpus)
 }
 
 pub fn get_total_logical_processor() -> Option<u32> {
@@ -139,7 +139,7 @@ pub fn get_total_logical_processor() -> Option<u32> {
     
     let thread_count = (cpuid!(topo_leaf, 0x1).ebx >> 16) & 0xFF;
     
-    return Some(thread_count);
+    Some(thread_count)
 }
 
 pub fn get_threads_per_core() -> Option<u32> {
@@ -166,7 +166,7 @@ pub fn get_threads_per_core() -> Option<u32> {
         return Some(cache_prop.share_thread);
     }
 
-    return None;
+    None
 }
 
 #[macro_export]

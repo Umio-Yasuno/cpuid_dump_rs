@@ -21,11 +21,11 @@ impl LastLevelCache {
     fn from_cache_prop(prop: &CacheProp, max_apic_id: u32) -> Self {
         let shared_all_thread = prop.share_thread == max_apic_id;
         
-        return Self {
+        Self {
             level: prop.level,
             share_thread: prop.share_thread,
             shared_all_thread,
-        };
+        }
     }
 }
 
@@ -163,7 +163,7 @@ impl TopoCacheInfo {
         let [l2_ids, l3_ids, l4_ids] = [l2_ids, l3_ids, l4_ids]
             .map(|ids| Arc::try_unwrap(ids).unwrap().into_inner().unwrap() );
 
-        return Some(Self {
+        Some(Self {
             l1d_cache: l1d,
             l1i_cache: l1i,
             l2_cache: l2,
@@ -173,7 +173,7 @@ impl TopoCacheInfo {
             l4_cache: l4,
             l4_count: l4_ids.len() as u32,
             last_level,
-        });
+        })
     }
 
     fn from_amd_80_1dh(cache_leaf: u32) -> Option<Self> {
@@ -219,7 +219,7 @@ impl TopoCacheInfo {
             }
         }
 
-        return Some(Self {
+        Some(Self {
             l1d_cache: l1d,
             l1i_cache: l1i,
             l2_cache: l2,
@@ -229,7 +229,7 @@ impl TopoCacheInfo {
             l4_cache: l4,
             l4_count,
             last_level,
-        });
+        })
     }
 
     /* ref:
@@ -241,7 +241,7 @@ impl TopoCacheInfo {
         /* find last set bit */
         let index_msb = u32::BITS - num_sharing_thread.leading_zeros();
 
-        return apicid & !((1 << index_msb) - 1);
+        apicid & !((1 << index_msb) - 1)
     }
 }
 
@@ -256,7 +256,7 @@ impl TopoPartInfo {
     pub fn check_hybrid_flag() -> bool {
         let cpuid = (cpuid!(0x7, 0x0).edx >> 15) & 0b1;
 
-        return cpuid == 1;
+        cpuid == 1
     }
 
     fn get_core_type() -> HybridCoreType {
@@ -288,7 +288,7 @@ impl TopoPartInfo {
             }).join().unwrap();
         }
 
-        return Arc::try_unwrap(type_only_list).unwrap().into_inner().unwrap();
+        Arc::try_unwrap(type_only_list).unwrap().into_inner().unwrap()
     }
 
     pub fn get(core_type: HybridCoreType) -> Self {
@@ -309,13 +309,11 @@ impl TopoPartInfo {
                 thread::spawn(move || {
                     pin_thread(cpu_list[0]).unwrap();
 
-                    let threads_per_core = match get_threads_per_core() {
-                        Some(num) => num,
-                        None => 1,
-                    };
+                    let threads_per_core = get_threads_per_core().unwrap_or(1);
                     let mut phy_proc = phy_proc.lock().unwrap();
-                    *phy_proc = *logi_proc / threads_per_core;
                     let mut topo_cache = topo_cache.lock().unwrap();
+
+                    *phy_proc = *logi_proc / threads_per_core;
                     *topo_cache = TopoCacheInfo::get_topology_cache_info(&cpu_list);
                 }).join().unwrap();
         }

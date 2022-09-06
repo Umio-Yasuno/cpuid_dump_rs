@@ -28,7 +28,7 @@ impl TopoId {
             return false;
         }
 
-        return true;
+        true
     }
 
     pub(crate) fn get_topology_leaf() -> Option<u32> {
@@ -40,7 +40,7 @@ impl TopoId {
             return None;
         };
 
-        return Some(topo_leaf);
+        Some(topo_leaf)
     }
 
     /* Page 9: [Detecting Hyper-Threading Technology - kuo-cputopology-rc1-rh1-final-256920.pdf](https://www.intel.com/content/dam/develop/external/us/en/documents/kuo-cputopology-rc1-rh1-final-256920.pdf) */

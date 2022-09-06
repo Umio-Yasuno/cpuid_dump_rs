@@ -34,7 +34,7 @@ pub(crate) const fn ftr_00_01_edx_x0() -> [&'static str; 32] {
     ftr[30] = "";
     ftr[31] = "PBE"; // Pending Break Enable
 
-    return ftr;
+    ftr
 }
 
 pub(crate) const fn ftr_00_01_ecx_x0() -> [&'static str; 32] {
@@ -73,7 +73,7 @@ pub(crate) const fn ftr_00_01_ecx_x0() -> [&'static str; 32] {
     ftr[30] = "RDRAND";
     ftr[31] = "";
 
-    return ftr;
+    ftr
 }
 
 pub(crate) const fn ftr_00_06_eax_x0() -> [&'static str; 32] {
@@ -104,7 +104,7 @@ pub(crate) const fn ftr_00_06_eax_x0() -> [&'static str; 32] {
     ftr[22] = "";
     ftr[23] = "EHFI";
 
-    return ftr;
+    ftr
 }
 
 pub(crate) const fn ftr_00_07_ebx_x0() -> [&'static str; 32] {
@@ -143,7 +143,7 @@ pub(crate) const fn ftr_00_07_ebx_x0() -> [&'static str; 32] {
     ftr[30] = "AVX512BW";
     ftr[31] = "AVX512VL";
                  
-    return ftr;
+    ftr
 }
 
 pub(crate) const fn ftr_00_07_ecx_x0() -> [&'static str; 32] {
@@ -182,7 +182,7 @@ pub(crate) const fn ftr_00_07_ecx_x0() -> [&'static str; 32] {
     ftr[30] = "SGX_LC"; // SGX Launch Configuration
     ftr[31] = "PKS"; // protection keys for supervisor-mode pages
 
-    return ftr;
+    ftr
 }
 
 pub(crate) const fn ftr_00_07_edx_x0() -> [&'static str; 32] {
@@ -219,7 +219,7 @@ pub(crate) const fn ftr_00_07_edx_x0() -> [&'static str; 32] {
     ftr[30] = "";
     ftr[31] = "SSBD";
 
-    return ftr;
+    ftr
 }
 
 pub(crate) const fn ftr_00_07_eax_x1() -> [&'static str; 32] {
@@ -233,7 +233,7 @@ pub(crate) const fn ftr_00_07_eax_x1() -> [&'static str; 32] {
     ftr[22] = "HRESET";
     ftr[26] = "LAM"; // Linear Address Masking
 
-    return ftr;
+    ftr
 }
 
 /*  Ref: https://github.com/torvalds/linux/blob/master/arch/x86/kernel/fpu/xstate.c */
@@ -260,7 +260,7 @@ pub(crate) const fn xfeature_mask_00_0d_eax_x0() -> [&'static str; 32] {
     ftr[17] = "AMX Tile config";
     ftr[18] = "AMX Tile data";
 
-    return ftr;
+    ftr
 }
 
 pub(crate) const fn xsave_00_0d_eax_x1() -> [&'static str; 32] {
@@ -272,7 +272,7 @@ pub(crate) const fn xsave_00_0d_eax_x1() -> [&'static str; 32] {
     ftr[3] = "XSAVES";
     ftr[4] = "XFD";
 
-    return ftr;
+    ftr
 }
 
 pub(crate) const fn ftr_80_01_ecx_x0() -> [&'static str; 32] {
@@ -310,7 +310,7 @@ pub(crate) const fn ftr_80_01_ecx_x0() -> [&'static str; 32] {
     ftr[29] = "MONITORX"; // MWAITX/MONITORX
     ftr[30] = "AddrMaskExt";
 
-    return ftr;
+    ftr
 }
 
 pub(crate) const fn ftr_80_01_edx_x0() -> [&'static str; 32] {
@@ -324,7 +324,7 @@ pub(crate) const fn ftr_80_01_edx_x0() -> [&'static str; 32] {
     ftr[30] = "3DNow!Ext";
     ftr[31] = "3DNow!";
 
-    return ftr;
+    ftr
 }
 
 pub(crate) const fn ftr_amd_80_07_edx_x0() -> [&'static str; 32] {
@@ -346,7 +346,7 @@ pub(crate) const fn ftr_amd_80_07_edx_x0() -> [&'static str; 32] {
     ftr[13] = "ConnectedStandby";
     ftr[14] = "RAPL";
 
-    return ftr;
+    ftr
 }
 
 pub(crate) const fn ftr_amd_80_08_ebx_x0() -> [&'static str; 32] {
@@ -382,7 +382,7 @@ pub(crate) const fn ftr_amd_80_08_ebx_x0() -> [&'static str; 32] {
     ftr[27] = "";
     ftr[28] = "PSFD"; // Predictive Store Forward Disable
 
-    return ftr;
+    ftr
 }
 
 pub const fn ftr_amd_80_0a_edx_x0() -> [&'static str; 32] {
@@ -413,7 +413,7 @@ pub const fn ftr_amd_80_0a_edx_x0() -> [&'static str; 32] {
     ftr[22] = "";
     ftr[23] = "HOST_MCE_OVERRIDE";
 
-    return ftr;
+    ftr
 }
 
 pub(crate) const fn ftr_amd_80_1a_eax_x0() -> [&'static str; 32] {
@@ -423,7 +423,7 @@ pub(crate) const fn ftr_amd_80_1a_eax_x0() -> [&'static str; 32] {
     ftr[1] = "MOVU";
     ftr[2] = "FP256";
 
-    return ftr;
+    ftr
 }
 
 pub const fn ftr_amd_80_1b_eax_x0() -> [&'static str; 32] {
@@ -439,7 +439,7 @@ pub const fn ftr_amd_80_1b_eax_x0() -> [&'static str; 32] {
     ftr[7] = "RipInvalidChk"; // Invalid RIP indication
     ftr[8] = "OpBrnFuse"; // Fused branch micro-op indication
 
-    return ftr;
+    ftr
 }
 
 pub const fn ftr_amd_80_1f_eax_x0() -> [&'static str; 32] {
@@ -467,7 +467,7 @@ pub const fn ftr_amd_80_1f_eax_x0() -> [&'static str; 32] {
     ftr[23] = "";
     ftr[24] = "VMSARegProt"; // VMSA Register Protection
 
-    return ftr;
+    ftr
 }
 
 /*
@@ -498,5 +498,5 @@ pub(crate) const fn ftr_amd_80_21_eax_x0() -> [&'static str; 32] {
     ftr[12] = "";
     ftr[13] = "PrefetchCtlMsr";
 
-    return ftr;
+    ftr
 }

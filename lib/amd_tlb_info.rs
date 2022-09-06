@@ -84,7 +84,7 @@ impl TlbInfo {
 
         Self {
             size: reg & offset,
-            assoc: assoc,
+            assoc,
         }
     }
 }

@@ -131,13 +131,13 @@ impl RawCpuid {
     }
 
     pub fn parse_fmt(&self, vendor: &VendorFlag) -> String {
-        let parsed = &self.parse(&vendor);
+        let parsed = &self.parse(vendor);
 
         if parsed.is_empty() {
             return "".to_string();
         }
 
-        return self.result(parsed);
+        self.result(parsed)
     }
 
     pub fn bin_fmt(&self) -> String {
@@ -158,7 +158,7 @@ impl RawCpuid {
             self.result.ebx,
             self.result.ecx,
             self.result.edx,
-        ].map(|reg| separate(reg));
+        ].map(separate);
 
         const PAD: &str = unsafe { std::str::from_utf8_unchecked(&[b' '; 17]) };
 

@@ -18,7 +18,7 @@ impl ProcName {
             |&reg| tmp.extend(Self::dec_reg(reg))
         );
 
-        return tmp;
+        tmp
     }
     
     fn set_cpuid() -> [CpuidResult; 3] {
@@ -37,7 +37,7 @@ impl ProcName {
             name.extend(Self::dec_cpuid(&cpuid));
         }
 
-        return String::from_utf8(name).unwrap();
+        String::from_utf8(name).unwrap()
     }
     
     pub fn get_name() -> String {

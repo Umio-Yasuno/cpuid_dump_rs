@@ -106,7 +106,7 @@ impl CacheProp {
             return Some(_AX+0x1D);
         }
 
-        return None;
+        None
     }
     
     pub fn from_cpuid(cpuid: &CpuidResult) -> CacheProp {

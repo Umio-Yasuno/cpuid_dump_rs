@@ -86,7 +86,7 @@ impl MicroArchLevel {
                 }
             }
 
-            return true;
+            true
         };
 
         let base_line = mask(&[Self::BASE_LINE], &[cpuid_00_01.edx]);
@@ -101,7 +101,7 @@ impl MicroArchLevel {
         if x86_64_v3 { level |= 1 << 2 }
         if x86_64_v4 { level |= 1 << 3 }
 
-        return Self(level);
+        Self(level)
     }
     pub fn check() -> u8 {
         let cpuid_array = Self::set_cpuid();

@@ -41,7 +41,7 @@ impl Vendor {
             self.ebx,
             self.edx,
             self.ecx,
-        ].map(|reg| dec(reg) );
+        ].map(dec);
 
         format!("{ebx}{edx}{ecx}")
     }

@@ -91,7 +91,7 @@ impl ParseGeneric for CpuidResult {
         buff.extend(str_detect_ftr(edx, &ftr_00_01_edx_x0()));
         buff.extend(str_detect_ftr(ecx, &ftr_00_01_ecx_x0()));
 
-        return align_mold_ftr(&buff);
+        align_mold_ftr(&buff)
     }
 
     fn thermal_power_00_06h(&self) -> String {
@@ -107,7 +107,7 @@ impl ParseGeneric for CpuidResult {
             str_detect_ftr(edx, &ftr_00_07_edx_x0()),
         ].concat();
 
-        return align_mold_ftr(&buff);
+        align_mold_ftr(&buff)
     }
 
     fn feature_00_07h_x1(&self) -> String {
@@ -134,7 +134,7 @@ impl ParseGeneric for CpuidResult {
         let num_proc = self.ebx & 0xFFFF;
         // let ext_local_apicid = self.edx;
 
-        return [
+        [
             format!(" [LevelType: {level_type_str} ({level_type_val:#x})]"),
             lnpad!(),
             format!(" [NumProcAtThisLevel: {num_proc}]"),
@@ -144,7 +144,7 @@ impl ParseGeneric for CpuidResult {
             lnpad!(),
             format!(" [ExtAPID_ID: {ext_local_apicid}]"),
             */
-        ].concat();
+        ].concat()
     }
 
     fn xstate_00_0dh(&self, sub_leaf: u32) -> String {
@@ -173,7 +173,7 @@ impl ParseGeneric for CpuidResult {
 
         let eax = self.eax;
 
-        return match sub_leaf {
+        match sub_leaf {
             0x0 => x0(eax),
             0x1 => x1(eax),
             0x2 => size(eax, "XSTATE"),
@@ -181,7 +181,7 @@ impl ParseGeneric for CpuidResult {
             0xB => size(eax, "CET User"),
             0xC => size(eax, "CET SuperVisor"),
             _ => "".to_string(),
-        };
+        }
     }
 
     fn feature_80_01h(&self) -> String {
@@ -191,7 +191,7 @@ impl ParseGeneric for CpuidResult {
             str_detect_ftr(self.edx, &ftr_80_01_edx_x0()),
         ].concat();
 
-        return align_mold_ftr(&buff);
+        align_mold_ftr(&buff)
     }
 
     fn addr_size_80_08h(&self) -> String {
@@ -209,7 +209,7 @@ impl ParseGeneric for CpuidResult {
     fn cpu_name(&self) -> String {
         let name = libcpuid_dump::ProcName::dec_cpuid(self);
 
-        return String::from_utf8(name).unwrap();
+        String::from_utf8(name).unwrap()
     }
 
     fn cache_prop(&self) -> String {
@@ -227,10 +227,10 @@ impl ParseGeneric for CpuidResult {
             ),
             // format!(" [Shared {}T]", cache.share_thread),
             if cache.inclusive {
-                format!(" [Inclusive]")
+                " [Inclusive]"
             } else {
-                "".to_string()
-            }
+                ""
+            }.to_string()
         ].concat();
     }
 }
