@@ -444,6 +444,7 @@ pub const fn ftr_amd_80_1f_eax_x0() -> [&'static str; 32] {
     return ftr;
 }
 
+/*
 pub(crate) const fn ftr_amd_80_20_ebx_x0() -> [&'static str; 32] {
     let mut ftr = [""; 32];
 
@@ -451,6 +452,7 @@ pub(crate) const fn ftr_amd_80_20_ebx_x0() -> [&'static str; 32] {
 
     return ftr;
 }
+*/
 
 pub(crate) const fn ftr_amd_80_21_eax_x0() -> [&'static str; 32] {
     let mut ftr = [""; 32];
