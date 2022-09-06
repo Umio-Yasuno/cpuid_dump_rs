@@ -56,6 +56,7 @@ impl MicroArchLevel {
             ABM_LZCNT,
         ]
     };
+
     const X86_64_V4: u32 = {
         /* 00_07_EBX */
         const AVX512F: u32  = 1 << 16;

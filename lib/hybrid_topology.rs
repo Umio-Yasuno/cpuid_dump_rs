@@ -110,7 +110,7 @@ impl TopoCacheInfo {
 
         for cpu in &type_only_list[1..] {
             let cpu = *cpu;
-            let cache_leaf = cache_leaf.clone();
+            let cache_leaf = Arc::clone(&cache_leaf);
 
             let [l2_ids, l3_ids, l4_ids] = [
                 Arc::clone(&l2_ids),
@@ -243,15 +243,15 @@ impl TopoCacheInfo {
     }
 }
 
-struct TopoPartInfo {
-   core_type: HybridCoreType,
-   num_logical_proc: u32,
-   num_physical_proc: u32,
-   cache: TopoCacheInfo,
+pub struct TopoPartInfo {
+   pub core_type: HybridCoreType,
+   pub num_logical_proc: u32,
+   pub num_physical_proc: u32,
+   pub cache: Option<TopoCacheInfo>,
 }
 
 impl TopoPartInfo {
-    fn check_hybrid_flag() -> bool {
+    pub fn check_hybrid_flag() -> bool {
         let cpuid = (cpuid!(0x7, 0x0).edx >> 15) & 0b1;
 
         return cpuid == 1;
@@ -287,5 +287,28 @@ impl TopoPartInfo {
         }
 
         return Arc::try_unwrap(type_only_list).unwrap().into_inner().unwrap();
+    }
+
+    pub fn get(core_type: HybridCoreType) -> Self {
+        let core_type_ = core_type.clone();
+        let cpu_list = Self::get_core_type_only_list(core_type_);
+        /* core type only */
+        let num_logical_proc = cpu_list.len() as u32;
+        
+        pin_thread(cpu_list[0]).unwrap();
+
+        let threads_per_core = match get_threads_per_core() {
+            Some(num) => num,
+            None => 1,
+        };
+        let num_physical_proc = num_logical_proc / threads_per_core;
+        let cache = TopoCacheInfo::get_topology_cache_info(&cpu_list);
+
+        Self {
+            core_type,
+            num_logical_proc,
+            num_physical_proc,
+            cache,
+        }
     }
 }

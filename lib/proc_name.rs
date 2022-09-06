@@ -9,6 +9,7 @@ impl ProcName {
             |&byte| if char::from(byte).is_control() { 0x20 } else { byte }
         ).collect()
     }
+
     pub fn dec_cpuid(cpuid: &CpuidResult) -> Vec<u8> {
         /* u32 ([u8; 4]) * 4 (E{A,B,C,D}X) */
         let mut tmp: Vec<u8> = Vec::with_capacity(16);
@@ -19,6 +20,7 @@ impl ProcName {
 
         return tmp;
     }
+    
     fn set_cpuid() -> [CpuidResult; 3] {
         [
             cpuid!(_AX+0x2, 0x0),
@@ -26,6 +28,7 @@ impl ProcName {
             cpuid!(_AX+0x4, 0x0),
         ]
     }
+    
     pub fn from_cpuid_array(array: [CpuidResult; 3]) -> String {
         /* 4 (0x8000_0002 .. 0x8000_0004) * u32 ([u8; 4]) * 4 (E{A,B,C,D}X) */
         let mut name: Vec<u8> = Vec::with_capacity(48);
@@ -36,10 +39,12 @@ impl ProcName {
 
         return String::from_utf8(name).unwrap();
     }
+    
     pub fn get_name() -> String {
         let cpuid = Self::set_cpuid();
         Self::from_cpuid_array(cpuid)
     }
+    
     pub fn get_trim_name() -> String {
         Self::get_name()
             .trim_end()

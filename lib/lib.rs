@@ -172,7 +172,7 @@ pub fn get_threads_per_core() -> Option<u32> {
 #[macro_export]
 macro_rules! initial_apic_id {
     () => {
-        cpuid!(0x1, 0x0).eax >> 24
+        initial_apic_id!(cpuid!(0x1, 0x0).eax)
     };
     ($eax: expr) => {
         $eax >> 24
@@ -182,7 +182,7 @@ macro_rules! initial_apic_id {
 #[macro_export]
 macro_rules! max_apic_id {
     () => {
-        (cpuid!(0x1, 0x0).eax >> 16) & 0xFF
+        max_apic_id!(cpuid!(0x1, 0x0).eax)
     };
     ($eax: expr) => {
         ($eax >> 16) & 0xFF

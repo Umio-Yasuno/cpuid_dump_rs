@@ -32,9 +32,11 @@ impl FamModStep {
             raw_eax: eax,
         }
     }
+    
     pub fn get() -> Self {
         Self::from_cpuid(cpuid!(0x1, 0).eax)
     }
+
     pub fn proc_info(&self) -> ProcInfo {
         let [f, m, s] = [self.syn_fam, self.syn_mod, self.step];
 
@@ -51,12 +53,15 @@ impl FamModStep {
             },
         }
     }
+    
     pub fn codename(&self) -> String {
         self.proc_info().codename
     }
+
     pub fn archname(&self) -> String {
         self.proc_info().archname
     }
+
     pub fn process(&self) -> String {
         self.proc_info().process
     }
