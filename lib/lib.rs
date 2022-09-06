@@ -182,9 +182,9 @@ macro_rules! initial_apic_id {
 #[macro_export]
 macro_rules! max_apic_id {
     () => {
-        max_apic_id!(cpuid!(0x1, 0x0).eax)
+        max_apic_id!(cpuid!(0x1, 0x0).ebx)
     };
-    ($eax: expr) => {
-        ($eax >> 16) & 0xFF
+    ($ebx: expr) => {
+        ($ebx >> 16) & 0xFF
     };
 }

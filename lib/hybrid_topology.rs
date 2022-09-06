@@ -10,6 +10,7 @@ struct CachePropCount {
 }
 */
 
+#[derive(Debug)]
 pub struct LastLevelCache {
     pub level: u32,
     pub share_thread: u32,
@@ -28,6 +29,7 @@ impl LastLevelCache {
     }
 }
 
+#[derive(Debug)]
 pub struct TopoCacheInfo {
     pub l1d_cache: Option<CacheProp>,
     // l1d_count: u32,
@@ -293,16 +295,34 @@ impl TopoPartInfo {
         let core_type_ = core_type.clone();
         let cpu_list = Self::get_core_type_only_list(core_type_);
         /* core type only */
-        let num_logical_proc = cpu_list.len() as u32;
-        
-        pin_thread(cpu_list[0]).unwrap();
+        let num_logical_proc = Arc::new(cpu_list.len() as u32);
 
-        let threads_per_core = match get_threads_per_core() {
-            Some(num) => num,
-            None => 1,
-        };
-        let num_physical_proc = num_logical_proc / threads_per_core;
-        let cache = TopoCacheInfo::get_topology_cache_info(&cpu_list);
+        let num_physical_proc = Arc::new(Mutex::new(0u32));
+        let cache: Arc<Mutex<Option<TopoCacheInfo>>> = Arc::new(Mutex::new(None));
+
+        /* To confine the effects of pin_thread */
+        {
+                let logi_proc = Arc::clone(&num_logical_proc);
+                let phy_proc = Arc::clone(&num_physical_proc);
+                let topo_cache = Arc::clone(&cache);
+
+                thread::spawn(move || {
+                    pin_thread(cpu_list[0]).unwrap();
+
+                    let threads_per_core = match get_threads_per_core() {
+                        Some(num) => num,
+                        None => 1,
+                    };
+                    let mut phy_proc = phy_proc.lock().unwrap();
+                    *phy_proc = *logi_proc / threads_per_core;
+                    let mut topo_cache = topo_cache.lock().unwrap();
+                    *topo_cache = TopoCacheInfo::get_topology_cache_info(&cpu_list);
+                }).join().unwrap();
+        }
+
+        let num_physical_proc = *num_physical_proc.lock().unwrap();
+        let num_logical_proc = *num_logical_proc;
+        let cache = Arc::try_unwrap(cache).unwrap().into_inner().unwrap();
 
         Self {
             core_type,
