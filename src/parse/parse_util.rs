@@ -20,9 +20,9 @@ macro_rules! lnpad {
     };
 }
 
-pub struct Reg(u32);
+pub(crate) struct Reg(u32);
 impl Reg {
-    pub fn new(reg: u32) -> Self {
+    pub(crate) fn new(reg: u32) -> Self {
         Self(reg)
     }
 
@@ -36,7 +36,7 @@ impl Reg {
         return array;
     }
 
-    pub fn to_bool_array(&self) -> [bool; 32] {
+    pub(crate) fn to_bool_array(&self) -> [bool; 32] {
         let mut array = [false; 32];
 
         for (bit, flag) in self.to_bit_array().iter().zip(array.iter_mut()) {
@@ -47,7 +47,7 @@ impl Reg {
     }
 }
 
-pub fn str_detect_ftr(reg: u32, ftr_str: &[&str]) -> Vec<String> {
+pub(crate) fn str_detect_ftr(reg: u32, ftr_str: &[&str]) -> Vec<String> {
     let reg = Reg::new(reg).to_bool_array();
     let mut buff: Vec<String> = Vec::with_capacity(32);
 
@@ -60,7 +60,7 @@ pub fn str_detect_ftr(reg: u32, ftr_str: &[&str]) -> Vec<String> {
     return buff;
 }
 
-pub fn align_mold_ftr(buff: &[String]) -> String {
+pub(crate) fn align_mold_ftr(buff: &[String]) -> String {
     let mut rest: usize = PARSE_WIDTH;
     let mut mold = String::with_capacity(buff.len() * 48);
     let mut inner: String;
@@ -88,7 +88,8 @@ pub fn align_mold_ftr(buff: &[String]) -> String {
     return mold;
 }
 
-pub fn ftr_variant_expand(base_name: &str, flag_str: &[(bool, &str)]) -> String {
+/*
+pub(crate) fn ftr_variant_expand(base_name: &str, flag_str: &[(bool, &str)]) -> String {
     let mut base = format!("{base_name}{{");
 
     for (flag, name) in flag_str {
@@ -102,3 +103,4 @@ pub fn ftr_variant_expand(base_name: &str, flag_str: &[(bool, &str)]) -> String 
 
     return base;
 }
+*/

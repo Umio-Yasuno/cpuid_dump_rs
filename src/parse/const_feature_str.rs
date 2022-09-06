@@ -126,24 +126,22 @@ pub(crate) const fn ftr_00_07_ebx_x0() -> [&'static str; 32] {
     ftr[13] = "FPU_CS_DS"; // Deprecates FPU CS and FPU DS
     ftr[14] = "MemoryProtectionExtensions";
     ftr[15] = "PQE"; // AMD: PQE (Cache Allocation Technology, Platform QoS Allocation?), Intel: RTD-A (Allocation),
-    // ftr[16] = "AVX512F";
-    // ftr[17] = "AVX512DQ";
+    ftr[16] = "AVX512F";
+    ftr[17] = "AVX512DQ";
     ftr[18] = "RDSEED";
     ftr[19] = "ADX";
     ftr[20] = "SMAP";
-    // ftr[21] = "AVX512IFMA";
+    ftr[21] = "AVX512IFMA";
     ftr[22] = "";
     ftr[23] = "CLFLUSHOPT";
     ftr[24] = "CLWB";
     ftr[25] = "ProcessorTrace";
-    // ftr[26] = "AVX512PF";
-    // ftr[27] = "AVX512ER";
-    // ftr[28] = "AVX512CD";
+    ftr[26] = "AVX512PF";
+    ftr[27] = "AVX512ER";
+    ftr[28] = "AVX512CD";
     ftr[29] = "SHA";
-    // ftr[30] = "AVX512BW";
-    // ftr[31] = "AVX512VL";
-
-    /* use ftr_variant_expand to AVX512* */
+    ftr[30] = "AVX512BW";
+    ftr[31] = "AVX512VL";
                  
     return ftr;
 }
@@ -152,20 +150,20 @@ pub(crate) const fn ftr_00_07_ecx_x0() -> [&'static str; 32] {
     let mut ftr = [""; 32];
 
     ftr[0] = "PREFETCHWT1"; // Intel Xeon Phi only
-    // ftr[1] = "AVX512_VBMI";
+    ftr[1] = "AVX512_VBMI";
     ftr[2] = "UMIP";
     ftr[3] = "PKU";
     ftr[4] = "OSPKE";
     ftr[5] = "WAITPKG";
-    // ftr[6] = "AVX512_VBMI2";
+    ftr[6] = "AVX512_VBMI2";
     ftr[7] = "CET_SS";
     ftr[8] = "GFNI";
     ftr[9] = "VAES";
     ftr[10] = "VPCLMULQDQ";
-    // ftr[11] = "AVX512_VNNI";
-    // ftr[12] = "AVX512_BITALG";
+    ftr[11] = "AVX512_VNNI";
+    ftr[12] = "AVX512_BITALG";
     ftr[13] = "TME_EN";
-    // ftr[14] = "AVX512_VPOPCNTDQ";
+    ftr[14] = "AVX512_VPOPCNTDQ";
     ftr[15] = "";
     ftr[16] = "LA57"; // 57-bit linear addresses
     ftr[17] = "";
@@ -196,7 +194,7 @@ pub(crate) const fn ftr_00_07_edx_x0() -> [&'static str; 32] {
     ftr[5] = "UINTR"; // the processor supports user interrupts
     ftr[6] = "";
     ftr[7] = "";
-    // ftr[8] = "AVX512_VP2INTERSECT";
+    ftr[8] = "AVX512_VP2INTERSECT";
     ftr[9] = "";
     ftr[10] = "MD_CLEAR";
     ftr[11] = "";
@@ -220,6 +218,20 @@ pub(crate) const fn ftr_00_07_edx_x0() -> [&'static str; 32] {
     ftr[29] = "";
     ftr[30] = "";
     ftr[31] = "SSBD";
+
+    return ftr;
+}
+
+pub(crate) const fn ftr_00_07_eax_x1() -> [&'static str; 32] {
+    let mut ftr = [""; 32];
+
+    ftr[4] = "AVX_VNNI";
+    ftr[5] = "AVX512_BF16";
+    ftr[10] = ""; // fast zero-length MOVSB
+    ftr[11] = ""; // fast short STOSB
+    ftr[12] = ""; // fast short CMPSB, SCASB
+    ftr[22] = "HRESET";
+    ftr[26] = "LAM"; // Linear Address Masking
 
     return ftr;
 }
@@ -297,6 +309,20 @@ pub(crate) const fn ftr_80_01_ecx_x0() -> [&'static str; 32] {
     ftr[28] = "PerfCtrExtLLC"; // L3 performance counter extension
     ftr[29] = "MONITORX"; // MWAITX/MONITORX
     ftr[30] = "AddrMaskExt";
+
+    return ftr;
+}
+
+pub(crate) const fn ftr_80_01_edx_x0() -> [&'static str; 32] {
+    let mut ftr = [""; 32];
+
+    ftr[11] = "SYSCALL/SYSRET";
+    ftr[20] = "NXbit";
+    ftr[26] = "Page1GB";
+    ftr[27] = "RDTSCP";
+    ftr[29] = "LongMode";
+    ftr[30] = "3DNow!Ext";
+    ftr[31] = "3DNow!";
 
     return ftr;
 }

@@ -116,8 +116,12 @@ impl RawCpuid {
 
     fn result(&self, end_str: &str) -> String {
         format!("  0x{:08X}_x{:1X}:  0x{:08X} 0x{:08X} 0x{:08X} 0x{:08X} {}",
-            self.leaf, self.sub_leaf,
-            self.result.eax, self.result.ebx, self.result.ecx, self.result.edx,
+            self.leaf,
+            self.sub_leaf,
+            self.result.eax,
+            self.result.ebx,
+            self.result.ecx,
+            self.result.edx,
             end_str,
         )
     }

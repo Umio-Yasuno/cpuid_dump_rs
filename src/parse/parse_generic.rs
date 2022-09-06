@@ -91,27 +91,6 @@ impl ParseGeneric for CpuidResult {
         buff.extend(str_detect_ftr(edx, &ftr_00_01_edx_x0()));
         buff.extend(str_detect_ftr(ecx, &ftr_00_01_ecx_x0()));
 
-        let [ecx, edx] = [
-            Reg::new(ecx).to_bool_array(),
-            Reg::new(edx).to_bool_array(),
-        ];
-
-        /* SSE */
-        /*
-        if edx[25] {
-            let ftr_map = [
-                (edx[26], "2"),
-                (ecx[0], "3"),
-                (ecx[19], "4.1"),
-                (ecx[20], "4.2"),
-            ];
-            let sse = ftr_variant_expand("SSE", &ftr_map);
-
-            buff.push(sse);
-        }
-        */
-        // if ecx[9] { buff.push("SSSE3".to_string()); }
-
         return align_mold_ftr(&buff);
     }
 
@@ -120,116 +99,19 @@ impl ParseGeneric for CpuidResult {
     }
 
     fn feature_00_07h_x0(&self) -> String {
-        let mut buff: Vec<String> = Vec::with_capacity(96);
         let [ebx, ecx, edx] = [self.ebx, self.ecx, self.edx];
 
-        buff.extend(str_detect_ftr(ebx, &ftr_00_07_ebx_x0()));
-        buff.extend(str_detect_ftr(ecx, &ftr_00_07_ecx_x0()));
-        buff.extend(str_detect_ftr(edx, &ftr_00_07_edx_x0()));
-
-        let [ebx, ecx, edx] = [
-            ebx, ecx, edx,
-        ].map(|reg| Reg::new(reg).to_bool_array());
-
-        let avx512_f    = ebx[16];
-        let avx512_dq   = ebx[17];
-        let avx512_ifma = ebx[21];
-        let avx512_cd   = ebx[28];
-        let avx512_bw   = ebx[30];
-        let avx512_vl   = ebx[31];
-
-        if avx512_f || avx512_dq || avx512_ifma || avx512_cd
-        || avx512_bw || avx512_vl {
-            let v = [
-                (avx512_f,    "F"),
-                (avx512_dq,   "DQ"),
-                (avx512_ifma, "IFMA"),
-                (avx512_cd,   "CD"),
-                (avx512_bw,   "BW"),
-                (avx512_vl,   "VL")
-            ];
-            let avx512 = ftr_variant_expand("AVX512", &v);
-            buff.push(avx512);
-        }
-
-        /* Intel Xeon Phi only */
-        if ebx[26] && ebx[27] {
-            buff.push("AVX512{PF,ER}".to_string());
-        }
-
-        // 0x00000007_ECX_x0
-        let avx512_vbmi1     = ecx[ 1];
-        let avx512_vbmi2     = ecx[ 6];
-        let avx512_vnni      = ecx[11];
-        let avx512_bitalg    = ecx[12];
-        let avx512_vpopcntdq = ecx[14];
-
-        if avx512_vbmi1 || avx512_vbmi2 || avx512_vnni
-        || avx512_bitalg || avx512_vpopcntdq {
-            let v = [
-                (avx512_vbmi1,     "VBMI"),
-                (avx512_vbmi2,     "VBMI2"),
-                (avx512_vnni,      "VNNI"),
-                (avx512_bitalg,    "BITALG"),
-                (avx512_vpopcntdq, "VPOPCNTDQ"),
-            ];
-            let avx512 = ftr_variant_expand("AVX512", &v);
-            buff.push(avx512);
-        }
-
-        // 0x00000007_EDX_x0
-        /* Intel Xeon Phi Only */
-        if edx[2] && edx[3] {
-            buff.push("AVX512{4VNNIW,4FMAPS}".to_string());
-        }
-
-        let avx512_vp2intersect  = edx[ 8];
-        let avx512_fp16          = edx[23];
-
-        if avx512_vp2intersect || avx512_fp16 {
-            let v = [
-                (avx512_vp2intersect, "VP2INTERSECT"),
-                (avx512_fp16,         "FP16"),
-            ];
-            let avx512 = ftr_variant_expand("AVX512", &v);
-            buff.push(avx512);
-        }
-
-        /*
-            Currently Intel Sapphire Rapids only
-            Bit22 => AMX-BF16,
-            Bit24 => AMX-TILE,
-            Bit25 => AMX-INT8,
-        */
-        if edx[22] && edx[24] && edx[25] {
-            /*
-                let v = [
-                    (ebx[22], "BF16"),
-                    (ebx[24], "TILE"),
-                    (ebx[25], "INT8"),
-                ];
-                let amx = ftr_variant_expand("AMX", &v);
-            */
-            buff.push("AMX{BF16,TILE,INT8}".to_string());
-        }
+        let buff = [
+            str_detect_ftr(ebx, &ftr_00_07_ebx_x0()),
+            str_detect_ftr(ecx, &ftr_00_07_ecx_x0()),
+            str_detect_ftr(edx, &ftr_00_07_edx_x0()),
+        ].concat();
 
         return align_mold_ftr(&buff);
     }
 
     fn feature_00_07h_x1(&self) -> String {
-        let eax = self.eax;
-        /* https://github.com/torvalds/linux/commit/b85a0425d8056f3bd8d0a94ecdddf2a39d32a801 */
-        let mut v = [""; 32];
-        {
-            v[4] = "AVX_VNNI";
-            v[5] = "AVX512_BF16";
-            v[22] = "HRESET";
-            v[26] = "LAM";
-        }
-
-        let buff = str_detect_ftr(eax, &v);
-
-        return align_mold_ftr(&buff);
+        align_mold_ftr(&str_detect_ftr(self.eax, &ftr_00_07_eax_x1()))
     }
 
     fn topo_ext_00_0bh(&self) -> String {
@@ -303,19 +185,11 @@ impl ParseGeneric for CpuidResult {
     }
 
     fn feature_80_01h(&self) -> String {
-        let [ecx, edx] = [ self.ecx, self.edx, ];
-
-        // 0x8000_0001_ECX_x0
-        let mut buff = str_detect_ftr(ecx, &ftr_80_01_ecx_x0());
-
-        // 0x8000_0001_EDX_x0
-        let edx = Reg::new(edx).to_bool_array();
-
-        if edx[31] {
-            let v = [ (edx[30], "EXT") ];
-            let tdnow = ftr_variant_expand("3DNow!", &v);
-            buff.push(tdnow);
-        }
+        // 0x8000_0001_E{CD}X_x0
+        let buff = [
+            str_detect_ftr(self.ecx, &ftr_80_01_ecx_x0()),
+            str_detect_ftr(self.edx, &ftr_80_01_edx_x0()),
+        ].concat();
 
         return align_mold_ftr(&buff);
     }

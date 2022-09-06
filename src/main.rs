@@ -169,9 +169,8 @@ fn topo_info_with_threadid_head(thread_id: usize) -> String {
 }
 
 fn dump_write(pool: &[u8]) {
-    use std::io::{BufWriter, Write, stdout};
-    let out = stdout();
-    let mut out = BufWriter::new(out.lock());
+    use std::io::{Write, stdout};
+    let mut out = stdout().lock();
 
     out.write(pool).unwrap();
 }
