@@ -88,8 +88,8 @@ impl ParseGeneric for CpuidResult {
         let mut buff: Vec<String> = Vec::with_capacity(64);
         let [ecx, edx] = [self.ecx, self.edx];
 
-        buff.extend(str_detect_ftr(edx, FTR_00_01_EDX_X0));
-        buff.extend(str_detect_ftr(ecx, FTR_00_01_ECX_X0));
+        buff.extend(str_detect_ftr(edx, &ftr_00_01_edx_x0()));
+        buff.extend(str_detect_ftr(ecx, &ftr_00_01_ecx_x0()));
 
         let [ecx, edx] = [
             Reg::new(ecx).to_bool_array(),
@@ -108,22 +108,22 @@ impl ParseGeneric for CpuidResult {
 
             buff.push(sse);
         }
-        if ecx[9] { buff.push("SSSE3".to_string()); }
+        // if ecx[9] { buff.push("SSSE3".to_string()); }
 
         return align_mold_ftr(&buff);
     }
 
     fn thermal_power_00_06h(&self) -> String {
-        align_mold_ftr(&str_detect_ftr(self.eax, FTR_00_06_EAX_X0))
+        align_mold_ftr(&str_detect_ftr(self.eax, &ftr_00_06_eax_x0()))
     }
 
     fn feature_00_07h_x0(&self) -> String {
         let mut buff: Vec<String> = Vec::with_capacity(96);
         let [ebx, ecx, edx] = [self.ebx, self.ecx, self.edx];
 
-        buff.extend(str_detect_ftr(ebx, FTR_00_07_EBX_X0));
-        buff.extend(str_detect_ftr(ecx, FTR_00_07_ECX_X0));
-        buff.extend(str_detect_ftr(edx, FTR_00_07_EDX_X0));
+        buff.extend(str_detect_ftr(ebx, &ftr_00_07_ebx_x0()));
+        buff.extend(str_detect_ftr(ecx, &ftr_00_07_ecx_x0()));
+        buff.extend(str_detect_ftr(edx, &ftr_00_07_edx_x0()));
 
         let [ebx, ecx, edx] = [
             ebx, ecx, edx,
@@ -265,7 +265,7 @@ impl ParseGeneric for CpuidResult {
 
     fn xstate_00_0dh(&self, sub_leaf: u32) -> String {
         let x0 = |eax: u32| -> String {
-            let tmp = align_mold_ftr(&str_detect_ftr(eax, XFEATURE_MASK_00_0D_EAX_X0));
+            let tmp = align_mold_ftr(&str_detect_ftr(eax, &xfeature_mask_00_0d_eax_x0()));
 
             if !tmp.is_empty() {
                 format!(" [-XFEATURE Mask-]{LN_PAD}{tmp}")
@@ -275,7 +275,7 @@ impl ParseGeneric for CpuidResult {
         };
 
         let x1 = |eax: u32| -> String {
-            align_mold_ftr(&str_detect_ftr(eax, XSAVE_00_0D_EAX_X1))
+            align_mold_ftr(&str_detect_ftr(eax, &xsave_00_0d_eax_x1()))
         };
 
         let size = |eax: u32, txt: &str| -> String {
@@ -304,7 +304,7 @@ impl ParseGeneric for CpuidResult {
         let [ecx, edx] = [ self.ecx, self.edx, ];
 
         // 0x8000_0001_ECX_x0
-        let mut buff = str_detect_ftr(ecx, FTR_80_01_ECX_X0);
+        let mut buff = str_detect_ftr(ecx, &ftr_80_01_ecx_x0());
 
         // 0x8000_0001_EDX_x0
         let edx = Reg::new(edx).to_bool_array();

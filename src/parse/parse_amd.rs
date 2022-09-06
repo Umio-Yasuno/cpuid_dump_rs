@@ -107,11 +107,11 @@ impl ParseAMD for CpuidResult {
     }
 
     fn apmi_amd_80_07h(&self) -> String {
-        align_mold_ftr(&str_detect_ftr(self.edx, FTR_AMD_80_07_EDX_X0))
+        align_mold_ftr(&str_detect_ftr(self.edx, &ftr_amd_80_07_edx_x0()))
     }
 
     fn spec_amd_80_08h(&self) -> String {
-        align_mold_ftr(&str_detect_ftr(self.ebx, FTR_AMD_80_08_EBX_X0))
+        align_mold_ftr(&str_detect_ftr(self.ebx, &ftr_amd_80_08_ebx_x0()))
     }
 
     fn size_amd_80_08h(&self) -> String {
@@ -119,7 +119,7 @@ impl ParseAMD for CpuidResult {
     }
 
     fn rev_id_amd_80_0ah(&self) -> String {
-        align_mold_ftr(&str_detect_ftr(self.edx, FTR_AMD_80_0A_EDX_X0))
+        align_mold_ftr(&str_detect_ftr(self.edx, &ftr_amd_80_0a_edx_x0()))
     }
 
     fn l1l2tlb_1g_amd_80_19h(&self) -> String {
@@ -148,11 +148,11 @@ impl ParseAMD for CpuidResult {
     }
 
     fn fpu_width_amd_80_1ah(&self) -> String {
-        align_mold_ftr(&str_detect_ftr(self.eax, FTR_AMD_80_1A_EAX_X0))
+        align_mold_ftr(&str_detect_ftr(self.eax, &ftr_amd_80_1a_eax_x0()))
     }
 
     fn ibs_amd_80_1bh(&self) -> String {
-        align_mold_ftr(&str_detect_ftr(self.eax, FTR_AMD_80_1B_EAX_X0))
+        align_mold_ftr(&str_detect_ftr(self.eax, &ftr_amd_80_1b_eax_x0()))
     }
 
     fn cpu_topo_amd_80_1eh(&self) -> String {
@@ -170,7 +170,7 @@ impl ParseAMD for CpuidResult {
     }
 
     fn encrypt_ftr_amd_80_1fh(&self) -> String {
-        align_mold_ftr(&str_detect_ftr(self.eax, FTR_AMD_80_1F_EAX_X0))
+        align_mold_ftr(&str_detect_ftr(self.eax, &ftr_amd_80_1f_eax_x0()))
     }
 
     fn reduction_phys_addr_amd_80_1fh(&self) -> String {
@@ -190,7 +190,7 @@ impl ParseAMD for CpuidResult {
     }
 
     fn ext_amd_80_21h(&self) -> String {
-        let ftr = align_mold_ftr(&str_detect_ftr(self.eax, FTR_AMD_80_21_EAX_X0));
+        let ftr = align_mold_ftr(&str_detect_ftr(self.eax, &ftr_amd_80_21_eax_x0()));
 
         if 0 < self.ebx {
             [
