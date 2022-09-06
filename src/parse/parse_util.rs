@@ -1,5 +1,4 @@
 use crate::*;
-use std::fmt::Write;
 
 const PAD_WIDTH: usize = INPUT_WIDTH + OUTPUT_WIDTH + 1;
 // pub const PAD: &str = unsafe { std::str::from_utf8_unchecked(&[b' '; PAD_WIDTH]) };
@@ -82,7 +81,7 @@ pub(crate) fn align_mold_ftr(buff: &[String]) -> String {
             };
         }
 
-        write!(mold, "{inner}").unwrap();
+        mold += &inner;
     }
 
     mold
