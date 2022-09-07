@@ -41,6 +41,7 @@ impl fmt::Display for IntelLevelType {
 pub struct IntelExtTopo {
     pub next_level: u32,
     pub x2apic_id: u32,
+    pub num_proc: u32,
     pub level_type: IntelLevelType,
 }
 
@@ -53,11 +54,13 @@ impl IntelExtTopo {
 
             IntelLevelType::from_reg(reg as u8)
         };
+        let num_proc = cpuid.ebx & 0xFFFF;
 
         Self {
             next_level,
             x2apic_id,
             level_type,
+            num_proc,
         }
     }
 }

@@ -49,9 +49,7 @@ pub trait ParseAMD {
 
 impl ParseAMD for CpuidResult {
     fn pkgtype_amd_80_01h(&self) -> String {
-        let ebx = self.ebx;
-
-        let pkg_type = ebx >> 28;
+        let pkg_type = self.ebx >> 28;
         /*
         // Family 17h, 19h
         let pkg_dec = match pkg_type {
@@ -156,11 +154,9 @@ impl ParseAMD for CpuidResult {
     }
 
     fn cpu_topo_amd_80_1eh(&self) -> String {
-        let [ebx, ecx] = [self.ebx, self.ecx];
-
-        let core_id = ebx & 0xFF;
-        let th_per_core = ((ebx >> 8) & 0xFF) + 1;
-        let node_id = ecx & 0xFF;
+        let core_id = self.ebx & 0xFF;
+        let th_per_core = ((self.ebx >> 8) & 0xFF) + 1;
+        let node_id = self.ecx & 0xFF;
 
         return [
             format!(" [NodeID: {node_id}, CoreID: {core_id}]"),

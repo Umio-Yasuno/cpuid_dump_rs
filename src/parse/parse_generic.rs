@@ -47,10 +47,11 @@ impl ParseGeneric for CpuidResult {
     fn monitor_mwait_00_05h(&self) -> String {
         let min_mon_line_size = self.eax & 0xFFFF;
         let max_mon_line_size = self.ebx & 0xFFFF;
-        let ftr = format!("{}{}",
+        let ftr = [
             if (self.ecx & 0b01) == 0b01 { " [EMX]" } else { "" },
             if (self.ecx & 0b10) == 0b10 { " [IBE]" } else { "" },
-        );
+        ].concat();
+
         let c_state: String = {
             let mut c = 0;
 
@@ -85,11 +86,10 @@ impl ParseGeneric for CpuidResult {
     }
 
     fn feature_00_01h(&self) -> String {
-        let mut buff: Vec<String> = Vec::with_capacity(64);
-        let [ecx, edx] = [self.ecx, self.edx];
-
-        buff.extend(str_detect_ftr(edx, &ftr_00_01_edx_x0()));
-        buff.extend(str_detect_ftr(ecx, &ftr_00_01_ecx_x0()));
+        let buff = [
+            str_detect_ftr(self.edx, &ftr_00_01_edx_x0()),
+            str_detect_ftr(self.ecx, &ftr_00_01_ecx_x0()),
+        ].concat();
 
         align_mold_ftr(&buff)
     }
@@ -99,12 +99,10 @@ impl ParseGeneric for CpuidResult {
     }
 
     fn feature_00_07h_x0(&self) -> String {
-        let [ebx, ecx, edx] = [self.ebx, self.ecx, self.edx];
-
         let buff = [
-            str_detect_ftr(ebx, &ftr_00_07_ebx_x0()),
-            str_detect_ftr(ecx, &ftr_00_07_ecx_x0()),
-            str_detect_ftr(edx, &ftr_00_07_edx_x0()),
+            str_detect_ftr(self.ebx, &ftr_00_07_ebx_x0()),
+            str_detect_ftr(self.ecx, &ftr_00_07_ecx_x0()),
+            str_detect_ftr(self.edx, &ftr_00_07_edx_x0()),
         ].concat();
 
         align_mold_ftr(&buff)
@@ -115,34 +113,17 @@ impl ParseGeneric for CpuidResult {
     }
 
     fn topo_ext_00_0bh(&self) -> String {
-        let (level_type_str, level_type_val) = {
-            let tmp = (self.ecx >> 8) & 0xFF;
-
-            (match tmp {
-                0x0 => {
-                    // "Invalid"
-                    return "".to_string();
-                },
-                0x1 => "Thread",
-                0x2 => "Core",
-                _ => "Reserved",
-            }, tmp)
-        };
-
-        // let core_mask_width = self.eax & 0xF;
-        /* logical processor at this level */
-        let num_proc = self.ebx & 0xFFFF;
-        // let ext_local_apicid = self.edx;
+        let topo = libcpuid_dump::IntelExtTopo::from_cpuid(self);
 
         [
-            format!(" [LevelType: {level_type_str} ({level_type_val:#x})]"),
+            format!(" [LevelType: {}]", topo.level_type),
             lnpad!(),
-            format!(" [NumProcAtThisLevel: {num_proc}]"),
+            format!(" [NumProcAtThisLevel: {}]", topo.num_proc),
             /*
             lnpad!(),
-            format!(" [CoreMaskWidth: {core_mask_width}]"),
+            format!(" [CoreMaskWidth: {}]", topo.next_level),
             lnpad!(),
-            format!(" [ExtAPID_ID: {ext_local_apicid}]"),
+            format!(" [ExtAPID_ID: {}]", topo.x2apic_id),
             */
         ].concat()
     }
