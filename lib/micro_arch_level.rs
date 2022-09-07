@@ -95,7 +95,11 @@ impl MicroArchLevel {
             &[cpuid_00_01.ecx, cpuid_00_07.ebx, cpuid_80_01.ecx]);
         let x86_64_v4 = mask(&[Self::X86_64_V4], &[cpuid_00_07.ebx]);
 
-        let mut level = if base_line { 1 } else { 0 };
+        let mut level = if base_line {
+            1
+        } else {
+            return Self(0)
+        };
 
         if x86_64_v2 { level |= 1 << 1 }
         if x86_64_v3 { level |= 1 << 2 }
@@ -103,10 +107,10 @@ impl MicroArchLevel {
 
         Self(level)
     }
-    pub fn check() -> u8 {
+    pub fn check() -> Self {
         let cpuid_array = Self::set_cpuid();
 
-        Self::from_cpuid_array(cpuid_array).0
+        Self::from_cpuid_array(cpuid_array)
     }
     pub fn to_u8(&self) -> u8 {
         match self.0 {
