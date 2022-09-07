@@ -59,7 +59,7 @@ impl ParseAMD for CpuidResult {
         };
         */
 
-        return format!(" [PkgType: {pkg_type:#X})]")
+        format!(" [PkgType: {pkg_type:#X}]")
     }
 
     fn l1_amd_80_05h(&self) -> String {
@@ -113,7 +113,14 @@ impl ParseAMD for CpuidResult {
     }
 
     fn size_amd_80_08h(&self) -> String {
-        format!(" [Num threads: {}]", (self.ecx & 0xFF) + 1)
+        let num_t = (self.ecx & 0xFF) + 1;
+        let apicid_size = (self.ecx >> 12) & 0xF;
+        
+        [
+            format!(" [Num Threads: {num_t}]"),
+            lnpad!(),
+            format!(" [APIC ID size: {apicid_size}-bits]"),
+        ].concat()
     }
 
     fn rev_id_amd_80_0ah(&self) -> String {

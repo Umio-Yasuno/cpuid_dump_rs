@@ -19,23 +19,9 @@ impl RawCpuid {
     pub fn check_result_zero(&self) -> bool {
         self.result == CpuidResult { eax: 0x0, ebx: 0x0, ecx: 0x0, edx: 0x0 }
     }
-/*
-    fn zero() -> Self {
-        Self {
-            leaf: 0x0,
-            sub_leaf: 0x0,
-            result: CpuidResult {
-                eax: 0x0, ebx: 0x0, ecx: 0x0, edx: 0x0,
-            },
-        }
-    }
 
-    fn check_all_zero(&self) -> bool {
-        *self == Self::zero()
-    }
-*/
     fn parse(&self, vendor: &VendorFlag) -> String {
-        let parse_result: String = match self.leaf {
+        let parse_result = match self.leaf {
             0x0 => self.result.vendor_00_00h(),
             0x1 => [
                 self.result.info_00_01h(),
@@ -111,7 +97,7 @@ impl RawCpuid {
             },
         };
 
-        return format!("{parse_result}\n");
+        parse_result + "\n"
     }
 
     fn result(&self, end_str: &str) -> String {
@@ -131,13 +117,13 @@ impl RawCpuid {
     }
 
     pub fn parse_fmt(&self, vendor: &VendorFlag) -> String {
-        let parsed = &self.parse(vendor);
+        let parsed = self.parse(vendor);
 
         if parsed.is_empty() {
-            return "".to_string();
+            return parsed;
         }
 
-        self.result(parsed)
+        self.result(&parsed)
     }
 
     pub fn bin_fmt(&self) -> String {

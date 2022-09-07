@@ -115,17 +115,7 @@ impl ParseGeneric for CpuidResult {
     fn topo_ext_00_0bh(&self) -> String {
         let topo = libcpuid_dump::IntelExtTopo::from_cpuid(self);
 
-        [
-            format!(" [LevelType: {}]", topo.level_type),
-            lnpad!(),
-            format!(" [NumProcAtThisLevel: {}]", topo.num_proc),
-            /*
-            lnpad!(),
-            format!(" [CoreMaskWidth: {}]", topo.next_level),
-            lnpad!(),
-            format!(" [ExtAPID_ID: {}]", topo.x2apic_id),
-            */
-        ].concat()
+        format!(" [LevelType: {}, num: {}]", topo.level_type, topo.num_proc)
     }
 
     fn xstate_00_0dh(&self, sub_leaf: u32) -> String {
