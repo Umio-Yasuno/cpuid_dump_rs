@@ -62,7 +62,6 @@ pub(crate) fn str_detect_ftr(reg: u32, ftr_str: &[&str]) -> Vec<String> {
 pub(crate) fn align_mold_ftr(buff: &[String]) -> String {
     let mut rest: usize = PARSE_WIDTH;
     let mut mold = String::with_capacity(buff.len() * 48);
-    let mut inner: String;
 
     const DECO_LEN: usize = " []".len();
     
@@ -70,18 +69,15 @@ pub(crate) fn align_mold_ftr(buff: &[String]) -> String {
         let len = v.len() + DECO_LEN;
 
         if len <= rest {
-            inner = format!(" [{v}]");
             rest -= len;
         } else {
-            inner = format!("{LN_PAD} [{v}]");
-            rest = if PARSE_WIDTH < len {
-                0
-            } else {
-                PARSE_WIDTH - len
-            };
+            mold += LN_PAD;
+            rest = PARSE_WIDTH.saturating_sub(len);
         }
 
-        mold += &inner;
+        mold += " [";
+        mold += v;
+        mold += "]";
     }
 
     mold
