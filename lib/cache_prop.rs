@@ -97,10 +97,9 @@ impl CacheProp {
             return Some(0x4);
         }
         /*
-            CacheType: CPUID[Leaf=0x8000_001D, SubLeaf=0x0].EAX[4:0]
-            0x0 => Null, no more caches
+            AMD TopologyExtensions: CPUID[Leaf=0x8000_0001, SubLeaf=0x0].ECX[22]
         */
-        let check_cpuid = (cpuid!(_AX+0x1D, 0x0).eax & 0xF) != 0;
+        let check_cpuid = ((cpuid!(_AX+0x1, 0x0).ecx >> 22) & 0b1) != 0;
 
         if vendor.amd && check_cpuid {
             return Some(_AX+0x1D);

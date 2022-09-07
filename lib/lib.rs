@@ -153,6 +153,17 @@ pub fn get_threads_per_core() -> Option<u32> {
         }
     }
 
+    /*
+        AMD TopologyExtensions: CPUID[Leaf=0x8000_0001, SubLeaf=0x0].ECX[22]
+    */
+    let check_cpuid = ((cpuid!(_AX+0x1, 0x0).ecx >> 22) & 0b1) != 0;
+    if check_cpuid {
+        let cpuid = cpuid!(_AX+0x1E, 0x0).ebx;
+        let per_core = (cpuid >> 8) & 0xFF;
+
+        return Some(per_core);
+    }
+
     /* Cache Parameters/Properties */
     if let Some(cache_leaf) = CacheProp::get_cache_prop_leaf() {
         /* L1 Data Cache? */
