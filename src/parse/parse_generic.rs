@@ -38,7 +38,7 @@ impl ParseGeneric for CpuidResult {
             lnpad!(),
             format!(" [APIC ID: {apic_id}]"),
             lnpad!(),
-            format!(" [Total thread(s): {total_thread}]"),
+            format!(" [Max APIC ID: {total_thread}]"),
             lnpad!(),
             format!(" [CLFlush (Byte): {clflush_size}]"),
         ].concat();
