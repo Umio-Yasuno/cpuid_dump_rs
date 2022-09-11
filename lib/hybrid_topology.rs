@@ -11,7 +11,7 @@ pub struct CachePropCount {
 }
 
 #[derive(Debug)]
-pub struct __TopoCacheInfo {
+pub struct TopoCacheInfo {
     pub l1d: Option<CachePropCount>,
     pub l1i: Option<CachePropCount>,
     pub l2: Option<CachePropCount>,
@@ -19,7 +19,7 @@ pub struct __TopoCacheInfo {
     pub l4: Option<CachePropCount>,
 }
 
-impl __TopoCacheInfo {
+impl TopoCacheInfo {
     fn shared_all_threads(prop: &CacheProp, max_apic_id: u32) -> bool {
         prop.share_thread == max_apic_id
     }
@@ -33,6 +33,11 @@ impl __TopoCacheInfo {
 
         let [mut l1d, mut l1i, mut l2, mut l3, mut l4]: [Option<CachePropCount>; 5]
             = [None, None, None, None, None];
+        /*
+        let [mut l1d_prop, mut l1i_prop, mut l2_prop, mut l3_prop, mut l4_prop]:
+            [Option<CacheProp>; 5] = [None, None, None, None, None];
+        */
+
         let [mut l1d_ids, mut l1i_ids, mut l2_ids, mut l3_ids, mut l4_ids] = [
             Vec::<u32>::with_capacity(64),
             Vec::<u32>::with_capacity(64),
@@ -110,6 +115,13 @@ impl __TopoCacheInfo {
             Arc::new(Mutex::new(l4_ids)),
         ];
 
+        let update_cache_ids = |ids: &Arc<Mutex<Vec<u32>>>, cache_id: u32| {
+            let mut ids = ids.lock().unwrap();
+            if !ids.contains(&cache_id) {
+                ids.push(cache_id);
+            }
+        };
+
         for cpu in &type_only_list[1..] {
             let cpu = *cpu;
             let cache_leaf = Arc::clone(&cache_leaf);
@@ -136,14 +148,6 @@ impl __TopoCacheInfo {
                     
                     let cache_id = Self::get_cache_id(apicid, prop.share_thread);
 
-                    let update_cache_ids = |ids: &Arc<Mutex<Vec<u32>>>, cache_id: u32| {
-                        let mut ids = ids.lock().unwrap();
-
-                        if !ids.contains(&cache_id) {
-                            ids.push(cache_id);
-                        }
-                    };
-
                     match prop {
                         CacheProp { cache_type: CacheType::Data, level: 1, .. } => {
                             update_cache_ids(&l1d_ids, cache_id);
@@ -169,6 +173,15 @@ impl __TopoCacheInfo {
         let [l1d_ids, l1i_ids, l2_ids, l3_ids, l4_ids] =
             [l1d_ids, l1i_ids, l2_ids, l3_ids, l4_ids]
             .map(|ids| Arc::try_unwrap(ids).unwrap().into_inner().unwrap() );
+
+        let ids = [l1d_ids, l1i_ids, l2_ids, l3_ids, l4_ids];
+
+        /* Done????? */
+        for (cache, ids) in [&mut l1d, &mut l1i, &mut l2, &mut l3, &mut l4].iter_mut().zip(ids) {
+            if let Some(cache) = cache {
+                cache.count = ids.len() as u32;
+            }
+        }
 
         Some(Self {
             l1d,
@@ -250,251 +263,6 @@ impl __TopoCacheInfo {
         let index_msb = u32::BITS - num_sharing_thread.leading_zeros();
 
         apicid & !((1 << index_msb) - 1)
-    }
-}
-
-
-#[derive(Debug)]
-pub struct LastLevelCache {
-    pub level: u32,
-    pub share_thread: u32,
-    pub shared_all_thread: bool,
-}
-
-impl LastLevelCache {
-    fn from_cache_prop(prop: &CacheProp, max_apic_id: u32) -> Self {
-        let shared_all_thread = prop.share_thread == max_apic_id;
-        
-        Self {
-            level: prop.level,
-            share_thread: prop.share_thread,
-            shared_all_thread,
-        }
-    }
-}
-
-#[derive(Debug)]
-pub struct TopoCacheInfo {
-    pub l1d_cache: Option<CacheProp>,
-    // l1d_count: u32,
-    pub l1i_cache: Option<CacheProp>,
-    // l1i_count: u32,
-    pub l2_cache: Option<CacheProp>,
-    pub l2_count: u32,
-    pub l3_cache: Option<CacheProp>,
-    pub l3_count: u32,
-    pub l4_cache: Option<CacheProp>,
-    pub l4_count: u32,
-    pub last_level: LastLevelCache,
-}
-
-impl TopoCacheInfo {
-    pub fn get_topology_cache_info(type_only_list: &[usize]) -> Option<Self> {
-        let cache_leaf = Arc::new(CacheProp::get_cache_prop_leaf()?);
-        let mut last_level = LastLevelCache {
-            level: 0,
-            share_thread: 0,
-            shared_all_thread: false,
-        };
-        
-        if *cache_leaf == 0x8000_001D {
-            return Self::from_amd_80_1dh(*cache_leaf);
-        }
-
-        let [mut l2_ids, mut l3_ids, mut l4_ids] = [
-            Vec::<u32>::with_capacity(32),
-            Vec::<u32>::with_capacity(32),
-            Vec::<u32>::with_capacity(32),
-        ];
-
-        let [mut l1d, mut l1i, mut l2, mut l3, mut l4]: [Option<CacheProp>; 5]
-            = [None, None, None, None, None];
-
-        {
-            pin_thread(type_only_list[0]).unwrap();
-            let eax = cpuid!(0x1, 0x0).eax;
-            let apicid = initial_apic_id!(eax);
-            let max_apic_id = max_apic_id!(eax);
-            
-            for sub_leaf in 0x0..=0x4 {
-                let cpuid = cpuid!(*cache_leaf, sub_leaf);
-                let prop = CacheProp::from_cpuid(&cpuid);
-                let cache_id = Self::get_cache_id(apicid, prop.share_thread);
-
-                match prop {
-                    CacheProp { cache_type: CacheType::Data, level: 1, .. } => {
-                        l1d = Some(prop)
-                    },
-                    CacheProp { cache_type: CacheType::Instruction, level: 1, .. } => {
-                        l1i = Some(prop)
-                    },
-                    CacheProp { level: 2, .. } => {
-                        last_level = LastLevelCache::from_cache_prop(&prop, max_apic_id);
-                        l2 = Some(prop);
-                        l2_ids.push(cache_id);
-                    },
-                    CacheProp { level: 3, .. } => {
-                        last_level = LastLevelCache::from_cache_prop(&prop, max_apic_id);
-                        l3 = Some(prop);
-                        l3_ids.push(cache_id);
-                    },
-                    CacheProp { level: 4, .. } => {
-                        last_level = LastLevelCache::from_cache_prop(&prop, max_apic_id);
-                        l4 = Some(prop);
-                        l4_ids.push(cache_id);
-                    },
-                    _ => {},
-                }
-            }
-        }
-
-        let [l2_ids, l3_ids, l4_ids] = [
-            Arc::new(Mutex::new(l2_ids)),
-            Arc::new(Mutex::new(l3_ids)),
-            Arc::new(Mutex::new(l4_ids)),
-        ];
-
-        for cpu in &type_only_list[1..] {
-            let cpu = *cpu;
-            let cache_leaf = Arc::clone(&cache_leaf);
-
-            let [l2_ids, l3_ids, l4_ids] = [
-                Arc::clone(&l2_ids),
-                Arc::clone(&l3_ids),
-                Arc::clone(&l4_ids),
-            ];
-
-            thread::spawn(move || {
-                pin_thread(cpu).unwrap();
-                let apicid = initial_apic_id!();
-
-                /* 0x2..=0x4 (L2 Cache .. L4 Cache) ? */
-                for sub_leaf in 0x0..=0x4 {
-                    let cpuid = cpuid!(*cache_leaf, sub_leaf);
-                    let prop = CacheProp::from_cpuid(&cpuid);
-
-                    if prop.cache_type == CacheType::Unknown {
-                        continue;
-                    }
-                    
-                    let cache_id = Self::get_cache_id(apicid, prop.share_thread);
-
-                    match prop {
-                        CacheProp { level: 2, .. } => {
-                            let mut l2_ids = l2_ids.lock().unwrap();
-                            if !l2_ids.contains(&cache_id) {
-                                l2_ids.push(cache_id);
-                            }
-                        },
-                        CacheProp { level: 3, .. } => {
-                            let mut l3_ids = l3_ids.lock().unwrap();
-                            if !l3_ids.contains(&cache_id) {
-                                l3_ids.push(cache_id);
-                            }
-                        },
-                        CacheProp { level: 4, .. } => {
-                            let mut l4_ids = l4_ids.lock().unwrap();
-                            if !l4_ids.contains(&cache_id) {
-                                l4_ids.push(cache_id);
-                            }
-                        },
-                        _ => {},
-                    }
-                }
-            }).join().unwrap();
-        }
-
-        let [l2_ids, l3_ids, l4_ids] = [l2_ids, l3_ids, l4_ids]
-            .map(|ids| Arc::try_unwrap(ids).unwrap().into_inner().unwrap() );
-
-        Some(Self {
-            l1d_cache: l1d,
-            l1i_cache: l1i,
-            l2_cache: l2,
-            l2_count: l2_ids.len() as u32,
-            l3_cache: l3,
-            l3_count: l3_ids.len() as u32,
-            l4_cache: l4,
-            l4_count: l4_ids.len() as u32,
-            last_level,
-        })
-    }
-
-    fn from_amd_80_1dh(cache_leaf: u32) -> Option<Self> {
-        let [mut l1d, mut l1i, mut l2, mut l3, mut l4]: [Option<CacheProp>; 5]
-            = [None, None, None, None, None];
-        let [mut l2_count, mut l3_count, mut l4_count]: [u32; 3] = [0, 0, 0];
-        let mut last_level = LastLevelCache {
-            level: 0,
-            share_thread: 0,
-            shared_all_thread: false,
-        };
-        let total_logical_proc = get_total_logical_processor()?;
-        let max_apic_id = max_apic_id!();
-
-        for sub_leaf in 0x0..=0x4 {
-            let cpuid = cpuid!(cache_leaf, sub_leaf);
-            let prop = CacheProp::from_cpuid(&cpuid);
-            // let cache_id = Self::get_cache_id(apicid, prop.share_thread);
-
-            match prop {
-                CacheProp { cache_type: CacheType::Data, level: 1, .. } => {
-                    l1d = Some(prop);
-                },
-                CacheProp { cache_type: CacheType::Instruction, level: 1, .. } => {
-                    l1i = Some(prop);
-                },
-                CacheProp { level: 2, .. } => {
-                    last_level = LastLevelCache::from_cache_prop(&prop, max_apic_id);
-                    l2_count = total_logical_proc / prop.share_thread;
-                    l2 = Some(prop);
-                },
-                CacheProp { level: 3, .. } => {
-                    last_level = LastLevelCache::from_cache_prop(&prop, max_apic_id);
-                    l3_count = total_logical_proc / prop.share_thread;
-                    l3 = Some(prop);
-                },
-                CacheProp { level: 4, .. } => {
-                    last_level = LastLevelCache::from_cache_prop(&prop, max_apic_id);
-                    l4_count = total_logical_proc / prop.share_thread;
-                    l4 = Some(prop);
-                },
-                _ => {},
-            }
-        }
-
-        Some(Self {
-            l1d_cache: l1d,
-            l1i_cache: l1i,
-            l2_cache: l2,
-            l2_count,
-            l3_cache: l3,
-            l3_count,
-            l4_cache: l4,
-            l4_count,
-            last_level,
-        })
-    }
-
-    /* ref:
-        Intel® 64 Architecture Processor Topology Enumeration - intel-64-architecture-processor-topology-enumeration.pdf
-        https://www.intel.com/content/dam/develop/external/us/en/documents/intel-64-architecture-processor-topology-enumeration.pdf)
-    */
-    /* Linux Kernel: arch/x86/kernel/cpu/cacheinfo.c */
-    fn get_cache_id(apicid: u32, num_sharing_thread: u32) -> u32 {
-        /* find last set bit */
-        let index_msb = u32::BITS - num_sharing_thread.leading_zeros();
-
-        apicid & !((1 << index_msb) - 1)
-    }
-
-    pub fn get_llc_prop(&self) -> Option<CacheProp> {
-        match self.last_level.level {
-            2 => self.l2_cache.clone(),
-            3 => self.l3_cache.clone(),
-            4 => self.l4_cache.clone(),
-            _ => None,
-        }
     }
 }
 
