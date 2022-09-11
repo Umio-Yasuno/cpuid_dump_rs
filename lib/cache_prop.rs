@@ -1,6 +1,6 @@
 use crate::{cpuid, _AX, CpuidResult, VendorFlag};
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Unit {
     Byte,
     KiB,
@@ -46,7 +46,7 @@ impl fmt::Display for Unit {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum CacheType {
     Data,
     Instruction,
@@ -76,7 +76,7 @@ impl fmt::Display for CacheType {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct CacheProp {
     pub cache_type: CacheType,
     pub level: u32,

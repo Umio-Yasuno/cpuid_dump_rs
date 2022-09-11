@@ -145,6 +145,7 @@ pub fn get_total_logical_processor() -> Option<u32> {
 pub fn get_threads_per_core() -> Option<u32> {
     /* Extended Topology Enumeration */
     if let Some(topo_leaf) = TopoId::get_topology_leaf() {
+        /* SMT Level */
         let cpuid = cpuid!(topo_leaf, 0x0);
         let level = (cpuid.ecx >> 8) & 0xFF;
 
@@ -154,10 +155,10 @@ pub fn get_threads_per_core() -> Option<u32> {
     }
 
     /*
-        AMD TopologyExtensions: CPUID[Leaf=0x8000_0001, SubLeaf=0x0].ECX[22]
+        AMD TopologyExtensions flag: CPUID[Leaf=0x8000_0001, SubLeaf=0x0].ECX[22]
     */
-    let check_cpuid = ((cpuid!(_AX+0x1, 0x0).ecx >> 22) & 0b1) != 0;
-    if check_cpuid {
+    let check_topoext = ((cpuid!(_AX+0x1, 0x0).ecx >> 22) & 0b1) != 0;
+    if check_topoext {
         let cpuid = cpuid!(_AX+0x1E, 0x0).ebx;
         let per_core = (cpuid >> 8) & 0xFF;
 
@@ -166,7 +167,7 @@ pub fn get_threads_per_core() -> Option<u32> {
 
     /* Cache Parameters/Properties */
     if let Some(cache_leaf) = CacheProp::get_cache_prop_leaf() {
-        /* L1 Data Cache? */
+        /* L1 Data Cache or L1 Instruction Cache */
         let cpuid = cpuid!(cache_leaf, 0x0);
         let cache_prop = CacheProp::from_cpuid(&cpuid);
 
@@ -177,6 +178,7 @@ pub fn get_threads_per_core() -> Option<u32> {
         return Some(cache_prop.share_thread);
     }
 
+    /* return 1; */
     None
 }
 

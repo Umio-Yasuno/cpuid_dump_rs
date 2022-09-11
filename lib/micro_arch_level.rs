@@ -138,9 +138,4 @@ fn test_micro_arch_level() {
     let level = MicroArchLevel::from_cpuid_array(cpuid_array);
 
     assert_eq!(0b0111, level.0);
-
-    /*
-    println!("MicroArchLevel: 0b{:04b}", level.0);
-    println!("MicroArchLevel: {}", level.to_u8());
-    */
 }
