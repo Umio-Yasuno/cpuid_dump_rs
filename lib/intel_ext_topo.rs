@@ -1,4 +1,5 @@
 use crate::CpuidResult;
+use std::fmt;
 
 #[repr(u8)]
 pub enum IntelLevelType {
@@ -24,7 +25,6 @@ impl IntelLevelType {
     }
 }
 
-use std::fmt;
 impl fmt::Display for IntelLevelType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
@@ -48,13 +48,13 @@ pub struct IntelExtTopo {
 impl IntelExtTopo {
     pub fn from_cpuid(cpuid: &CpuidResult) -> Self {
         let next_level = cpuid.eax & 0xF;
+        let num_proc = cpuid.ebx & 0xFFFF;
         let x2apic_id = cpuid.edx;
         let level_type = {
             let reg = (cpuid.ecx >> 8) & 0xFF;
 
             IntelLevelType::from_reg(reg as u8)
         };
-        let num_proc = cpuid.ebx & 0xFFFF;
 
         Self {
             next_level,

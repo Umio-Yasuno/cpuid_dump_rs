@@ -23,22 +23,18 @@ impl ParseGeneric for CpuidResult {
     }
 
     fn info_00_01h(&self) -> String {
-        let [eax, ebx] = [self.eax, self.ebx];
+        let fms = libcpuid_dump::FamModStep::from_cpuid(self.eax);
 
-        let fms = libcpuid_dump::FamModStep::from_cpuid(eax);
-
-        let apic_id = ebx >> 24;
-        let total_thread = (ebx >> 16) & 0xFF;
-        let clflush_size = ((ebx >> 8) & 0xFF) * 8;
+        let apic_id = self.ebx >> 24;
+        let max_apic_id = (self.ebx >> 16) & 0xFF;
+        let clflush_size = ((self.ebx >> 8) & 0xFF) * 8;
 
         return [
             format!(" [F: 0x{:X}, M: 0x{:X}, S: 0x{:X}]", fms.syn_fam, fms.syn_mod, fms.step),
             lnpad!(),
             format!(" [Codename: {}]", fms.codename()),
             lnpad!(),
-            format!(" [APIC ID: {apic_id}]"),
-            lnpad!(),
-            format!(" [Max APIC ID: {total_thread}]"),
+            format!(" [APIC ID: {apic_id}] [Max APIC ID: {max_apic_id}]"),
             lnpad!(),
             format!(" [CLFlush (Byte): {clflush_size}]"),
         ].concat();
@@ -168,13 +164,11 @@ impl ParseGeneric for CpuidResult {
     fn addr_size_80_08h(&self) -> String {
         const LEN: usize = " [Address size:".len();
         const PAD: &str = unsafe { std::str::from_utf8_unchecked(&[b' '; LEN]) };
-        let pad = format!("{LN_PAD}{PAD}");
 
-        let eax = self.eax;
-        let p_size = eax & 0xFF;
-        let v_size = (eax >> 8) & 0xFF;
+        let phy = self.eax & 0xFF;
+        let virt = (self.eax >> 8) & 0xFF;
 
-        format!(" [Address size: {p_size:2}-bits physical {pad} {v_size:2}-bits virtual]")
+        format!(" [Address size: {phy:2}-bits physical {LN_PAD}{PAD} {virt:2}-bits virtual]")
     }
 
     fn cpu_name(&self) -> String {
@@ -187,6 +181,12 @@ impl ParseGeneric for CpuidResult {
         let cache = libcpuid_dump::CacheProp::from_cpuid(self);
 
         if cache.level == 0 { return "".to_string(); }
+        
+        let inclusive = if cache.inclusive {
+            " [Inclusive]"
+        } else {
+            ""
+        }.to_string();
 
         return [
             format!(" [L{}{},{:>3}_way,{:>4}_{}]",
@@ -197,11 +197,7 @@ impl ParseGeneric for CpuidResult {
                 &cache.size_unit.to_string()[..1]
             ),
             // format!(" [Shared {}T]", cache.share_thread),
-            if cache.inclusive {
-                " [Inclusive]"
-            } else {
-                ""
-            }.to_string()
+            inclusive,
         ].concat();
     }
 }
