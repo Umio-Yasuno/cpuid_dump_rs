@@ -435,11 +435,13 @@ impl MainOpt {
 
         let tmp = if self.bin_fmt {
             [
+                topo_info_head(),
                 bin_head(),
                 raw_result.bin_fmt(),
             ]
         } else {
             [
+                topo_info_head(),
                 hex_head(),
                 raw_result.parse_fmt(&VendorFlag::check()),
             ]
