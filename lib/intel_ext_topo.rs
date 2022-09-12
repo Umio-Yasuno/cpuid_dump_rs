@@ -2,16 +2,16 @@ use crate::CpuidResult;
 use std::fmt;
 
 #[repr(u8)]
-pub enum IntelLevelType {
-    Invalid,
-    SMT,
-    Core,
-    Module,
-    Tile,
-    Die,
+pub enum TopoLevelType {
+    Invalid = 0,
+    SMT = 1,
+    Core = 2,
+    Module = 3,
+    Tile = 4,
+    Die = 5,
 }
 
-impl IntelLevelType {
+impl TopoLevelType {
     fn from_reg(reg: u8) -> Self {
         match reg {
             0x1 => Self::SMT,
@@ -25,7 +25,7 @@ impl IntelLevelType {
     }
 }
 
-impl fmt::Display for IntelLevelType {
+impl fmt::Display for TopoLevelType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Self::SMT => write!(f, "SMT"),
@@ -42,7 +42,7 @@ pub struct IntelExtTopo {
     pub next_level: u32,
     pub x2apic_id: u32,
     pub num_proc: u32,
-    pub level_type: IntelLevelType,
+    pub level_type: TopoLevelType,
 }
 
 impl IntelExtTopo {
@@ -53,7 +53,7 @@ impl IntelExtTopo {
         let level_type = {
             let reg = (cpuid.ecx >> 8) & 0xFF;
 
-            IntelLevelType::from_reg(reg as u8)
+            TopoLevelType::from_reg(reg as u8)
         };
 
         Self {

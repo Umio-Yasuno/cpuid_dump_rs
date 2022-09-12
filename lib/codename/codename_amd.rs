@@ -47,6 +47,7 @@ pub(super) fn fam19h(m: u32, s: u32) -> Self {
             _ => "",
         }), "Zen 3", "7 nm"),
         0x21 => Self::info("Vermeer", "Zen 3", "7 nm"),
+        0x30 => Self::info("Trento", "Zen 3", "7 nm"),
         0x44 => Self::info("Rembrandt", "Zen 3+", "6nm"),
         0x50 => Self::info("Cezanne (A1)", "Zen 3", "7 nm"),
 

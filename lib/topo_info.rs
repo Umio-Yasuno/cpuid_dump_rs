@@ -1,16 +1,5 @@
 use crate::*;
 
-#[repr(u8)]
-#[allow(dead_code)]
-pub(crate) enum TopoLevelType {
-    Invalid = 0,
-    SMT = 1, // Thread
-    Core = 2,
-    Module = 3,
-    Tile = 4,
-    Die = 5,
-}
-
 pub struct TopoId {
     pub smt_id: u32,
     pub core_id: u32,
