@@ -32,12 +32,35 @@ impl TopoId {
         Some(topo_leaf)
     }
 
-    /* Page 9: [Detecting Hyper-Threading Technology - kuo-cputopology-rc1-rh1-final-256920.pdf](https://www.intel.com/content/dam/develop/external/us/en/documents/kuo-cputopology-rc1-rh1-final-256920.pdf) */
+    pub(crate) fn get_cpuid_by_level_type(
+        topo_leaf: u32,
+        target_level_type: TopoLevelType
+    ) -> Option<CpuidResult> {
+        for sub_leaf in 0..(TopoLevelType::Die as u32) {
+            let cpuid = cpuid!(topo_leaf, sub_leaf);
+            let level_type = {
+                let reg = (cpuid.ecx >> 8) & 0xFF;
+
+                TopoLevelType::from_reg(reg as u8)
+            };
+            
+            if level_type == target_level_type {
+                return Some(cpuid);
+            }
+        }
+
+        None
+    }
+
+    /*
+        Page 9: Detecting Hyper-Threading Technology - kuo-cputopology-rc1-rh1-final-256920.pdf
+        https://www.intel.com/content/dam/develop/external/us/en/documents/kuo-cputopology-rc1-rh1-final-256920.pdf
+    */
     pub fn get_topo_info() -> Option<Self> {
         let topo_leaf = Self::get_topology_leaf()?;
 
-        let smt_cpuid = cpuid!(topo_leaf, 0x0);
-        let core_cpuid = cpuid!(topo_leaf, 0x1);
+        let smt_cpuid = Self::get_cpuid_by_level_type(topo_leaf, TopoLevelType::SMT)?;
+        let core_cpuid = Self::get_cpuid_by_level_type(topo_leaf, TopoLevelType::Core)?;
 
         let x2apic_id = smt_cpuid.edx;
 

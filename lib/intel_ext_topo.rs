@@ -1,6 +1,7 @@
 use crate::CpuidResult;
 use std::fmt;
 
+#[derive(PartialEq)]
 #[repr(u8)]
 pub enum TopoLevelType {
     Invalid = 0,
@@ -12,7 +13,7 @@ pub enum TopoLevelType {
 }
 
 impl TopoLevelType {
-    fn from_reg(reg: u8) -> Self {
+    pub(crate) fn from_reg(reg: u8) -> Self {
         match reg {
             0x1 => Self::SMT,
             0x2 => Self::Core,
