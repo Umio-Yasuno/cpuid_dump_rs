@@ -135,10 +135,11 @@ fn bin_head() -> String {
     const INPUT_LINE: &str = unsafe { std::str::from_utf8_unchecked(&[b'='; INPUT_LEN]) };
     const OUTPUT_LINE: &str = unsafe { std::str::from_utf8_unchecked(&[b'='; OUTPUT_LEN]) };
 
-    [
-        format!("  {{LEAF}}_x{{SUB}}:  {PAD} (out)EAX / (out)ECX {PAD} {PAD}  (out)EBX / (out)EDX\n"),
-        format!("{INPUT_LINE}  {OUTPUT_LINE}  {OUTPUT_LINE}\n"),
-    ].concat()
+    format!("  \
+        {{LEAF}}_x{{SUB}}:  {PAD} (out)EAX / (out)ECX {PAD} \
+        {PAD}  (out)EBX / (out)EDX\n\
+        {INPUT_LINE}  {OUTPUT_LINE}  {OUTPUT_LINE}\
+    \n")
 }
 
 fn topo_info_head() -> String {
@@ -150,9 +151,14 @@ fn topo_info_head() -> String {
     let pkg_id = topo_info.pkg_id;
     let core_id = topo_info.core_id;
     let smt_id = topo_info.smt_id;
-    // let x2apic_id = topo_info.x2apic_id;
+    let x2apic_id = topo_info.x2apic_id;
 
-    format!("[Pkg: {pkg_id:03}, Core: {core_id:03}, SMT: {smt_id:03}]\n")
+    format!("[\
+        Pkg: {pkg_id:03}, \
+        Core: {core_id:03}, \
+        SMT: {smt_id:03}, \
+        x2APIC ID: {x2apic_id:03}\
+    ]\n")
 }
 
 fn topo_info_with_threadid_head(thread_id: usize) -> String {
@@ -164,9 +170,15 @@ fn topo_info_with_threadid_head(thread_id: usize) -> String {
     let pkg_id = topo_info.pkg_id;
     let core_id = topo_info.core_id;
     let smt_id = topo_info.smt_id;
-    // let x2apic_id = topo_info.x2apic_id;
+    let x2apic_id = topo_info.x2apic_id;
 
-    format!("[Pkg: {pkg_id:03}, Core: {core_id:03}, SMT: {smt_id:03}, Thread: {thread_id:03}]\n")
+    format!("[\
+        Pkg: {pkg_id:03}, \
+        Core: {core_id:03}, \
+        SMT: {smt_id:03}, \
+        x2APIC ID: {x2apic_id:03}, \
+        Thread: {thread_id:03}\
+    ]\n")
 }
 
 fn dump_write(pool: &[u8]) -> std::io::Result<()> {

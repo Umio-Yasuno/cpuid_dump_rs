@@ -25,16 +25,16 @@ impl ParseIntel for CpuidResult {
 
         let native_model_id = HybridInfo::get_native_model_id(*self);
 
-        return format!(" [{core_type} (0x{native_model_id:x})]");
+        format!(" [{core_type} (0x{native_model_id:x})]")
     }
 
     fn v2_ext_topo_intel_1fh(&self) -> String {
         let topo = libcpuid_dump::IntelExtTopo::from_cpuid(self);
 
-        return [
+        [
             format!(" [{}]", topo.level_type),
             lnpad!(),
             format!(" [x2apic id: {}]", topo.x2apic_id),
-        ].concat();
+        ].concat()
     }
 }
