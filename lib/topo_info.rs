@@ -9,11 +9,11 @@ pub struct TopoId {
 
 impl TopoId {
     fn check_topology_leaf(leaf: u32) -> bool {
-        /* Sub-Leaf = 0 (SMT Level) */
-        let cpuid = cpuid!(leaf, 0);
-        let level = (cpuid.ecx >> 8) & 0xFF;
+        let sub_leaf = 0x1;
+        let cpuid = cpuid!(leaf, sub_leaf);
 
-        if cpuid.ebx == 0 || level != (TopoLevelType::SMT as u32) {
+        /* ECX[07-00]: Level number. Same value in ECX input (Sub_Leaf) */
+        if (cpuid.ecx & 0xFF) != sub_leaf {
             return false;
         }
 
