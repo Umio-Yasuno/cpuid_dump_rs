@@ -117,7 +117,7 @@ pub(super) fn fam06h(m: u32, s: u32) -> Self {
 
         0x8D => Self::info("Tiger Lake (Desktop)", "Willow Cove", "10 nm SF"),
 
-        /*  Hybrid */
+        /* Hybrid */
         0x8A => Self::info("Lakefield (1+4)", "Sunny Cove + Tremont", "10 nm"),
 
         /* https://edc.intel.com/content/www/us/en/design/ipla/software-development-platforms/client/platforms/alder-lake-desktop/12th-generation-intel-core-processors-datasheet-volume-1-of-2/005/cpuid/ */
@@ -126,8 +126,8 @@ pub(super) fn fam06h(m: u32, s: u32) -> Self {
             match s {
                 0x0 => " (A0, ES)",
                 0x1 => " (B0, ES)",
-                0x2 => " (C0, ES/QS, 8+8)",
-                0x4 => " (G0, ES)",
+                0x2 => " (C0, 8+8)",
+                0x4 => " (G0)",
                 0x5 => " (H0, 6+0)",
                 _   => "",
             }

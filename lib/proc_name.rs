@@ -3,22 +3,29 @@ use crate::{_AX, cpuid, CpuidResult};
 pub struct ProcName;
 
 impl ProcName {
-    pub fn dec_reg(reg: u32) -> Vec<u8> {
-        reg.to_le_bytes().iter().map(
+    pub(crate) fn check_reg(reg: u32) -> [u8; 4] {
+        let mut bytes = reg.to_le_bytes();
+
+        for b in bytes.iter_mut() {
             /* replace from <Control> to \u0020 (<Space>) */
-            |&byte| if char::from(byte).is_control() { 0x20 } else { byte }
-        ).collect()
+            if char::from(*b).is_control() {
+                *b = 0x20
+            }
+        }
+
+        bytes
     }
 
     pub fn dec_cpuid(cpuid: &CpuidResult) -> Vec<u8> {
-        /* u32 ([u8; 4]) * 4 (E{A,B,C,D}X) */
-        let mut tmp: Vec<u8> = Vec::with_capacity(16);
-
-        [cpuid.eax, cpuid.ebx, cpuid.ecx, cpuid.edx].iter().for_each(
-            |&reg| tmp.extend(Self::dec_reg(reg))
-        );
-
-        tmp
+        [
+            cpuid.eax,
+            cpuid.ebx,
+            cpuid.ecx,
+            cpuid.edx,
+        ]
+        .iter()
+        .flat_map(|&reg| Self::check_reg(reg))
+        .collect()
     }
     
     fn set_cpuid() -> [CpuidResult; 3] {
@@ -31,11 +38,7 @@ impl ProcName {
     
     pub fn from_cpuid_array(array: [CpuidResult; 3]) -> String {
         /* 4 (0x8000_0002 .. 0x8000_0004) * u32 ([u8; 4]) * 4 (E{A,B,C,D}X) */
-        let mut name: Vec<u8> = Vec::with_capacity(48);
-
-        for cpuid in array {
-            name.extend(Self::dec_cpuid(&cpuid));
-        }
+        let name = array.iter().flat_map(|cpuid| Self::dec_cpuid(cpuid)).collect();
 
         String::from_utf8(name).unwrap()
     }
