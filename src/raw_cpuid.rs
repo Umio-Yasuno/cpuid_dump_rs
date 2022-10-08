@@ -101,7 +101,7 @@ impl RawCpuid {
     }
 
     fn result(&self, end_str: &str) -> String {
-        format!("  0x{:08X}_x{:1X}:  0x{:08X} 0x{:08X} 0x{:08X} 0x{:08X} {}",
+        format!("  {:#010X} {:#3X}:  {:#010X} {:#010X} {:#010X} {:#010X} {}",
             self.leaf,
             self.sub_leaf,
             self.result.eax,
@@ -148,6 +148,6 @@ impl RawCpuid {
 
         const PAD: &str = unsafe { std::str::from_utf8_unchecked(&[b' '; 17]) };
 
-        format!("  0x{leaf:08X}_x{sub_leaf:1X}:  {eax}  {ebx} \n{PAD} {ecx}  {edx} \n")
+        format!(" {leaf:#010X} {sub_leaf:#03X}:  {eax}  {ebx} \n{PAD} {ecx}  {edx} \n")
     }
 }

@@ -6,7 +6,7 @@ use std::io;
 
 use libcpuid_dump::{cpuid, VendorFlag, _AX};
 
-pub const INPUT_WIDTH: usize = "  0x00000000_x0: ".len();
+pub const INPUT_WIDTH: usize = "  0x00000000 0x0: ".len();
 pub const OUTPUT_WIDTH: usize = "0x00000000 ".len() * 4;
 pub const TOTAL_WIDTH: usize = 100;
 pub const PARSE_WIDTH: usize = TOTAL_WIDTH - INPUT_WIDTH - OUTPUT_WIDTH - 1; // " ".len()
@@ -119,7 +119,7 @@ fn leaf_pool() -> Vec<(u32, u32)> {
 }
 
 fn hex_head() -> String {
-    const HEAD: &str = "  {LEAF}_x{SUB}:  (out)EAX   (out)EBX   (out)ECX   (out)EDX";
+    const HEAD: &str = "     (in)EAX ECX:  (out)EAX   (out)EBX   (out)ECX   (out)EDX";
     const LINE: &str = unsafe { std::str::from_utf8_unchecked(&[b'='; TOTAL_WIDTH]) };
 
     format!("{HEAD}\n{LINE}\n")
@@ -134,8 +134,8 @@ fn bin_head() -> String {
     const INPUT_LINE: &str = unsafe { std::str::from_utf8_unchecked(&[b'='; INPUT_LEN]) };
     const OUTPUT_LINE: &str = unsafe { std::str::from_utf8_unchecked(&[b'='; OUTPUT_LEN]) };
 
-    format!("  \
-        {{LEAF}}_x{{SUB}}:  {PAD} (out)EAX / (out)ECX {PAD} \
+    format!("    \
+        (in)EAX ECX:  {PAD} (out)EAX / (out)ECX {PAD} \
         {PAD}  (out)EBX / (out)EDX\n\
         {INPUT_LINE}  {OUTPUT_LINE}  {OUTPUT_LINE}\
     \n")
@@ -156,7 +156,7 @@ fn topo_info_head() -> String {
         Pkg: {pkg_id:03}, \
         Core: {core_id:03}, \
         SMT: {smt_id:03}, \
-        x2APIC ID: {x2apic_id:03}\
+        x2APIC: {x2apic_id:03}\
     ]\n")
 }
 
@@ -175,7 +175,7 @@ fn topo_info_with_threadid_head(thread_id: usize) -> String {
         Pkg: {pkg_id:03}, \
         Core: {core_id:03}, \
         SMT: {smt_id:03}, \
-        x2APIC ID: {x2apic_id:03}, \
+        x2APIC: {x2apic_id:03}, \
         Thread: {thread_id:03}\
     ]\n")
 }
@@ -195,6 +195,40 @@ fn default_name() -> String {
 
     /* like "AMD_Ryzen_5_5600G_with_Radeon_Graphics_00A50F00.txt" */
     format!("{proc_name}_{fms:08X}.txt")
+}
+
+fn help_msg() {
+    print!("\n\
+        {VERSION_HEAD}\
+        https://github.com/Umio-Yasuno/cpuid_dump_rs\n\
+        \n\
+        USAGE:\n\
+        \x20    cargo run -- [options ..] or <cpuid_dump> [options ..]\n\
+        \n\
+        FLAGS:\n\
+        \x20    -a, -all\n\
+        \x20        Display result for all threads.\n\
+        \x20    -r, -raw\n\
+        \x20        Display raw/hex result.\n\
+        \x20    -bin\n\
+        \x20        Display binary result.\n\
+        \x20    -full\n\
+        \x20        Combine \"-disp-zero\" and \"-no-diff\"\n\
+        \x20    -disp-zero\n\
+        \x20        Display result even if E[ABCD]X are zero.\n\
+        \x20    -no-diff\n\
+        \x20        Do not omit diff when all threads execution\n\
+        \n\
+        OPTIONS:\n\
+        \x20    --l <u32>, --leaf <u32>\n\
+        \x20        Display result only for the specified value, the value is Leaf/InputEAX <u32>.\n\
+        \x20        e.g. --leaf 1, --leaf 0x8000_0008,\n\
+        \x20    --sub_leaf <u32>, --subleaf <u32>\n\
+        \x20        Display result only for the specified value, the value is Sub_Leaf/InputECX <u32>.\n\
+        \x20    --s <path/filename>, --save <path/filename>\n\
+        \x20        Save dump result to text file.\n\
+        \x20        If there is no path/filename argument, will be used \"./<processor_name>\".
+    \n");
 }
 
 #[derive(Debug, Clone)]
@@ -223,55 +257,15 @@ impl MainOpt {
         }
     }
 
-    fn parse_value(raw_value: String, msg: &str) -> u32 {
+    fn parse_value(raw_value: &str) -> u32 {
+        /* for like "0x8000_0000" */
         let raw_value = raw_value.replace('_', "");
 
-        if raw_value.starts_with('-') {
-            eprintln!("Please the value of {msg} <u32>");
-            return 0u32;
-        }
-
         if let Some(stripped) = raw_value.strip_prefix("0x") {
-            u32::from_str_radix(stripped, 16).expect("Parse error: {msg} <u32>")
+            u32::from_str_radix(stripped, 16).unwrap()
         } else {
-            raw_value.parse::<u32>().expect("Parse error: {msg} <u32>")
+            raw_value.parse::<u32>().unwrap()
         }
-    }
-
-    fn help_msg() {
-        print!("\n\
-            {VERSION_HEAD}\
-            https://github.com/Umio-Yasuno/cpuid_dump_rs\n\
-            \n\
-            USAGE:\n\
-            \x20    cargo run -- [options ..] or <cpuid_dump> [options ..]\n\
-            \n\
-            FLAGS:\n\
-            \x20    -a, -all\n\
-            \x20        Display result for all threads.\n\
-            \x20    -r, -raw\n\
-            \x20        Display raw/hex result.\n\
-            \x20    -bin\n\
-            \x20        Display binary result.\n\
-            \x20    -full\n\
-            \x20        Combine \"-disp-zero\" and \"-no-diff\"\n\
-            \x20    -disp-zero\n\
-            \x20        Display result even if E[ABCD]X are zero.\n\
-            \x20    -no-diff\n\
-            \x20        Do not omit diff when all threads execution\n\
-            \n\
-            OPTIONS:\n\
-            \x20    --l <u32>, --leaf <u32>\n\
-            \x20        Display result only for the specified value, the value is Leaf/InputEAX <u32>.\n\
-            \x20        e.g. --leaf 1, --leaf 0x8000_0008,\n\
-            \x20    --sub_leaf <u32>, --subleaf <u32>\n\
-            \x20        Display result only for the specified value, the value is Sub_Leaf/InputECX <u32>.\n\
-            \x20    --pin <usize>, --pin_threads <usize>\n\
-            \x20        Display result for the specified thread.\n\
-            \x20    --s <path/filename>, --save <path/filename>\n\
-            \x20        Save dump result to text file.\n\
-            \x20        If there is no path/filename argument, will be used \"./<processor_name>\".
-        \n");
     }
 
     fn main_parse() -> Self {
@@ -339,7 +333,7 @@ impl MainOpt {
                 */
                 "leaf" => {
                     if let Some(v) = args.get(idx+1) {
-                        let leaf = Self::parse_value(v.to_string(), "leaf");
+                        let leaf = Self::parse_value(v);
                         opt.leaf = Some((leaf, 0x0));
                     } else {
                         eprintln!("missing argument <u32> to \"--leaf\"");
@@ -348,7 +342,7 @@ impl MainOpt {
                 "subleaf" | "sub_leaf" | "sub-leaf" => {
                     if let Some((leaf, _)) = opt.leaf {
                         if let Some(sub_leaf) = args.get(idx+1) {
-                            let sub_leaf = Self::parse_value(sub_leaf.to_string(), "sub_leaf");
+                            let sub_leaf = Self::parse_value(sub_leaf);
                             opt.leaf = Some((leaf, sub_leaf));
                         } else {
                             eprintln!("missing argument <u32> to \"--sub_leaf <u32>\"");
@@ -360,23 +354,8 @@ impl MainOpt {
                 "bin" => {
                     opt.bin_fmt = true
                 },
-                /*
-                "pin" | "pin_thread" => {
-                    let cpu = match args.get(idx+1) {
-                        Some(v) => {
-                            v.parse::<usize>()
-                                .expect("Parse error: pin/pin_thread")
-                        },
-                        _ => {
-                            eprintln!("Please the value of pin/pin_thread <usize>");
-                            continue;
-                        },
-                    };
-                    libcpuid_dump::pin_thread(cpu).unwrap();
-                },
-                */
                 "h" | "help" => {
-                    Self::help_msg();
+                    help_msg();
                     std::process::exit(0);
                 },
                 "disp-zero" => {
