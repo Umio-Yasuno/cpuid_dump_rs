@@ -19,7 +19,7 @@ pub trait ParseGeneric {
 
 impl ParseGeneric for CpuidResult {
     fn vendor_00_00h(&self) -> String {
-        format!(" [{}]", Vendor::from_cpuid(self).get_name())
+        format!("[{}]", Vendor::from_cpuid(self).get_name())
     }
 
     fn info_00_01h(&self) -> String {
@@ -30,13 +30,13 @@ impl ParseGeneric for CpuidResult {
         let clflush_size = ((self.ebx >> 8) & 0xFF) * 8;
 
         return [
-            format!(" [F: 0x{:X}, M: 0x{:X}, S: 0x{:X}]", fms.syn_fam, fms.syn_mod, fms.step),
+            format!("[F: 0x{:X}, M: 0x{:X}, S: 0x{:X}]", fms.syn_fam, fms.syn_mod, fms.step),
             lnpad!(),
-            format!(" [Codename: {}]", fms.codename()),
+            format!("[Codename: {}]", fms.codename()),
             lnpad!(),
-            format!(" [APIC ID: {apic_id}] [Max APIC ID: {max_apic_id}]"),
+            format!("[APIC ID: {apic_id}] [Max APIC ID: {max_apic_id}]"),
             lnpad!(),
-            format!(" [CLFlush (Byte): {clflush_size}]"),
+            format!("[CLFlush (Byte): {clflush_size}]"),
         ].concat();
     }
 
@@ -44,8 +44,8 @@ impl ParseGeneric for CpuidResult {
         let min_mon_line_size = self.eax & 0xFFFF;
         let max_mon_line_size = self.ebx & 0xFFFF;
         let ftr = [
-            if (self.ecx & 0b01) == 0b01 { " [EMX]" } else { "" },
-            if (self.ecx & 0b10) == 0b10 { " [IBE]" } else { "" },
+            if (self.ecx & 0b01) == 0b01 { "[EMX] " } else { "" },
+            if (self.ecx & 0b10) == 0b10 { "[IBE] " } else { "" },
         ].concat();
 
         let c_state: String = {
@@ -62,7 +62,7 @@ impl ParseGeneric for CpuidResult {
                 (self.edx >> 28) & 0xF,
             ].map(|v| {
                 let parsed = if v != 0 {
-                    format!("{LN_PAD} [C{c} sub-state using MWAIT: {v}]")
+                    format!("{LN_PAD}[C{c} sub-state using MWAIT: {v}]")
                 } else {
                     "".to_string()
                 };
@@ -74,7 +74,7 @@ impl ParseGeneric for CpuidResult {
         };
         
         return [
-            format!(" [MonitorLineSize: {min_mon_line_size}(Min), {max_mon_line_size}(Max)]"),
+            format!("[MonitorLineSize: {min_mon_line_size}(Min), {max_mon_line_size}(Max)]"),
             lnpad!(),
             ftr,
             c_state,
@@ -110,7 +110,7 @@ impl ParseGeneric for CpuidResult {
     fn topo_ext_00_0bh(&self) -> String {
         let topo = libcpuid_dump::IntelExtTopo::from_cpuid(self);
 
-        format!(" [LevelType: {}, num: {}]", topo.level_type, topo.num_proc)
+        format!("[LevelType: {}, num: {}]", topo.level_type, topo.num_proc)
     }
 
     fn xstate_00_0dh(&self, sub_leaf: u32) -> String {
@@ -118,7 +118,7 @@ impl ParseGeneric for CpuidResult {
             let tmp = align_mold_ftr(&str_detect_ftr(eax, &xfeature_mask_00_0d_eax_x0()));
 
             if !tmp.is_empty() {
-                format!(" [-XFEATURE Mask-]{LN_PAD}{tmp}")
+                format!("[-XFEATURE Mask-]{LN_PAD}{tmp}")
             } else {
                 tmp
             }
@@ -131,7 +131,7 @@ impl ParseGeneric for CpuidResult {
         let size = |eax: u32, txt: &str| -> String {
             /* 00_0D_X{SUB}:EAX is the state size, EAX = 0 indicates not supported it */
             if eax != 0x0 {
-                format!(" [{}: size({})]", txt, eax)
+                format!("[{}: size({})]", txt, eax)
             } else {
                 "".to_string()
             }
@@ -167,7 +167,7 @@ impl ParseGeneric for CpuidResult {
         let phy = self.eax & 0xFF;
         let virt = (self.eax >> 8) & 0xFF;
 
-        format!(" [Address size: {phy:2}-bits physical {LN_PAD}{PAD} {virt:2}-bits virtual]")
+        format!("[Address size: {phy:2}-bits physical {LN_PAD}{PAD} {virt:2}-bits virtual]")
     }
 
     fn cpu_name(&self) -> String {
@@ -182,20 +182,20 @@ impl ParseGeneric for CpuidResult {
         if cache.level == 0 { return "".to_string(); }
         
         let inclusive = if cache.inclusive {
-            " [Inclusive]"
+            "[Inclusive]"
         } else {
             ""
         }.to_string();
 
         return [
-            format!(" [L{}{},{:>3}_way,{:>4}_{}]",
+            format!("[L{}{},{:>3}_way,{:>4}_{}]",
                 cache.level,
                 &cache.cache_type.to_string()[..1],
                 cache.way,
                 cache.size / cache.size_unit.to_byte(),
                 &cache.size_unit.to_string()[..1]
             ),
-            // format!(" [Shared {}T]", cache.share_thread),
+            // format!("[Shared {}T]", cache.share_thread),
             inclusive,
         ].concat();
     }

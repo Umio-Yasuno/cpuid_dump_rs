@@ -8,7 +8,7 @@ pub trait ParseIntel {
 
 impl ParseIntel for CpuidResult {
     fn clock_speed_intel_00_16h(&self) -> String {
-        format!(" [{}/{}/{} MHz]",
+        format!("[{}/{}/{} MHz]",
             self.eax & 0xFFFF,
             self.ebx & 0xFFFF,
             self.ecx & 0xFFFF
@@ -25,16 +25,16 @@ impl ParseIntel for CpuidResult {
 
         let native_model_id = HybridInfo::get_native_model_id(*self);
 
-        format!(" [{core_type} (0x{native_model_id:x})]")
+        format!("[{core_type} ({native_model_id:#x})]")
     }
 
     fn v2_ext_topo_intel_1fh(&self) -> String {
         let topo = libcpuid_dump::IntelExtTopo::from_cpuid(self);
 
         [
-            format!(" [{}]", topo.level_type),
+            format!("[{}]", topo.level_type),
             lnpad!(),
-            format!(" [x2apic id: {}]", topo.x2apic_id),
+            format!("[x2apic id: {}]", topo.x2apic_id),
         ].concat()
     }
 }

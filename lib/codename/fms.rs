@@ -57,11 +57,9 @@ impl FamModStep {
     pub fn codename(&self) -> String {
         self.proc_info().codename
     }
-
     pub fn archname(&self) -> String {
         self.proc_info().archname
     }
-
     pub fn process(&self) -> String {
         self.proc_info().process
     }

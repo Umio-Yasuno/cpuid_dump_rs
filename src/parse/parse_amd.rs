@@ -17,11 +17,11 @@ trait PrintTlb {
 
 impl PrintTlb for Tlb {
     fn print_tlb(&self) -> String {
-        const PAD: &str = unsafe { std::str::from_utf8_unchecked(&[b' '; 8]) };
+        const PAD: &str = unsafe { std::str::from_utf8_unchecked(&[b' '; 7]) };
 
         return [
             lnpad!(),
-            format!(" [{}TLB 4K: {}", self.type_, self.page_4k.print_entry_way()),
+            format!("[{}TLB 4K: {}", self.type_, self.page_4k.print_entry_way()),
             lnpad!(),
             format!("{PAD} 2M: {}", self.page_2m.print_entry_way()),
             lnpad!(),
@@ -59,7 +59,7 @@ impl ParseAMD for CpuidResult {
         };
         */
 
-        format!(" [PkgType: {pkg_type:#X}]")
+        format!("[PkgType: {pkg_type:#X}]")
     }
 
     fn l1_amd_80_05h(&self) -> String {
@@ -77,7 +77,7 @@ impl ParseAMD for CpuidResult {
         let l1itlb = Tlb::reg(TlbType::L1i, (ebx & 0xFFFF) as u16, (eax & 0xFFFF) as u16);
 
         return [
-            format!(" [L1D {l1d_size}K/L1I {l1i_size}K]"),
+            format!("[L1D {l1d_size}K/L1I {l1i_size}K]"),
             l1itlb.print_tlb(),
             l1dtlb.print_tlb(),
         ].concat();
@@ -98,7 +98,7 @@ impl ParseAMD for CpuidResult {
         let l2itlb = Tlb::reg(TlbType::L2i, (ebx & 0xFFFF) as u16, (eax & 0xFFFF) as u16);
 
         return [
-            format!(" [L2 {l2_size}K/L3 {l3_size}M]"),
+            format!("[L2 {l2_size}K/L3 {l3_size}M]"),
             l2itlb.print_tlb(),
             l2dtlb.print_tlb(),
         ].concat();
@@ -117,9 +117,9 @@ impl ParseAMD for CpuidResult {
         let apicid_size = (self.ecx >> 12) & 0xF;
         
         [
-            format!(" [Num Threads: {num_t}]"),
+            format!("[Num Threads: {num_t}]"),
             lnpad!(),
-            format!(" [APIC ID size: {apicid_size}-bits]"),
+            format!("[APIC ID size: {apicid_size}-bits]"),
         ].concat()
     }
 
@@ -142,13 +142,13 @@ impl ParseAMD for CpuidResult {
         );
 
         return [
-            format!(" [L1iTLB 1G: {}]", l1itlb),
+            format!("[L1iTLB 1G: {}]", l1itlb),
             lnpad!(),
-            format!(" [L1dTLB 1G: {}]", l1dtlb),
+            format!("[L1dTLB 1G: {}]", l1dtlb),
             lnpad!(),
-            format!(" [L2iTLB 1G: {}]", l2itlb),
+            format!("[L2iTLB 1G: {}]", l2itlb),
             lnpad!(),
-            format!(" [L2dTLB 1G: {}]", l2dtlb),
+            format!("[L2dTLB 1G: {}]", l2dtlb),
         ].concat();
     }
 
@@ -166,9 +166,9 @@ impl ParseAMD for CpuidResult {
         let node_id = self.ecx & 0xFF;
 
         return [
-            format!(" [NodeID: {node_id}, CoreID: {core_id}]"),
+            format!("[NodeID: {node_id}, CoreID: {core_id}]"),
             lnpad!(),
-            format!(" [Thread(s) per core: {th_per_core}]"),
+            format!("[Thread(s) per core: {th_per_core}]"),
         ].concat();
     }
 
@@ -186,7 +186,7 @@ impl ParseAMD for CpuidResult {
         let reduction_size = (self.ebx >> 6) & 0x3F;
 
         if 0 < reduction_size {
-            format!("{LN_PAD} [MemEncryptPhysAddWidth: {reduction_size}-bits]")
+            format!("{LN_PAD}[MemEncryptPhysAddWidth: {reduction_size}-bits]")
         } else {
             "".to_string()
         }
@@ -199,7 +199,7 @@ impl ParseAMD for CpuidResult {
             [
                 ftr,
                 lnpad!(),
-                format!(" [uCodePatchSize: {}]", self.ebx),
+                format!("[uCodePatchSize: {}]", self.ebx),
             ].concat()
         } else {
             ftr

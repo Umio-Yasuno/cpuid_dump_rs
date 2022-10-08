@@ -53,7 +53,7 @@ impl RawCpuid {
                 },
                 self.result.feature_80_01h(),
             ].concat(),
-            0x8000_0002..=0x8000_0004 => format!(" [\"{}\"]", self.result.cpu_name()),
+            0x8000_0002..=0x8000_0004 => format!("[{}]", self.result.cpu_name()),
             0x8000_0008 => [
                 self.result.addr_size_80_08h(),
                 if vendor.amd {
@@ -101,7 +101,7 @@ impl RawCpuid {
     }
 
     fn result(&self, end_str: &str) -> String {
-        format!("  {:#010X} {:#3X}:  {:#010X} {:#010X} {:#010X} {:#010X} {}",
+        format!("  {:#010X} {:#3X}:  {:#010X} {:#010X} {:#010X} {:#010X}  {}",
             self.leaf,
             self.sub_leaf,
             self.result.eax,

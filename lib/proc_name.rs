@@ -3,13 +3,13 @@ use crate::{_AX, cpuid, CpuidResult};
 pub struct ProcName;
 
 impl ProcName {
-    pub(crate) fn check_reg(reg: u32) -> [u8; 4] {
+    fn check_reg(reg: u32) -> [u8; 4] {
         let mut bytes = reg.to_le_bytes();
 
-        for b in bytes.iter_mut() {
+        for byte in bytes.iter_mut() {
             /* replace from <Control> to \u0020 (<Space>) */
-            if char::from(*b).is_control() {
-                *b = 0x20
+            if char::from(*byte).is_control() {
+                *byte = 0x20
             }
         }
 
@@ -36,7 +36,7 @@ impl ProcName {
         ]
     }
     
-    pub fn from_cpuid_array(array: [CpuidResult; 3]) -> String {
+    fn from_cpuid_array(array: [CpuidResult; 3]) -> String {
         /* 4 (0x8000_0002 .. 0x8000_0004) * u32 ([u8; 4]) * 4 (E{A,B,C,D}X) */
         let name = array.iter().flat_map(|cpuid| Self::dec_cpuid(cpuid)).collect();
 
