@@ -235,6 +235,8 @@ pub(crate) const fn ftr_00_07_eax_x1() -> [&'static str; 32] {
     ftr[10] = "FZRM"; // fast zero-length MOVSB
     ftr[11] = "FSRS"; // fast short STOSB
     ftr[12] = "FSRC"; // fast short CMPSB, SCASB
+    /* https://lore.kernel.org/lkml/20221006154041.13001-2-xin3.li@intel.com/ */
+    ftr[18] = "LKGS"; // Load "kernel" (userspace) gs
     ftr[19] = "WRMSRNS"; // Non-Serializing WRMSR
     ftr[21] = "AMX-FP16";
     ftr[22] = "HRESET";
