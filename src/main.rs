@@ -180,7 +180,7 @@ fn topo_info_with_threadid_head(thread_id: usize) -> String {
     ]\n")
 }
 
-fn dump_write(pool: &[u8]) -> std::io::Result<()> {
+fn dump_write(pool: &[u8]) -> io::Result<()> {
     use std::io::{Write, stdout};
     let mut out = stdout().lock();
 
@@ -188,27 +188,22 @@ fn dump_write(pool: &[u8]) -> std::io::Result<()> {
     Ok(())
 }
 
-#[derive(Debug, Clone)]
-struct SaveOpt {
-    flag: bool,
-    path: String,
-}
+fn default_name() -> String {
+    let proc_name = libcpuid_dump::ProcName::get_trim_name().replace(' ', "_");
+    /* Family, Model, Stepping */
+    let fms = cpuid!(0x1, 0x0).eax;
 
-#[derive(Debug, Clone)]
-struct OnlyLeaf {
-    flag: bool,
-    leaf: u32,
-    sub_leaf: u32,
+    /* like "AMD_Ryzen_5_5600G_with_Radeon_Graphics_00A50F00.txt" */
+    format!("{proc_name}_{fms:08X}.txt")
 }
 
 #[derive(Debug, Clone)]
 struct MainOpt {
     raw: bool,
     dump_all: bool,
-    save: SaveOpt,
+    save_path: Option<String>,
     // load: (bool, String),
-    // only_leaf: (bool, u32, u32),
-    only_leaf: OnlyLeaf,
+    leaf: Option<(u32, u32)>,
     skip_zero: bool,
     diff: bool,
     bin_fmt: bool,
@@ -219,29 +214,13 @@ impl MainOpt {
         Self {
             raw: false,
             dump_all: false,
-            save: SaveOpt {
-                flag: false,
-                path: Self::init_name(),
-            },
+            save_path: None,
             // load: (false, "cpuid_dump.txt".to_string()),
-            only_leaf: OnlyLeaf {
-                flag: false,
-                leaf: 0x0,
-                sub_leaf: 0x0,
-            },
+            leaf: None,
             skip_zero: true,
             diff: true,
             bin_fmt: false,
         }
-    }
-
-    fn init_name() -> String {
-        let proc_name = libcpuid_dump::ProcName::get_trim_name().replace(' ', "_");
-        /* Family, Model, Stepping */
-        let fms = cpuid!(0x1, 0x0).eax;
-
-        /* like "AMD_Ryzen_5_5600G_with_Radeon_Graphics_00A50F00.txt" */
-        format!("{proc_name}_{fms:08X}.txt")
     }
 
     fn parse_value(raw_value: String, msg: &str) -> u32 {
@@ -321,25 +300,22 @@ impl MainOpt {
                     opt.skip_zero = false;
                 },
                 "s" | "save" => {
-                    opt.save.flag = true;
-                    opt.save.path = match args.get(idx+1) {
-                        Some(v) => {
-                            if v.starts_with('-') {
-                                skip = true;
-                                continue;
-                            }
+                    use std::path::Path;
+                    let mut path = default_name();
 
-                            if std::path::Path::new(v).is_dir() {
-                                format!("{}{}", v, opt.save.path)
-                            } else {
-                                v.to_string()
-                            }
-                        },
-                        // use default path/file name
-                        // save_path: format!("{}.txt",
-                        //      libcpuid_dump::get_trim_proc_name().replace(" ", "_")
-                        _ => continue,
-                    };
+                    if let Some(v) = args.get(idx+1) {
+                        if v.starts_with('-') { 
+                            continue;
+                        }
+
+                        path = if Path::new(v).is_dir() {
+                            format!("{v}{path}")
+                        } else {
+                            v.to_string()
+                        };
+                    }
+
+                    opt.save_path = Some(path);
                 },
                 /*
                 "l" | "load" => {
@@ -361,25 +337,29 @@ impl MainOpt {
                 },
                 */
                 "leaf" => {
-                    opt.only_leaf.flag = true;
-                    opt.only_leaf.leaf = match args.get(idx+1) {
-                        Some(v) => Self::parse_value(v.to_string(), "leaf"),
-                        _ => continue,
+                    if let Some(v) = args.get(idx+1) {
+                        let leaf = Self::parse_value(v.to_string(), "leaf");
+                        opt.leaf = Some((leaf, 0x0));
+                    } else {
+                        eprintln!("missing argument <u32> to \"--leaf\"");
                     };
                 },
                 "subleaf" | "sub_leaf" | "sub-leaf" => {
-                    if !opt.only_leaf.flag {
-                        eprintln!("Please \"--leaf <u32>\" argument");
-                        continue;
-                    }
-                    opt.only_leaf.sub_leaf = match args.get(idx+1) {
-                        Some(v) => Self::parse_value(v.to_string(), "sub_leaf"),
-                        _ => continue,
+                    if let Some((leaf, _)) = opt.leaf {
+                        if let Some(sub_leaf) = args.get(idx+1) {
+                            let sub_leaf = Self::parse_value(sub_leaf.to_string(), "sub_leaf");
+                            opt.leaf = Some((leaf, sub_leaf));
+                        } else {
+                            eprintln!("missing argument <u32> to \"--sub_leaf <u32>\"");
+                        }
+                    } else {
+                        eprintln!("missing argument \"--leaf <u32>\"");
                     };
                 }
                 "bin" => {
                     opt.bin_fmt = true
                 },
+                /*
                 "pin" | "pin_thread" => {
                     let cpu = match args.get(idx+1) {
                         Some(v) => {
@@ -393,6 +373,7 @@ impl MainOpt {
                     };
                     libcpuid_dump::pin_thread(cpu).unwrap();
                 },
+                */
                 "h" | "help" => {
                     Self::help_msg();
                     std::process::exit(0);
@@ -407,9 +388,6 @@ impl MainOpt {
                     opt.skip_zero = false;
                     opt.diff = false;
                 },
-                // TODO: "taskset" option?
-                // cpuid_dump --taskset <list>
-                // same `taskset -c <list> cpuid_dump -a`
                 _ => eprintln!("Unknown option: {}", arg),
             }
         }
@@ -439,27 +417,6 @@ impl MainOpt {
         } else {
             hex_head()
         }
-    }
-
-    fn only_leaf(&self) -> io::Result<()> {
-        let raw_result = RawCpuid::exe(self.only_leaf.leaf, self.only_leaf.sub_leaf);
-
-        let tmp = if self.bin_fmt {
-            [
-                topo_info_head(),
-                bin_head(),
-                raw_result.bin_fmt(),
-            ]
-        } else {
-            [
-                topo_info_head(),
-                hex_head(),
-                raw_result.parse_fmt(&VendorFlag::check()),
-            ]
-        }.concat();
-
-        dump_write(&tmp.into_bytes())?;
-        Ok(())
     }
 
     fn raw_pool(&self, cpuid_pool: &[RawCpuid]) -> Vec<u8> {
@@ -556,7 +513,6 @@ impl MainOpt {
                 let mut main_pool = main_pool.lock().unwrap();
                 main_pool.extend(topo_head);
                 main_pool.extend(pool);
-
             }).join().unwrap();
         }
 
@@ -577,29 +533,55 @@ impl MainOpt {
         ].concat()
     }
 
+    fn only_leaf(&self) -> io::Result<()> {
+        let raw_result = match self.leaf {
+            Some((leaf, sub_leaf)) => RawCpuid::exe(leaf, sub_leaf),
+            None => unreachable!(),
+        };
+
+        let tmp = if self.bin_fmt {
+            [
+                topo_info_head(),
+                bin_head(),
+                raw_result.bin_fmt(),
+            ]
+        } else {
+            [
+                topo_info_head(),
+                hex_head(),
+                raw_result.parse_fmt(&VendorFlag::check()),
+            ]
+        }.concat();
+
+        dump_write(&tmp.into_bytes())?;
+        Ok(())
+    }
+
     fn save_file(&self) -> io::Result<()> {
         use std::fs::File;
         use std::io::Write;
         
-        let pool = self.dump_pool();
+        if let Some(save_path) = &self.save_path {
+            let pool = self.dump_pool();
 
-        let path = &self.save.path;
+            let mut f = File::create(&save_path)?;
 
-        let mut f = File::create(path).expect("File::create {path} faild.");
+            f.write_all(&pool)?;
+            println!("Output to \"{save_path}\"");
 
-        f.write_all(&pool)?;
-        println!("Output to \"{path}\"");
-
-        Ok(())
+            Ok(())
+        } else {
+            unreachable!()
+        }
     }
 
     fn run(&self) -> io::Result<()> {
         print!("{VERSION_HEAD}");
 
         match self {
-            Self { only_leaf: OnlyLeaf { flag: true, .. }, .. }
+            Self { leaf: Some(_), .. }
                 => self.only_leaf(),
-            Self { save: SaveOpt { flag: true, .. }, .. }
+            Self { save_path: Some(_), .. }
                 => self.save_file(),
             _ => dump_write(&self.dump_pool()),
         }
