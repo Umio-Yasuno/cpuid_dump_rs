@@ -305,6 +305,7 @@ impl MainOpt {
 
                     if let Some(v) = args.get(idx+1) {
                         if v.starts_with('-') { 
+                            opt.save_path = Some(path);
                             continue;
                         }
 
