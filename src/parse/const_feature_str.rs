@@ -132,7 +132,7 @@ pub(crate) const fn ftr_00_07_ebx_x0() -> [&'static str; 32] {
     ftr[19] = "ADX";
     ftr[20] = "SMAP";
     ftr[21] = "AVX512IFMA";
-    ftr[22] = "";
+    // ftr[22] = "";
     ftr[23] = "CLFLUSHOPT";
     ftr[24] = "CLWB";
     ftr[25] = "ProcessorTrace";
@@ -164,18 +164,20 @@ pub(crate) const fn ftr_00_07_ecx_x0() -> [&'static str; 32] {
     ftr[12] = "AVX512_BITALG";
     ftr[13] = "TME_EN";
     ftr[14] = "AVX512_VPOPCNTDQ";
-    ftr[15] = "";
+    // ftr[15] = "";
     ftr[16] = "LA57"; // 57-bit linear addresses
+    /*  The value of MAWAU used by the BNDLDX and BNDSTX instructions in 64-bit mode.
     ftr[17] = "";
     ftr[18] = "";
     ftr[19] = "";
     ftr[20] = "";
     ftr[21] = "";
+    */
     ftr[22] = "RDPID";
     ftr[23] = "KL"; // Key Locker
     ftr[24] = "BUS_LOCK_DETECT";
     ftr[25] = "CLDEMOTE";
-    ftr[26] = "";
+    // ftr[26] = "";
     ftr[27] = "MOVDIRI";
     ftr[28] = "MOVDIRI64B";
     ftr[29] = "ENQCMD"; // Enqueue Stores
@@ -192,31 +194,31 @@ pub(crate) const fn ftr_00_07_edx_x0() -> [&'static str; 32] {
     ftr[3] = "AVX512_4FMAPS"; // Intel Xeon Phi only
     ftr[4] = "FSRM"; // Fast Short REP MOV
     ftr[5] = "UINTR"; // the processor supports user interrupts
-    ftr[6] = "";
-    ftr[7] = "";
+    // ftr[6] = "";
+    // ftr[7] = "";
     ftr[8] = "AVX512_VP2INTERSECT";
-    ftr[9] = "";
+    ftr[9] = "SRBDS_CTRL";
     ftr[10] = "MD_CLEAR";
-    ftr[11] = "";
-    ftr[12] = "";
-    ftr[13] = "";
+    ftr[11] = "RTM_ALWAYS_ABORT";
+    // ftr[12] = "";
+    ftr[13] = "RTM_FORCE_ABORT";
     ftr[14] = "SERIALIZE";
     ftr[15] = "Hybrid";
     ftr[16] = "TSXLDTRK"; // Intel TSX suspend load address tracking
-    ftr[17] = "";
+    // ftr[17] = "";
     ftr[18] = "PCONFIG";
     ftr[19] = "ArchitecturalLBR";
     ftr[20] = "CET_IBT";
-    ftr[21] = "";
+    // ftr[21] = "";
     ftr[22] = "AMX-BF16";
     ftr[23] = "AVX512_FP16";
-    ftr[24] = "AMX-Tile";
+    ftr[24] = "AMX-TILE";
     ftr[25] = "AMX-INT8";
     ftr[26] = "IBRS";
     ftr[27] = "STIBP";
     ftr[28] = "L1D_FLUSH";
-    ftr[29] = "";
-    ftr[30] = "";
+    // ftr[29] = "IA32_ARCH_CAPABILITIES";
+    // ftr[30] = "IA32_CORE_CAPABILITIES";
     ftr[31] = "SSBD";
 
     ftr
@@ -225,13 +227,30 @@ pub(crate) const fn ftr_00_07_edx_x0() -> [&'static str; 32] {
 pub(crate) const fn ftr_00_07_eax_x1() -> [&'static str; 32] {
     let mut ftr = [""; 32];
 
-    ftr[4] = "AVX_VNNI";
+    ftr[3] = "RAO-INT";
+    ftr[4] = "AVX-VNNI";
     ftr[5] = "AVX512_BF16";
-    ftr[10] = ""; // fast zero-length MOVSB
-    ftr[11] = ""; // fast short STOSB
-    ftr[12] = ""; // fast short CMPSB, SCASB
+    ftr[7] = "CMPCCXADD";
+    ftr[8] = "ArchPerfmonExt";
+    ftr[10] = "FZRM"; // fast zero-length MOVSB
+    ftr[11] = "FSRS"; // fast short STOSB
+    ftr[12] = "FSRC"; // fast short CMPSB, SCASB
+    ftr[19] = "WRMSRNS"; // Non-Serializing WRMSR
+    ftr[21] = "AMX-FP16";
     ftr[22] = "HRESET";
+    ftr[23] = "AVX-IFMA";
     ftr[26] = "LAM"; // Linear Address Masking
+    ftr[27] = "MSRLIST"; // [RD,WR]MSRLIST
+
+    ftr
+}
+
+pub(crate) const fn ftr_00_07_edx_x1() -> [&'static str; 32] {
+    let mut ftr = [""; 32];
+
+    ftr[4] = "AVX-VNNI-INT8";
+    ftr[5] = "AVX-NE-CONVERT";
+    ftr[14] = "PREFETCHITI";
 
     ftr
 }

@@ -82,12 +82,10 @@ impl ParseGeneric for CpuidResult {
     }
 
     fn feature_00_01h(&self) -> String {
-        let buff = [
+        align_mold_ftr(&[
             str_detect_ftr(self.edx, &ftr_00_01_edx_x0()),
             str_detect_ftr(self.ecx, &ftr_00_01_ecx_x0()),
-        ].concat();
-
-        align_mold_ftr(&buff)
+        ].concat())
     }
 
     fn thermal_power_00_06h(&self) -> String {
@@ -95,17 +93,18 @@ impl ParseGeneric for CpuidResult {
     }
 
     fn feature_00_07h_x0(&self) -> String {
-        let buff = [
+        align_mold_ftr(&[
             str_detect_ftr(self.ebx, &ftr_00_07_ebx_x0()),
             str_detect_ftr(self.ecx, &ftr_00_07_ecx_x0()),
             str_detect_ftr(self.edx, &ftr_00_07_edx_x0()),
-        ].concat();
-
-        align_mold_ftr(&buff)
+        ].concat())
     }
 
     fn feature_00_07h_x1(&self) -> String {
-        align_mold_ftr(&str_detect_ftr(self.eax, &ftr_00_07_eax_x1()))
+        align_mold_ftr(&[
+            str_detect_ftr(self.eax, &ftr_00_07_eax_x1()),
+            str_detect_ftr(self.edx, &ftr_00_07_edx_x1()),
+        ].concat())
     }
 
     fn topo_ext_00_0bh(&self) -> String {

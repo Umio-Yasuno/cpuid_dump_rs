@@ -4,7 +4,6 @@
 use core::arch::x86_64::CpuidResult;
 use std::io;
 
-// extern crate libcpuid_dump;
 use libcpuid_dump::{cpuid, VendorFlag, _AX};
 
 pub const INPUT_WIDTH: usize = "  0x00000000_x0: ".len();
