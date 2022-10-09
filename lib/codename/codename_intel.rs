@@ -116,6 +116,7 @@ pub(super) fn fam06h(m: u32, s: u32) -> Self {
         ].concat(), "Willow Cove", "10 nm SF"),
 
         0x8D => Self::info("Tiger Lake (Desktop)", "Willow Cove", "10 nm SF"),
+        0x8F => Self::info("Sapphire Rapids (Server)", "Golden Cove", "10nm eSF"),
 
         /* Hybrid */
         0x8A => Self::info("Lakefield (1+4)", "Sunny Cove + Tremont", "10 nm"),
@@ -131,18 +132,14 @@ pub(super) fn fam06h(m: u32, s: u32) -> Self {
                 0x5 => " (H0, 6+0)",
                 _   => "",
             }
-        ].concat(), "Golden Cove + Gracemont", "Intel 7 /10 nm eSF"),
+        ].concat(), "Golden Cove + Gracemont", "Intel 7"),
 
         /* https://review.coreboot.org/c/coreboot/+/63299 */
         0x9A => {
             let (variant, stepping) = match s {
                 /* Alder Lake-M */
-                0x1 |
-                0x4 => ("M", match s {
-                    0x1 => " (Q0, 2+8)",
-                    0x4 => " (R0, 2+8)",
-                    _ => " (2+8)",
-                }),
+                0x1 => ("M", " (Q0, 2+8)"),
+                0x4 => ("M", " (R0, 2+8)"),
                 /* Alder Lake-P */
                 _ => ("P", match s {
                     0x0 => " (J0, 6+8)",
@@ -156,24 +153,20 @@ pub(super) fn fam06h(m: u32, s: u32) -> Self {
             Self::info(
                 &format!("Alder Lake-{variant} (Mobile)({stepping}"),
                 "Golden Cove + Gracemont",
-                "Intel 7 /10 nm eSF",
+                "Intel 7",
             )
         },
-        0xBE => Self::info("Alder Lake-N", "Gracemont", "Intel 7 /10 nm eSF"),
-        /*
-        0xBA => Self::info(
-            &format("Raptor Lake-P (Mobile){}",
-                match s {
-                    0x2 => "(J0)",
-                    _ => "",
-                },
-            ),
-            "", ""),
-        */
+        0xB7 => Self::info("Raptor Lake-S", "Golden Cove + Gracemont", "Intel 7"),
+        0xBA => Self::info("Raptor Lake-P", "Golden Cove + Gracemont", "Intel 7"),
+        0xBF => Self::info("Raptor Lake-S (0xBF)", "Golden Cove + Gracemont", "Intel 7"),
+        0xAA => Self::info("Meteor Lake-M/P", "Redwood Cove + Crestmont", ""),
+        0xAC => Self::info("Meteor Lake-S", "Redwood Cove + Crestmont", ""),
 
-        0x8F => Self::info("Sapphire Rapids (Server)", "Golden Cove", "10nm eSF"),
+        //  Atom
+        0xBE => Self::info("Alder Lake-N", "Gracemont", "Intel 7 /10 nm eSF"),
+        0xAF => Self::info("Sierra Forest", "", "Intel 3"),
+        0xB6 => Self::info("Grand Ridge", "", ""),
         /*
-                //  Atom
                 //  Bonnell
                 0x1C => format!("Diamondville/Pineview"),
                 0x26 => format!("Silverthorne/Lincroft"),

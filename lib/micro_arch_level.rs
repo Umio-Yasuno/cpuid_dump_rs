@@ -1,9 +1,20 @@
 use crate::{_AX, cpuid, CpuidResult};
 
-pub struct MicroArchLevel(u8);
+// pub struct MicroArchLevel(u8);
+
+#[allow(non_camel_case_types)]
+#[repr(u8)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub enum MicroArchLevel {
+    Not_x86_64,
+    X86_64_V1, // baseline
+    X86_64_V2,
+    X86_64_V3,
+    X86_64_V4,
+}
 
 impl MicroArchLevel {
-    const BASE_LINE: u32 = {
+    const MASK_BASE_LINE: u32 = {
         /* 00_01_EDX */
         const FPU: u32  = 1 <<  0;
         const CX8: u32  = 1 <<  8;
@@ -17,7 +28,7 @@ impl MicroArchLevel {
         FPU | CX8 | SCE | CMOV | MMX | FXSR | SSE | SSE2
     };
 
-    const X86_64_V2: [u32; 2] = { 
+    const MASK_X86_64_V2: [u32; 2] = { 
         /* 00_01_ECX */
         const SSE3: u32       = 1 << 0;
         const SSSE3: u32      = 1 << 9;
@@ -34,7 +45,7 @@ impl MicroArchLevel {
         ]
     };
 
-    const X86_64_V3: [u32; 3] = {
+    const MASK_X86_64_V3: [u32; 3] = {
         /* 00_01_ECX */
         const FMA: u32     = 1 << 12;
         const MOVBE: u32   = 1 << 22;
@@ -57,7 +68,7 @@ impl MicroArchLevel {
         ]
     };
 
-    const X86_64_V4: u32 = {
+    const MASK_X86_64_V4: u32 = {
         /* 00_07_EBX */
         const AVX512F: u32  = 1 << 16;
         const AVX512DQ: u32 = 1 << 17;
@@ -89,29 +100,37 @@ impl MicroArchLevel {
             true
         };
 
-        let base_line = mask(&[Self::BASE_LINE], &[cpuid_00_01.edx]);
-        let x86_64_v2 = mask(&Self::X86_64_V2, &[cpuid_00_01.ecx, cpuid_80_01.ecx]);
-        let x86_64_v3 = mask(&Self::X86_64_V3,
-            &[cpuid_00_01.ecx, cpuid_00_07.ebx, cpuid_80_01.ecx]);
-        let x86_64_v4 = mask(&[Self::X86_64_V4], &[cpuid_00_07.ebx]);
+        let [base_line, x86_64_v2, x86_64_v3, x86_64_v4] = [
+            mask(&[Self::MASK_BASE_LINE], &[cpuid_00_01.edx]),
+            mask(&Self::MASK_X86_64_V2, &[cpuid_00_01.ecx, cpuid_80_01.ecx]),
+            mask(&Self::MASK_X86_64_V3, &[cpuid_00_01.ecx, cpuid_00_07.ebx, cpuid_80_01.ecx]),
+            mask(&[Self::MASK_X86_64_V4], &[cpuid_00_07.ebx]),
+        ];
 
         let mut level = if base_line {
-            1
+            1u8
         } else {
-            return Self(0)
+            return Self::Not_x86_64
         };
 
         if x86_64_v2 { level |= 1 << 1 }
         if x86_64_v3 { level |= 1 << 2 }
         if x86_64_v4 { level |= 1 << 3 }
 
-        Self(level)
+        match level {
+            0b1 => Self::X86_64_V1,
+            0b11 => Self::X86_64_V2,
+            0b111 => Self::X86_64_V3,
+            0b1111 => Self::X86_64_V4,
+            _ => unreachable!(),
+        }
     }
     pub fn check() -> Self {
         let cpuid_array = Self::set_cpuid();
 
         Self::from_cpuid_array(cpuid_array)
     }
+    /*
     pub fn to_u8(&self) -> u8 {
         match self.0 {
             0b0001 => 1,
@@ -121,6 +140,7 @@ impl MicroArchLevel {
             _ => 0,
         }
     }
+    */
 }
 
 #[test]
@@ -137,5 +157,5 @@ fn test_micro_arch_level() {
 
     let level = MicroArchLevel::from_cpuid_array(cpuid_array);
 
-    assert_eq!(0b0111, level.0);
+    assert_eq!(MicroArchLevel::X86_64_V3, level);
 }

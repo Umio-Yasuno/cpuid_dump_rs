@@ -30,7 +30,7 @@ impl fmt::Display for TlbType {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub enum TlbAssoc {
     Way(u8),
     Full,
@@ -52,6 +52,12 @@ pub struct TlbInfo {
 }
 
 impl TlbInfo {
+    pub fn half_size(&self) -> Self {
+        Self {
+            size: self.size / 2,
+            assoc: self.assoc.clone(),
+        }
+    }
     pub fn from_reg(reg: u16, offset: u16) -> Self {
         let shift = offset.trailing_ones();
         let assoc = reg >> shift;
@@ -103,10 +109,7 @@ impl Tlb {
         let offset = type_.get_offset();
         let page_4k = TlbInfo::from_reg(reg_4k, offset);
         let page_2m = TlbInfo::from_reg(reg_2m4m, offset);
-        let page_4m = TlbInfo {
-            size: page_2m.size / 2,
-            assoc: page_2m.assoc,
-        };
+        let page_4m = page_2m.half_size();
 
         Self {
             type_,
