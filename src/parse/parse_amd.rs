@@ -19,14 +19,14 @@ impl PrintTlb for Tlb {
     fn print_tlb(&self) -> String {
         const PAD: &str = unsafe { std::str::from_utf8_unchecked(&[b' '; 7]) };
 
-        return [
+        [
             lnpad!(),
             format!("[{}TLB 4K: {}", self.type_, self.page_4k.print_entry_way()),
             lnpad!(),
             format!("{PAD} 2M: {}", self.page_2m.print_entry_way()),
             lnpad!(),
             format!("{PAD} 4M: {}]", self.page_4m.print_entry_way()),
-        ].concat();
+        ].concat()
     }
 }
 
@@ -76,11 +76,11 @@ impl ParseAMD for CpuidResult {
         let l1dtlb = Tlb::reg(TlbType::L1d, (ebx >> 16) as u16, (eax >> 16) as u16);
         let l1itlb = Tlb::reg(TlbType::L1i, (ebx & 0xFFFF) as u16, (eax & 0xFFFF) as u16);
 
-        return [
+        [
             format!("[L1D {l1d_size}K/L1I {l1i_size}K]"),
             l1itlb.print_tlb(),
             l1dtlb.print_tlb(),
-        ].concat();
+        ].concat()
     }
 
     fn l2_amd_80_06h(&self) -> String {
@@ -97,11 +97,11 @@ impl ParseAMD for CpuidResult {
         let l2dtlb = Tlb::reg(TlbType::L2d, (ebx >> 16) as u16, (eax >> 16) as u16);
         let l2itlb = Tlb::reg(TlbType::L2i, (ebx & 0xFFFF) as u16, (eax & 0xFFFF) as u16);
 
-        return [
+        [
             format!("[L2 {l2_size}K/L3 {l3_size}M]"),
             l2itlb.print_tlb(),
             l2dtlb.print_tlb(),
-        ].concat();
+        ].concat()
     }
 
     fn apmi_amd_80_07h(&self) -> String {
@@ -141,15 +141,15 @@ impl ParseAMD for CpuidResult {
             TlbInfo::from_reg(reg as u16, 0xFFF).print_entry_way()
         );
 
-        return [
-            format!("[L1iTLB 1G: {}]", l1itlb),
+        [
+            format!("[L1iTLB 1G: {l1itlb}]"),
             lnpad!(),
-            format!("[L1dTLB 1G: {}]", l1dtlb),
+            format!("[L1dTLB 1G: {l1dtlb}]"),
             lnpad!(),
-            format!("[L2iTLB 1G: {}]", l2itlb),
+            format!("[L2iTLB 1G: {l2itlb}]"),
             lnpad!(),
-            format!("[L2dTLB 1G: {}]", l2dtlb),
-        ].concat();
+            format!("[L2dTLB 1G: {l2dtlb}]"),
+        ].concat()
     }
 
     fn fpu_width_amd_80_1ah(&self) -> String {
@@ -165,11 +165,11 @@ impl ParseAMD for CpuidResult {
         let th_per_core = ((self.ebx >> 8) & 0xFF) + 1;
         let node_id = self.ecx & 0xFF;
 
-        return [
+        [
             format!("[NodeID: {node_id}, CoreID: {core_id}]"),
             lnpad!(),
             format!("[Thread(s) per core: {th_per_core}]"),
-        ].concat();
+        ].concat()
     }
 
     fn encrypt_ftr_amd_80_1fh(&self) -> String {
