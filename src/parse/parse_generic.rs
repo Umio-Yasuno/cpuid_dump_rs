@@ -29,7 +29,7 @@ impl ParseGeneric for CpuidResult {
         let max_apic_id = (self.ebx >> 16) & 0xFF;
         let clflush_size = ((self.ebx >> 8) & 0xFF) * 8;
 
-        return [
+        [
             format!("[F: 0x{:X}, M: 0x{:X}, S: 0x{:X}]", fms.syn_fam, fms.syn_mod, fms.step),
             lnpad!(),
             format!("[Codename: {}]", fms.codename()),
@@ -37,7 +37,7 @@ impl ParseGeneric for CpuidResult {
             format!("[APIC ID: {apic_id}] [Max APIC ID: {max_apic_id}]"),
             lnpad!(),
             format!("[CLFlush (Byte): {clflush_size}]"),
-        ].concat();
+        ].concat()
     }
 
     fn monitor_mwait_00_05h(&self) -> String {
@@ -73,12 +73,12 @@ impl ParseGeneric for CpuidResult {
             }).concat()
         };
         
-        return [
+        [
             format!("[MonitorLineSize: {min_mon_line_size}(Min), {max_mon_line_size}(Max)]"),
             lnpad!(),
             ftr,
             c_state,
-        ].concat();
+        ].concat()
     }
 
     fn feature_00_01h(&self) -> String {
@@ -177,9 +177,10 @@ impl ParseGeneric for CpuidResult {
     }
 
     fn cache_prop(&self) -> String {
-        let cache = libcpuid_dump::CacheProp::from_cpuid(self);
-
-        if cache.level == 0 { return "".to_string(); }
+        let cache = match libcpuid_dump::CacheProp::option_from_cpuid(self) {
+            Some(prop) => prop,
+            None => return "".to_string(),
+        };
         
         let inclusive = if cache.inclusive {
             "[Inclusive]"
@@ -187,7 +188,7 @@ impl ParseGeneric for CpuidResult {
             ""
         }.to_string();
 
-        return [
+        [
             format!("[L{}{},{:>3}_way,{:>4}_{}]",
                 cache.level,
                 &cache.cache_type.to_string()[..1],
@@ -197,6 +198,6 @@ impl ParseGeneric for CpuidResult {
             ),
             // format!("[Shared {}T]", cache.share_thread),
             inclusive,
-        ].concat();
+        ].concat()
     }
 }

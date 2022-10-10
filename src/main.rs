@@ -513,11 +513,8 @@ impl MainOpt {
         ].concat()
     }
 
-    fn only_leaf(&self) -> io::Result<()> {
-        let raw_result = match self.leaf {
-            Some((leaf, sub_leaf)) => RawCpuid::exe(leaf, sub_leaf),
-            None => unreachable!(),
-        };
+    fn only_leaf(&self, leaf: u32, sub_leaf: u32) -> io::Result<()> {
+        let raw_result = RawCpuid::exe(leaf, sub_leaf);
 
         let tmp = if self.bin_fmt {
             [
@@ -531,38 +528,36 @@ impl MainOpt {
                 hex_head(),
                 raw_result.parse_fmt(&VendorFlag::check()),
             ]
-        }.concat();
+        }
+        .concat()
+        .into_bytes();
 
-        dump_write(&tmp.into_bytes())?;
+        dump_write(&tmp)?;
         Ok(())
     }
 
-    fn save_file(&self) -> io::Result<()> {
+    fn save_file(&self, save_path: &String) -> io::Result<()> {
         use std::fs::File;
         use std::io::Write;
-        
-        if let Some(save_path) = &self.save_path {
-            let pool = self.dump_pool();
 
-            let mut f = File::create(&save_path)?;
+        let pool = self.dump_pool();
 
-            f.write_all(&pool)?;
-            println!("Output to \"{save_path}\"");
+        let mut f = File::create(save_path)?;
 
-            Ok(())
-        } else {
-            unreachable!()
-        }
+        f.write_all(&pool)?;
+        println!("Output to \"{save_path}\"");
+
+        Ok(())
     }
 
     fn run(&self) -> io::Result<()> {
         print!("{VERSION_HEAD}");
 
         match self {
-            Self { leaf: Some(_), .. }
-                => self.only_leaf(),
-            Self { save_path: Some(_), .. }
-                => self.save_file(),
+            Self { leaf: Some(leaf), .. }
+                => self.only_leaf(leaf.0, leaf.1),
+            Self { save_path: Some(path), .. }
+                => self.save_file(path),
             _ => dump_write(&self.dump_pool()),
         }
     }
