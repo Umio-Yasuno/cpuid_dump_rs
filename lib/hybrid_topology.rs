@@ -57,7 +57,10 @@ impl TopoCacheInfo {
             /* 0x2..=0x4 (L2 Cache .. L4 Cache) ? */
             for sub_leaf in 0x0..=0x4 {
                 let cpuid = cpuid!(*cache_leaf, sub_leaf);
-                let prop = CacheProp::from_cpuid(&cpuid);
+                let prop = match CacheProp::option_from_cpuid(&cpuid) {
+                    Some(prop) => prop,
+                    None => continue,
+                };
                 let cache_id = Self::get_cache_id(apicid, prop.share_thread);
                 let shared_between_topology = Self::shared_all_threads(&prop, max_apic_id);
 
@@ -140,12 +143,11 @@ impl TopoCacheInfo {
 
                 for sub_leaf in 0x0..=0x4 {
                     let cpuid = cpuid!(*cache_leaf, sub_leaf);
-                    let prop = CacheProp::from_cpuid(&cpuid);
+                    let prop = match CacheProp::option_from_cpuid(&cpuid) {
+                        Some(prop) => prop,
+                        None => continue,
+                    };
 
-                    if prop.cache_type == CacheType::Unknown {
-                        continue;
-                    }
-                    
                     let cache_id = Self::get_cache_id(apicid, prop.share_thread);
 
                     match prop {
@@ -200,7 +202,10 @@ impl TopoCacheInfo {
 
         for sub_leaf in 0x0..=0x4 {
             let cpuid = cpuid!(cache_leaf, sub_leaf);
-            let prop = CacheProp::from_cpuid(&cpuid);
+            let prop = match CacheProp::option_from_cpuid(&cpuid) {
+                Some(prop) => prop,
+                None => continue,
+            };
             let count = total_logical_proc / prop.share_thread;
             let shared_between_topology = Self::shared_all_threads(&prop, max_apic_id);
 

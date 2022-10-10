@@ -48,7 +48,7 @@ impl FamModStep {
             0x19 => ProcInfo::fam19h(m, s),
             _ => ProcInfo {
                 codename: format!("F{f}h_M{m}h_S{s}h"),
-                archname: "NoIndex".to_string(),
+                archname: "".to_string(),
                 process: "".to_string(),
             },
         }

@@ -38,7 +38,7 @@ impl ProcName {
     
     fn from_cpuid_array(array: [CpuidResult; 3]) -> String {
         /* 4 (0x8000_0002 .. 0x8000_0004) * u32 ([u8; 4]) * 4 (E{A,B,C,D}X) */
-        let name = array.iter().flat_map(|cpuid| Self::dec_cpuid(cpuid)).collect();
+        let name = array.iter().flat_map(Self::dec_cpuid).collect();
 
         String::from_utf8(name).unwrap()
     }

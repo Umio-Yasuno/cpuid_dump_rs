@@ -196,7 +196,7 @@ pub(super) fn fam06h(m: u32, s: u32) -> Self {
                 0x57 => format!("Knights Landing"),
                 0x85 => format!("Knights Mill"),
         */
-        _ => Self::info(&format!("F06h_M{m}_S{s}h"), "{{No Data}}", "{{No Data}}"),
+        _ => Self::info(&format!("F06h_M{m}_S{s}h"), "", ""),
     }
 }
 }

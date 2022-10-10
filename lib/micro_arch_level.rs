@@ -1,12 +1,10 @@
 use crate::{_AX, cpuid, CpuidResult};
 
-// pub struct MicroArchLevel(u8);
-
 #[allow(non_camel_case_types)]
 #[repr(u8)]
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum MicroArchLevel {
-    Not_x86_64,
+    X86_64_V0,
     X86_64_V1, // baseline
     X86_64_V2,
     X86_64_V3,
@@ -110,7 +108,7 @@ impl MicroArchLevel {
         let mut level = if base_line {
             1u8
         } else {
-            return Self::Not_x86_64
+            return Self::X86_64_V0
         };
 
         if x86_64_v2 { level |= 1 << 1 }
@@ -122,7 +120,7 @@ impl MicroArchLevel {
             0b11 => Self::X86_64_V2,
             0b111 => Self::X86_64_V3,
             0b1111 => Self::X86_64_V4,
-            _ => unreachable!(),
+            _ => Self::X86_64_V0,
         }
     }
     pub fn check() -> Self {
@@ -130,17 +128,6 @@ impl MicroArchLevel {
 
         Self::from_cpuid_array(cpuid_array)
     }
-    /*
-    pub fn to_u8(&self) -> u8 {
-        match self.0 {
-            0b0001 => 1,
-            0b0011 => 2,
-            0b0111 => 3,
-            0b1111 => 4,
-            _ => 0,
-        }
-    }
-    */
 }
 
 #[test]

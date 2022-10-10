@@ -1,15 +1,15 @@
 use crate::CpuidResult;
 use std::fmt;
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Eq)]
 #[repr(u8)]
 pub enum TopoLevelType {
-    Invalid = 0,
-    SMT = 1,
-    Core = 2,
-    Module = 3,
-    Tile = 4,
-    Die = 5,
+    Invalid,
+    SMT,
+    Core,
+    Module,
+    Tile,
+    Die,
 }
 
 impl TopoLevelType {

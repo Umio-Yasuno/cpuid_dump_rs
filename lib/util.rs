@@ -37,7 +37,7 @@ pub fn pin_thread(cpu: usize) -> Result<(), i32> {
 
 pub fn cpu_set_list() -> Result<Vec<usize>, i32> {
     let mut cpus: Vec<usize> = Vec::with_capacity(256);
-    
+
     #[cfg(unix)]
     unsafe {
         use std::mem;
@@ -92,9 +92,9 @@ pub fn get_total_logical_processor() -> Option<u32> {
             return Some(proc_count);
         },
     };
-    
+
     let thread_count = (cpuid!(topo_leaf, 0x1).ebx >> 16) & 0xFF;
-    
+
     Some(thread_count)
 }
 

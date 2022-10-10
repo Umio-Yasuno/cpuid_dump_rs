@@ -1,6 +1,6 @@
 use crate::{cpuid, _AX, CpuidResult, VendorFlag};
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub enum Unit {
     Byte,
     KiB,
@@ -46,7 +46,7 @@ impl fmt::Display for Unit {
     }
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub enum CacheType {
     Data,
     Instruction,
@@ -76,7 +76,7 @@ impl fmt::Display for CacheType {
     }
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct CacheProp {
     pub cache_type: CacheType,
     pub level: u32,
@@ -107,8 +107,18 @@ impl CacheProp {
 
         None
     }
+
+    pub fn option_from_cpuid(cpuid: &CpuidResult) -> Option<Self> {
+        let prop = Self::from_cpuid(cpuid);
+
+        if prop.level != 0 {
+            Some(prop)
+        } else {
+            None
+        }
+    }
     
-    pub fn from_cpuid(cpuid: &CpuidResult) -> CacheProp {
+    pub fn from_cpuid(cpuid: &CpuidResult) -> Self {
         let [eax, ebx, ecx, edx] = [cpuid.eax, cpuid.ebx, cpuid.ecx, cpuid.edx];
 
         let cache_type = CacheType::from_reg(eax & 0x1F);
@@ -125,7 +135,7 @@ impl CacheProp {
 
         let inclusive = (edx & 0b10) != 0;
 
-        CacheProp {
+        Self {
             cache_type,
             level,
             line_size,

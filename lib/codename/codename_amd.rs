@@ -7,7 +7,7 @@ pub(super) fn fam17h(m: u32, s: u32) -> Self {
         0x01 => match s {
             0x01 => Self::info("Summit Ridge (B1)", "Zen", "14 nm"),
             0x02 => Self::info("Naples (B2)", "Zen", "14 nm"),
-            _ => Self::info("{{Zen}}", "Zen", ""),
+            _ => Self::info("Zen", "Zen", ""),
         },
         0x20 => Self::info(&format!("Raven2 [Dali/Pollock]{}", match s {
             0x1 => " (A1)",
@@ -35,7 +35,7 @@ pub(super) fn fam17h(m: u32, s: u32) -> Self {
         0x90 => Self::info("VanGogh", "Zen 2", "7 nm"),
         0xA0 => Self::info("Mendocino", "Zen 2", "6 nm"),
 
-        _ => Self::info("Family17h", "Zen", ""),
+        _ => Self::info("Fam17h", "Zen", ""),
     }
 }
 
@@ -47,11 +47,15 @@ pub(super) fn fam19h(m: u32, s: u32) -> Self {
             _ => "",
         }), "Zen 3", "7 nm"),
         0x21 => Self::info("Vermeer", "Zen 3", "7 nm"),
+        /* https://www.openmp.org/wp-content/uploads/ecp_sollve_openmp_monthly.offload_perf_ana_craypat.marcus.hpe_.26aug2022.v2.pdf */
         0x30 => Self::info("Trento", "Zen 3", "7 nm"),
-        0x44 => Self::info("Rembrandt", "Zen 3+", "6nm"),
-        0x50 => Self::info("Cezanne (A1)", "Zen 3", "7 nm"),
+        // 0x44: Rembrandt
+        0x40..=0x4F => Self::info("Rembrandt", "Zen 3+", "6nm"),
+        0x50..=0x5F => Self::info("Cezanne (A1)", "Zen 3", "7 nm"),
+        0x60..=0x6F => Self::info("Phoenix", "Zen 4", ""),
+        0x70..=0x7F => Self::info("Raphael", "Zen 4", "5 nm"),
 
-        _ => Self::info("Family19h", "Zen 3", ""),
+        _ => Self::info("Fam19h", "Zen 3", ""),
     }
 }
 }
