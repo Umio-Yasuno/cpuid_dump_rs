@@ -63,7 +63,7 @@ pub(crate) fn align_mold_ftr(buff: &[String]) -> String {
     let mut rest: usize = PARSE_WIDTH;
     let mut mold = String::with_capacity(buff.len() * 48);
 
-    const DECO_LEN: usize = "[]".len();
+    const DECO_LEN: usize = "[] ".len();
     
     for v in buff {
         let len = v.len() + DECO_LEN;

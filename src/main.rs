@@ -6,8 +6,8 @@ use std::io;
 
 use libcpuid_dump::{cpuid, VendorFlag, _AX};
 
-pub const INPUT_WIDTH: usize = "  0x00000000 0x0: ".len();
-pub const OUTPUT_WIDTH: usize = "0x00000000 ".len() * 4 + 1;
+pub const INPUT_WIDTH: usize = "  0x00000000 0x0:  ".len();
+pub const OUTPUT_WIDTH: usize = "0x00000000 ".len() * 4;
 pub const TOTAL_WIDTH: usize = 100;
 pub const PARSE_WIDTH: usize = TOTAL_WIDTH - INPUT_WIDTH - OUTPUT_WIDTH - 1; // " ".len()
 pub const VERSION_HEAD: &str = concat!("CPUID Dump ", env!("CARGO_PKG_VERSION"), "\n");
