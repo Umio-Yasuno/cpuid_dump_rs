@@ -46,40 +46,40 @@ pub(super) fn fam06h(m: u32, s: u32) -> Self {
         0x4F => Self::info("Broadwell (Server)", "Broadwell", "14 nm"),
         0x56 => Self::info("Broadwell (Micro Server)", "Broadwell", "14 nm"),
 
-        0x4E => Self::info("Skylake (Mobile)", "Skylake", "14 nm"),
+        0x4E => Self::info("Skylake-U", "Skylake", "14 nm"),
         0x5E => Self::info(match s {
             0x8 => "Kaby Lake (HA0)",
-            _ => "Skylake (Desktop)",
+            _ => "Skylake-S",
         }, "Skylake", "14 nm"),
         0x55 => match s {
-            0x7 => Self::info("Cascade Lake (Server)", "Skylake AVX512/VNNI", "14 nm"),
+            0x7 => Self::info("Cascade Lake-SP", "Skylake AVX512/VNNI", "14 nm"),
             0xA |
-            0xB => Self::info("Cooper Lake (Server)", "Skylake AVX512/VNNI/BF16", "14 nm"),
-            _ => Self::info("Skylake (Server)", "Skylake AVX512", "14 nm"),
+            0xB => Self::info("Cooper Lake-SP", "Skylake AVX512/VNNI/BF16", "14 nm"),
+            _ => Self::info("Skylake-SP", "Skylake AVX512", "14 nm"),
         },
 
         /* 10th Generation Intel® Core™ Processors Datasheet, Volume 1 of 2 */
         /* https://www.intel.com/content/www/us/en/content-details/615211/10th-generation-intel-core-processors-datasheet-volume-1-of-2.html */
         /* https://github.com/coreboot/coreboot/blob/master/src/soc/intel/skylake/Makefile.inc */
         0x8E => match s {
-            0x9 => Self::info("Amber Lake (Mobile)", "Skylake", "14 nm"),
-            0xA => Self::info("Coffee Lake (Mobile)", "Skylake", "14 nm"),
-            0xB => Self::info("Whiskey Lake (Mobile) (W0)", "Skylake", "14 nm"),
-            0xC => Self::info("Comet/Whiskey Lake (Mobile) (V0)", "Skylake", "14 nm"),
-            _ => Self::info("Kaby Lake (Mobile)", "Skylake", "14 nm"),
+            0x9 => Self::info("Amber Lake-Y", "Skylake", "14 nm"),
+            0xA => Self::info("Coffee Lake-U", "Skylake", "14 nm"),
+            0xB => Self::info("Whiskey Lake-U (W0)", "Skylake", "14 nm"),
+            0xC => Self::info("Comet/Whiskey Lake-U (V0)", "Skylake", "14 nm"),
+            _ => Self::info("Kaby Lake-U", "Skylake", "14 nm"),
         },
 
         0x9E => match s {
-            0x9 => Self::info("Kaby Lake (Desktop) (HB0)", "Skylake", "14 nm"),
+            0x9 => Self::info("Kaby Lake-S (HB0)", "Skylake", "14 nm"),
             0xA |
             0xB |
-            0xC => Self::info("Coffee Lake (Desktop)", "Skylake", "14 nm"),
-            0xD => Self::info("Comet/Coffee Lake (ES) (Desktop) (R0)", "Skylake", "14 nm"),
-            _ => Self::info("Kaby Lake (Desktop)", "Skylake", "14 nm"),
+            0xC => Self::info("Coffee Lake-S", "Skylake", "14 nm"),
+            0xD => Self::info("Comet/Coffee Lake (ES) (R0)", "Skylake", "14 nm"),
+            _ => Self::info("Kaby Lake-S", "Skylake", "14 nm"),
         },
 
         0xA5 => Self::info(&[
-            "Comet Lake (Desktop)",
+            "Comet Lake-S",
             match s {
                 0x0 => " (G0)",
                 0x1 => " (P0)",
@@ -92,23 +92,23 @@ pub(super) fn fam06h(m: u32, s: u32) -> Self {
         ].concat(), "Skylake", "14 nm"),
 
         0xA6 => Self::info(&[
-            "Comet Lake (Mobile)",
+            "Comet Lake-U",
             match s {
                 0x0 => " (A0)",
                 _ => "",
             }
         ].concat(), "Skylake", "14 nm"),
 
-        0x66 => Self::info("Cannon Lake (Mobile)", "Palm Cove", "10 nm"),
+        0x66 => Self::info("Cannon Lake-U", "Palm Cove", "10 nm"),
 
-        0x6A => Self::info("Ice Lake (Server)", "Sunny Cove", "10nm"),
-        0x6C => Self::info("Ice Lake (Micro Server)", "Sunny Cove", "10nm"),
-        0x7D => Self::info("Ice Lake (Desktop)", "Sunny Cove", "10nm"),
-        0x7E => Self::info("Ice Lake (Mobile)", "Sunny Cove", "10nm"),
-        0x9D => Self::info("Ice Lake (NNPI)", "Sunny Cove", "10nm"),
+        0x6A => Self::info("Ice Lake-SP", "Sunny Cove", "10nm"),
+        0x6C => Self::info("Ice Lake-D", "Sunny Cove", "10nm"),
+        0x7D => Self::info("Ice Lake-S", "Sunny Cove", "10nm"),
+        0x7E => Self::info("Ice Lake-U", "Sunny Cove", "10nm"),
+        0x9D => Self::info("Ice Lake-NNPI", "Sunny Cove", "10nm"),
 
         0xA7 => Self::info(&[
-            "Rocket Lake (Desktop)",
+            "Rocket Lake-S",
             match s {
                 0x0 => " (A0)",
                 0x1 => " (B0)",
@@ -117,10 +117,10 @@ pub(super) fn fam06h(m: u32, s: u32) -> Self {
         ].concat(), "Cypress Cove", "14 nm"),
         /* Xeon W-1300 */
         /* 06_A8H: https://www.intel.com/content/www/us/en/developer/articles/technical/software-security-guidance/best-practices/data-operand-independent-timing-isa-guidance.html */
-        0xA8 => Self::info("Rocket Lake (WS)", "Cyoress Cove", "14 nm"),
+        0xA8 => Self::info("Rocket Lake (WS)", "Cypress Cove", "14 nm"),
         
         0x8C => Self::info(&[
-            "Tiger Lake (Mobile)",
+            "Tiger Lake-U",
             match s {
                 0x0 => " (A0)",
                 0x1 => " (B0)",
@@ -129,8 +129,8 @@ pub(super) fn fam06h(m: u32, s: u32) -> Self {
             }
         ].concat(), "Willow Cove", "10 nm SF"),
 
-        0x8D => Self::info("Tiger Lake (Desktop)", "Willow Cove", "10 nm SF"),
-        0x8F => Self::info("Sapphire Rapids (Server)", "Golden Cove", "10nm eSF"),
+        0x8D => Self::info("Tiger Lake-H", "Willow Cove", "10 nm SF"),
+        0x8F => Self::info("Sapphire Rapids-SP", "Golden Cove", "10nm eSF"),
 
         /* Hybrid */
         0x8A => Self::info("Lakefield (1+4)", "Sunny Cove + Tremont", "10 nm"),
@@ -138,7 +138,7 @@ pub(super) fn fam06h(m: u32, s: u32) -> Self {
         /* https://edc.intel.com/content/www/us/en/design/ipla/software-development-platforms/client/platforms/alder-lake-desktop/12th-generation-intel-core-processors-datasheet-volume-1-of-2/005/cpuid/ */
         /* https://github.com/coreboot/coreboot/blob/master/src/soc/intel/alderlake/Makefile.inc */
         0x97 => Self::info(&[
-            "Alder Lake-S (Desktop)",
+            "Alder Lake-S",
             match s {
                 0x0 => " (A0, ES)",
                 0x1 => " (B0, ES)",
@@ -165,7 +165,7 @@ pub(super) fn fam06h(m: u32, s: u32) -> Self {
             };
 
             Self::info(
-                &format!("Alder Lake-{variant} (Mobile){stepping}"),
+                &format!("Alder Lake-{variant} {stepping}"),
                 "Golden Cove + Gracemont",
                 "Intel 7",
             )
