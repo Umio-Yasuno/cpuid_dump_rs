@@ -183,7 +183,7 @@ impl ParseGeneric for CpuidResult {
         };
         
         let inclusive = if cache.inclusive {
-            "[Inclusive]"
+            " [Inclusive]"
         } else {
             ""
         }.to_string();

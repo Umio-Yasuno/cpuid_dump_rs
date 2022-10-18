@@ -58,11 +58,15 @@ pub use crate::load_file::*;
 fn leaf_pool() -> Vec<(u32, u32)> {
     let mut leaf_pool: Vec<(u32, u32)> = Vec::with_capacity(64);
 
+    /* LFuncStd: largest standard function */
+    let max_std_leaf = RawCpuid::exe(0x0, 0x0).result.eax;
     /* CPUID[Leaf=0x7, SubLeaf=0x0].EAX, StructExtFeatIdMax */
     let leaf_07h_subc = RawCpuid::exe(0x7, 0x0).result.eax;
+    /* LFuncExt: largest extended function */
+    let max_ext_leaf = RawCpuid::exe(_AX, 0x0).result.eax;
 
     /* Base */
-    for leaf in 0x0..=0xD {
+    for leaf in 0x0..=max_std_leaf {
         match leaf {
             /* Cache Properties, Intel */
             0x4 => for sub_leaf in 0x0..=0x4 {
@@ -94,11 +98,7 @@ fn leaf_pool() -> Vec<(u32, u32)> {
     }
 
     /* Ext */
-    for leaf in _AX..=_AX+0xA {
-        leaf_pool.push((leaf, 0x0))
-    }
-
-    for leaf in _AX+0x19..=_AX+0x21 {
+    for leaf in _AX..=max_ext_leaf {
         /* Cache Properties, AMD, same format as Intel Leaf 0x4 */
         const LF_80_1D: u32 = _AX + 0x1D;
         /* AMD Platform QoS Enforcement for Memory Bandwidth */
