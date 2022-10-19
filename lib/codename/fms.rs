@@ -7,6 +7,20 @@ pub struct ProcInfo {
 }
 
 impl ProcInfo {
+    pub fn from_fms(fms: &FamModStep) -> Option<Self> {
+        let [f, m, s] = [fms.syn_fam, fms.syn_mod, fms.step];
+
+        match f {
+            /* Intel */
+            0x5 => Some(ProcInfo::info("Quark X1000", "P5C", "32 nm")),
+            0x6 => ProcInfo::fam06h(m, s),
+
+            /* AMD */
+            0x17 => ProcInfo::fam17h(m, s),
+            0x19 => ProcInfo::fam19h(m, s),
+            _ => None,
+        }
+    }
     pub fn info(code: &str, arch: &str, process: &str) -> Self {
         Self {
             codename: code.to_string(),
@@ -35,32 +49,5 @@ impl FamModStep {
     
     pub fn get() -> Self {
         Self::from_cpuid(cpuid!(0x1).eax)
-    }
-
-    pub fn proc_info(&self) -> ProcInfo {
-        let [f, m, s] = [self.syn_fam, self.syn_mod, self.step];
-
-        match f {
-            0x5 => ProcInfo::info("Quark X1000", "P5C", "32 nm"),
-            0x6 => ProcInfo::fam06h(m, s),
-
-            0x17 => ProcInfo::fam17h(m, s),
-            0x19 => ProcInfo::fam19h(m, s),
-            _ => ProcInfo {
-                codename: format!("F{f}h_M{m}h_S{s}h"),
-                archname: "".to_string(),
-                process: "".to_string(),
-            },
-        }
-    }
-    
-    pub fn codename(&self) -> String {
-        self.proc_info().codename
-    }
-    pub fn archname(&self) -> String {
-        self.proc_info().archname
-    }
-    pub fn process(&self) -> String {
-        self.proc_info().process
     }
 }

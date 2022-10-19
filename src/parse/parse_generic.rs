@@ -24,15 +24,18 @@ impl ParseGeneric for CpuidResult {
 
     fn info_00_01h(&self) -> String {
         let fms = libcpuid_dump::FamModStep::from_cpuid(self.eax);
+        let codename = match libcpuid_dump::ProcInfo::from_fms(&fms) {
+            Some(info) => format!("{}[Codename: {}]", lnpad!(), info.codename),
+            None => "".to_string(),
+        };
 
         let apic_id = self.ebx >> 24;
         let max_apic_id = (self.ebx >> 16) & 0xFF;
         let clflush_size = ((self.ebx >> 8) & 0xFF) * 8;
 
         [
-            format!("[F: 0x{:X}, M: 0x{:X}, S: 0x{:X}]", fms.syn_fam, fms.syn_mod, fms.step),
-            lnpad!(),
-            format!("[Codename: {}]", fms.codename()),
+            format!("[F: {:#X}, M: {:#X}, S: {:#X}]", fms.syn_fam, fms.syn_mod, fms.step),
+            codename,
             lnpad!(),
             format!("[APIC ID: {apic_id}] [Max APIC ID: {max_apic_id}]"),
             lnpad!(),

@@ -6,8 +6,8 @@ use crate::ProcInfo;
 // TODO: use enum and fmt::Display ?
 
 impl ProcInfo {
-pub(super) fn fam06h(m: u32, s: u32) -> Self {
-    match m {
+pub(super) fn fam06h(m: u32, s: u32) -> Option<Self> {
+    Some(match m {
         /*
             /* Core */
             0x0E => format!("Yonah"),
@@ -221,7 +221,7 @@ pub(super) fn fam06h(m: u32, s: u32) -> Self {
                 0x57 => format!("Knights Landing"),
                 0x85 => format!("Knights Mill"),
         */
-        _ => Self::info(&format!("F06h_M{m}_S{s}h"), "", ""),
-    }
+        _ => return None,
+    })
 }
 }
