@@ -228,7 +228,7 @@ fn help_msg() {
         \x20    --s <path/filename>, --save <path/filename>\n\
         \x20        Save dump result to text file.\n\
         \x20        If there is no path/filename argument, will be used \"./<processor_name>\".
-    \n");
+    \n")
 }
 
 #[derive(Debug, Clone)]
@@ -296,7 +296,7 @@ impl MainOpt {
                 "a" | "all" => opt.dump_all = true,
                 "r" | "raw" => {
                     opt.fmt = DumpFormat::Raw;
-                    opt.skip_zero = false;
+                    // opt.skip_zero = false;
                 },
                 "s" | "save" => {
                     use std::path::Path;
