@@ -118,26 +118,33 @@ fn leaf_pool() -> Vec<(u32, u32)> {
     leaf_pool
 }
 
+const LEAF_HEAD: &str = "       [Leaf.Sub]";
+const LEAF_LINE: &str = unsafe { std::str::from_utf8_unchecked(&[b'='; LEAF_HEAD.len()]) };
+
 fn hex_head() -> String {
-    const HEAD: &str = "     (in)EAX ECX:  (out)EAX   (out)EBX   (out)ECX   (out)EDX";
+    const EAX: &str = "  [EAX]   ";
+    const EBX: &str = "  [EBX]   ";
+    const ECX: &str = "  [ECX]   ";
+    const EDX: &str = "  [EDX]   ";
     const LINE: &str = unsafe { std::str::from_utf8_unchecked(&[b'='; TOTAL_WIDTH]) };
 
-    format!("{HEAD}\n{LINE}\n")
+    format!("\
+        {LEAF_HEAD}  {EAX} {EBX} {ECX} {EDX}\n\
+        {LINE}\
+    \n")
 }
 
 fn bin_head() -> String {
-    const INPUT_LEN: usize = 16;
-    const OUTPUT_LEN: usize = 35;
-    const PAD_LEN: usize = (OUTPUT_LEN - "(out)EAX / (out)ECX".len()) / 2;
+    const OUTPUT_LEN: usize = 35; // 32 [bits] + '_' * 3
+    const PAD_LEN: usize = (OUTPUT_LEN - "[EAX / ECX]".len()) / 2;
 
     const PAD: &str = unsafe { std::str::from_utf8_unchecked(&[b' '; PAD_LEN-1]) };
-    const INPUT_LINE: &str = unsafe { std::str::from_utf8_unchecked(&[b'='; INPUT_LEN]) };
     const OUTPUT_LINE: &str = unsafe { std::str::from_utf8_unchecked(&[b'='; OUTPUT_LEN]) };
 
-    format!("    \
-        (in)EAX ECX:  {PAD} (out)EAX / (out)ECX {PAD} \
-        {PAD}  (out)EBX / (out)EDX\n\
-        {INPUT_LINE}  {OUTPUT_LINE}  {OUTPUT_LINE}\
+    format!("\
+        {LEAF_HEAD}  {PAD} [EAX / ECX] {PAD} \
+        {PAD}  [EBX / EDX]\n\
+        {LEAF_LINE}  {OUTPUT_LINE}  {OUTPUT_LINE}\
     \n")
 }
 
