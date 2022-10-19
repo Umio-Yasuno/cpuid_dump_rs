@@ -45,4 +45,7 @@ pub use topo_info::*;
 mod hybrid_topology;
 pub use hybrid_topology::*;
 
-pub mod cpuid_macro;
+mod addr_size;
+pub use addr_size::*;
+
+// pub mod cpuid_macro;

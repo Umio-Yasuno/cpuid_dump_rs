@@ -518,6 +518,8 @@ pub(crate) const fn ftr_amd_80_21_eax_x0() -> [&'static str; 32] {
     ftr[11] = "";
     ftr[12] = "";
     ftr[13] = "PrefetchCtlMsr";
+    /* */
+    ftr[17] = "CpuidUserDis";
 
     ftr
 }

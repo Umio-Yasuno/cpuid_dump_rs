@@ -161,11 +161,12 @@ impl ParseGeneric for CpuidResult {
     }
 
     fn addr_size_80_08h(&self) -> String {
-        const LEN: usize = " [Address size:".len();
+        const LEN: usize = "[Address size:".len();
         const PAD: &str = unsafe { std::str::from_utf8_unchecked(&[b' '; LEN]) };
 
-        let phy = self.eax & 0xFF;
-        let virt = (self.eax >> 8) & 0xFF;
+        let addr_size = libcpuid_dump::AddressSize::from_cpuid(self);
+        let phy = addr_size.physical;
+        let virt = addr_size.virtual_;
 
         format!("[Address size: {phy:2}-bits physical {LN_PAD}{PAD} {virt:2}-bits virtual]")
     }
