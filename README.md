@@ -133,17 +133,19 @@ FLAGS:
          Display raw/hex result.
      -bin
          Display binary result.
+     -full
+         Combine "-disp-zero" and "-no-diff"
      -disp-zero
          Display result even if E[ABCD]X are zero.
+     -no-diff
+         Do not omit diff when all threads execution
 
 OPTIONS:
      --l <u32>, --leaf <u32>
          Display result only for the specified value, the value is Leaf/InputEAX <u32>.
          e.g. --leaf 1, --leaf 0x8000_0008,
-     --sub_leaf <u32>, --sub-leaf <u32>
-         Display result only for the specified value, the value is Sub-Leaf/InputECX <u32>.
-     --pin <usize>, --pin_threads <usize>
-         Display result for the specified thread.
+     --sub_leaf <u32>, --subleaf <u32>
+         Display result only for the specified value, the value is Sub_Leaf/InputECX <u32>.
      --s <path/filename>, --save <path/filename>
          Save dump result to text file.
          If there is no path/filename argument, will be used "./<processor_name>".
