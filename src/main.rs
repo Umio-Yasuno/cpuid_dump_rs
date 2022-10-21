@@ -387,11 +387,11 @@ impl MainOpt {
         opt
     }
 
-    fn rawcpuid_pool(&self) -> Vec<RawCpuid> {
+    fn rawcpuid_pool(&self, leaf_pool: &[(u32, u32)]) -> Vec<RawCpuid> {
         let mut cpuid_pool: Vec<RawCpuid> = Vec::with_capacity(64);
 
-        for (leaf, sub_leaf) in leaf_pool() {
-            let cpuid = RawCpuid::exe(leaf, sub_leaf);
+        for (leaf, sub_leaf) in leaf_pool {
+            let cpuid = RawCpuid::exe(*leaf, *sub_leaf);
 
             if self.skip_zero && cpuid.check_result_zero() {
                 continue;
@@ -454,47 +454,45 @@ impl MainOpt {
             DumpFormat::Parse => self.parse_pool(cpuid_pool),
         }
     }
-
     fn pool_all_thread(&self) -> Vec<u8> {
         use std::thread;
-        use std::sync::{Arc, Mutex};
+        use std::sync::Arc;
 
-        let opt_0 = Arc::new(self.clone());
-
+        let opt = Arc::new(self.clone());
+        let leaf_pool = Arc::new(leaf_pool());
         let cpu_list = libcpuid_dump::cpu_set_list().unwrap();
+        let mut main_pool: Vec<u8> = Vec::with_capacity(16384 * cpu_list.len());
+        let mut handles: Vec<thread::JoinHandle<_>> = Vec::with_capacity(cpu_list.len());
 
         let (first_pool, topo_head) = {
-            let cpu = cpu_list[0];
-            libcpuid_dump::pin_thread(cpu).unwrap();
+            thread::scope(|s| {
+                s.spawn(|| {
+                    let cpu = cpu_list[0];
+                    libcpuid_dump::pin_thread(cpu).unwrap();
 
-            (
-                Arc::new(opt_0.rawcpuid_pool()),
-                topo_info_with_threadid_head(cpu),
-            )
+                    (
+                        Arc::new(opt.rawcpuid_pool(&leaf_pool)),
+                        topo_info_with_threadid_head(cpu).into_bytes(),
+                    )
+                }).join().unwrap()
+            })
         };
 
-        let main_pool = {
-            let mut tmp: Vec<u8> = Vec::with_capacity(16384 * cpu_list.len());
-            tmp.extend(topo_head.into_bytes());
-            tmp.extend(opt_0.head_fmt().into_bytes());
-            tmp.extend(opt_0.select_pool(&first_pool));
-
-            Arc::new(Mutex::new(tmp))
-        };
+        main_pool.extend(topo_head);
+        main_pool.extend(opt.head_fmt().into_bytes());
+        main_pool.extend(opt.select_pool(&first_pool));
 
         for i in &cpu_list[1..] {
             let i = *i;
-            let main_pool = Arc::clone(&main_pool);
-            let opt = Arc::clone(&opt_0);
+            let opt = Arc::clone(&opt);
+            let leaf_pool = Arc::clone(&leaf_pool);
             let first_pool = Arc::clone(&first_pool);
 
-            thread::spawn(move || {
+            handles.push(thread::spawn(move || -> Vec<u8> {
                 libcpuid_dump::pin_thread(i).unwrap();
 
-                let topo_head = topo_info_with_threadid_head(i).into_bytes();
-
                 let diff = {
-                    let mut sub_pool = opt.rawcpuid_pool();
+                    let mut sub_pool = opt.rawcpuid_pool(&leaf_pool);
 
                     if opt.diff {
                         let mut first_pool = first_pool.iter();
@@ -504,18 +502,19 @@ impl MainOpt {
                     sub_pool
                 };
 
-                /* for simulator, like Intel SDE */
-                if diff.is_empty() { return }
-
-                let pool = opt.select_pool(&diff);
-
-                let mut main_pool = main_pool.lock().unwrap();
-                main_pool.extend(topo_head);
-                main_pool.extend(pool);
-            }).join().unwrap();
+                [
+                    topo_info_with_threadid_head(i).into_bytes(),
+                    opt.select_pool(&diff),
+                ].concat()
+            }));
         }
 
-        Arc::try_unwrap(main_pool).unwrap().into_inner().unwrap()
+        for h in handles {
+            let v = h.join().unwrap();
+            main_pool.extend(v);
+        }
+
+        main_pool
     }
 
     fn dump_pool(&self) -> Vec<u8> {
@@ -523,10 +522,12 @@ impl MainOpt {
             return self.pool_all_thread();
         }
 
+        let rawcpuid_pool = self.rawcpuid_pool(&leaf_pool());
+
         [
             topo_info_head().into_bytes(),
             self.head_fmt().into_bytes(),
-            self.select_pool(&self.rawcpuid_pool()),
+            self.select_pool(&rawcpuid_pool),
         ].concat()
     }
 
