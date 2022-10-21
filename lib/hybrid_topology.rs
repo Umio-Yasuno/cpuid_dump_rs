@@ -285,68 +285,56 @@ impl TopoPartInfo {
         cpuid == 0b1
     }
 
-    fn get_core_type() -> HybridCoreType {
-        let leaf_1ah = cpuid!(0x1A, 0x0);
-
-        match HybridInfo::get_core_type(leaf_1ah) {
-            Some(t) => t,
-            None => HybridCoreType::Invalid,
-        }
-    }
-    
     fn get_core_type_only_list(core_type: HybridCoreType) -> Vec<usize> {
-        let cpu_list = cpu_set_list().unwrap();
-        let type_only_list = Arc::new(Mutex::new(Vec::<usize>::with_capacity(64)));
         let core_type = Arc::new(core_type);
+        let cpu_list = cpu_set_list().unwrap();
+        let mut type_only_list: Vec<usize> = Vec::with_capacity(cpu_list.len());
+        let mut handles: Vec<thread::JoinHandle<_>> = Vec::with_capacity(cpu_list.len());
 
         for cpu in cpu_list {
-            let type_only_list = Arc::clone(&type_only_list);
             let core_type = Arc::clone(&core_type);
 
-            thread::spawn(move || {
-                pin_thread(cpu).unwrap();
-                // let core_type = Arc::try_unwrap(core_type).unwrap();
+            handles.push(thread::spawn(move || -> Option<usize> {
+                self::pin_thread(cpu).unwrap();
+                let leaf_1ah = cpuid!(0x1A, 0x0);
 
-                if Self::get_core_type() == *core_type {
-                    let mut list = type_only_list.lock().unwrap();
-                    list.push(cpu);
-                }
-            }).join().unwrap();
+                if let Some(cur_core_type) = HybridInfo::get_core_type(leaf_1ah) {
+                    if cur_core_type == *core_type {
+                        return Some(cpu);
+                    }
+                };
+
+                None
+            }));
         }
 
-        Arc::try_unwrap(type_only_list).unwrap().into_inner().unwrap()
+        for h in handles {
+            if let Some(cpu) = h.join().unwrap() {
+                type_only_list.push(cpu)
+            }
+        }
+
+        type_only_list
     }
 
     pub fn get(core_type: HybridCoreType) -> Self {
-        let core_type_ = core_type.clone();
-        let cpu_list = Self::get_core_type_only_list(core_type_);
+        let cpu_list = Self::get_core_type_only_list(core_type.clone());
         /* core type only */
-        let logi_proc = Arc::new(cpu_list.len() as u32);
-
-        let phy_proc = Arc::new(Mutex::new(0u32));
-        let topo_cache: Arc<Mutex<Option<TopoCacheInfo>>> = Arc::new(Mutex::new(None));
+        let num_logical_proc = cpu_list.len() as u32;
 
         /* To confine the effects of pin_thread */
-        {
-                let logi_proc = Arc::clone(&logi_proc);
-                let phy_proc = Arc::clone(&phy_proc);
-                let topo_cache = Arc::clone(&topo_cache);
-
-                thread::spawn(move || {
-                    pin_thread(cpu_list[0]).unwrap();
+        let (num_physical_proc, cache) = thread::scope(|s| {
+            s.spawn(move || {
+                    self::pin_thread(cpu_list[0]).unwrap();
 
                     let threads_per_core = get_threads_per_core().unwrap_or(1);
-                    let mut phy_proc = phy_proc.lock().unwrap();
-                    let mut topo_cache = topo_cache.lock().unwrap();
 
-                    *phy_proc = *logi_proc / threads_per_core;
-                    *topo_cache = TopoCacheInfo::get_topology_cache_info(&cpu_list);
-                }).join().unwrap();
-        }
-
-        let num_physical_proc = *phy_proc.lock().unwrap();
-        let num_logical_proc = *logi_proc;
-        let cache = Arc::try_unwrap(topo_cache).unwrap().into_inner().unwrap();
+                    (
+                        num_logical_proc / threads_per_core,
+                        TopoCacheInfo::get_topology_cache_info(&cpu_list),
+                    )
+            }).join().unwrap()
+        });
 
         Self {
             core_type,

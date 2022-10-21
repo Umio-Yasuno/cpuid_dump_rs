@@ -465,6 +465,7 @@ impl MainOpt {
         let mut handles: Vec<thread::JoinHandle<_>> = Vec::with_capacity(cpu_list.len());
 
         let (first_pool, topo_head) = {
+            /* To confine the effects of pin_thread */
             thread::scope(|s| {
                 s.spawn(|| {
                     let cpu = cpu_list[0];
@@ -488,7 +489,7 @@ impl MainOpt {
             let leaf_pool = Arc::clone(&leaf_pool);
             let first_pool = Arc::clone(&first_pool);
 
-            handles.push(thread::spawn(move || -> Vec<u8> {
+            handles.push(thread::spawn(move || {
                 libcpuid_dump::pin_thread(i).unwrap();
 
                 let diff = {
