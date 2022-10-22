@@ -462,7 +462,12 @@ impl MainOpt {
         let opt = Arc::new(self.clone());
         let leaf_pool = Arc::new(leaf_pool());
         let cpu_list = libcpuid_dump::cpu_set_list().unwrap();
-        let mut main_pool = Vec::<u8>::with_capacity(TOTAL_WIDTH * leaf_pool.len() * cpu_list.len());
+        /* this with_capacity is experiental */
+        let mut main_pool = Vec::<u8>::with_capacity( if opt.diff {
+            TOTAL_WIDTH * leaf_pool.len() * cpu_list.len() / 2
+        } else {
+            TOTAL_WIDTH * leaf_pool.len() * cpu_list.len() * 2
+        });
         let mut handles: Vec<thread::JoinHandle<_>> = Vec::with_capacity(cpu_list.len());
 
         let (first_pool, topo_head) = {
