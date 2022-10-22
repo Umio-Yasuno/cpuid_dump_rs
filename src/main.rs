@@ -39,7 +39,7 @@ pub use crate::load_file::*;
 ///    // src/main.rs
 ///    MainOpt::parse() -> MainOpt
 ///            |
-///    opt.rawcpuid_pool() -> Vec<RawCpuid>
+///    opt.rawcpuid_pool(&leaf_pool()) -> Vec<RawCpuid>
 ///            |
 ///    // src/raw_cpuid.rs
 ///    let parsed_pool: Vec<u8>;
@@ -454,6 +454,7 @@ impl MainOpt {
             DumpFormat::Parse => self.parse_pool(cpuid_pool),
         }
     }
+
     fn pool_all_thread(&self) -> Vec<u8> {
         use std::thread;
         use std::sync::Arc;
@@ -461,7 +462,7 @@ impl MainOpt {
         let opt = Arc::new(self.clone());
         let leaf_pool = Arc::new(leaf_pool());
         let cpu_list = libcpuid_dump::cpu_set_list().unwrap();
-        let mut main_pool: Vec<u8> = Vec::with_capacity(16384 * cpu_list.len());
+        let mut main_pool = Vec::<u8>::with_capacity(TOTAL_WIDTH * leaf_pool.len() * cpu_list.len());
         let mut handles: Vec<thread::JoinHandle<_>> = Vec::with_capacity(cpu_list.len());
 
         let (first_pool, topo_head) = {
