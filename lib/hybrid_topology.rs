@@ -1,11 +1,11 @@
 use crate::*;
 
-use std::sync::{Arc, Mutex};
-use std::{thread};
+use std::sync::Arc;
+use std::thread;
 
 #[derive(Debug)]
 pub struct CachePropCount {
-    pub prop: Option<CacheProp>,
+    pub prop: CacheProp,
     pub count: u32,
     pub shared_between_topology: bool, // shared_all_threads?
 }
@@ -31,25 +31,20 @@ impl TopoCacheInfo {
             return Self::from_amd_80_1dh(*cache_leaf);
         }
 
+        let len = type_only_list.len();
         let [mut l1d, mut l1i, mut l2, mut l3, mut l4]: [Option<CachePropCount>; 5]
             = [None, None, None, None, None];
-        /*
-        let [mut l1d_prop, mut l1i_prop, mut l2_prop, mut l3_prop, mut l4_prop]:
-            [Option<CacheProp>; 5] = [None, None, None, None, None];
-        */
-
         let [mut l1d_ids, mut l1i_ids, mut l2_ids, mut l3_ids, mut l4_ids] = [
-            Vec::<u32>::with_capacity(64),
-            Vec::<u32>::with_capacity(64),
-            Vec::<u32>::with_capacity(64),
-            Vec::<u32>::with_capacity(32),
-            Vec::<u32>::with_capacity(32),
+            Vec::<u32>::with_capacity(len),
+            Vec::<u32>::with_capacity(len),
+            Vec::<u32>::with_capacity(len),
+            Vec::<u32>::with_capacity(len),
+            Vec::<u32>::with_capacity(len),
         ];
 
         /* fill cache prop */
-        /* TODO: thread */
-        {
-            pin_thread(type_only_list[0]).unwrap();
+        thread::scope(|s| { s.spawn(|| {
+            self::pin_thread(type_only_list[0]).unwrap();
             let eax = cpuid!(0x1, 0x0).eax;
             let apicid = initial_apic_id!(eax);
             let max_apic_id = max_apic_id!(eax);
@@ -67,7 +62,7 @@ impl TopoCacheInfo {
                 match prop {
                     CacheProp { cache_type: CacheType::Data, level: 1, .. } => {
                         l1d = Some(CachePropCount {
-                            prop: Some(prop),
+                            prop,
                             count: 1,
                             shared_between_topology,
                         });
@@ -75,7 +70,7 @@ impl TopoCacheInfo {
                     },
                     CacheProp { cache_type: CacheType::Instruction, level: 1, .. } => {
                         l1i = Some(CachePropCount {
-                            prop: Some(prop),
+                            prop,
                             count: 1,
                             shared_between_topology,
                         });
@@ -83,7 +78,7 @@ impl TopoCacheInfo {
                     },
                     CacheProp { level: 2, .. } => {
                         l2 = Some(CachePropCount {
-                            prop: Some(prop),
+                            prop,
                             count: 1,
                             shared_between_topology,
                         });
@@ -91,7 +86,7 @@ impl TopoCacheInfo {
                     },
                     CacheProp { level: 3, .. } => {
                         l3 = Some(CachePropCount {
-                            prop: Some(prop),
+                            prop,
                             count: 1,
                             shared_between_topology,
                         });
@@ -99,7 +94,7 @@ impl TopoCacheInfo {
                     },
                     CacheProp { level: 4, .. } => {
                         l4 = Some(CachePropCount {
-                            prop: Some(prop),
+                            prop,
                             count: 1,
                             shared_between_topology,
                         });
@@ -108,73 +103,68 @@ impl TopoCacheInfo {
                     _ => {},
                 }
             }
-        }
+        }).join().unwrap() });
 
-        let [l1d_ids, l1i_ids, l2_ids, l3_ids, l4_ids] = [
-            Arc::new(Mutex::new(l1d_ids)),
-            Arc::new(Mutex::new(l1i_ids)),
-            Arc::new(Mutex::new(l2_ids)),
-            Arc::new(Mutex::new(l3_ids)),
-            Arc::new(Mutex::new(l4_ids)),
-        ];
-
-        let update_cache_ids = |ids: &Arc<Mutex<Vec<u32>>>, cache_id: u32| {
-            let mut ids = ids.lock().unwrap();
+        let update_cache_ids = |ids: &mut Vec<u32>, cache_id: u32| {
             if !ids.contains(&cache_id) {
                 ids.push(cache_id);
             }
         };
 
+        let mut handles: Vec<thread::JoinHandle<_>> = Vec::with_capacity(type_only_list.len());
+
         for cpu in &type_only_list[1..] {
             let cpu = *cpu;
             let cache_leaf = Arc::clone(&cache_leaf);
 
-            let [l1d_ids, l1i_ids, l2_ids, l3_ids, l4_ids] = [
-                Arc::clone(&l1d_ids),
-                Arc::clone(&l1i_ids),
-                Arc::clone(&l2_ids),
-                Arc::clone(&l3_ids),
-                Arc::clone(&l4_ids),
-            ];
-
-            thread::spawn(move || {
-                pin_thread(cpu).unwrap();
+            handles.push(thread::spawn(move || -> Vec<Option<(CacheProp, u32)>> {
+                self::pin_thread(cpu).unwrap();
                 let apicid = initial_apic_id!();
+                let mut props: Vec<Option<(CacheProp, u32)>> = Vec::with_capacity(6);
 
                 for sub_leaf in 0x0..=0x4 {
                     let cpuid = cpuid!(*cache_leaf, sub_leaf);
                     let prop = match CacheProp::option_from_cpuid(&cpuid) {
                         Some(prop) => prop,
-                        None => continue,
+                        None => {
+                            props.push(None);
+                            continue;
+                        },
                     };
 
                     let cache_id = Self::get_cache_id(apicid, prop.share_thread);
 
+                    props.push(Some((prop, cache_id)));
+                }
+
+                props
+            }));
+        }
+
+        for h in handles {
+            for v in h.join().unwrap() {
+                if let Some((prop, cache_id)) = v {
                     match prop {
                         CacheProp { cache_type: CacheType::Data, level: 1, .. } => {
-                            update_cache_ids(&l1d_ids, cache_id);
+                            update_cache_ids(&mut l1d_ids, cache_id);
                         },
                         CacheProp { cache_type: CacheType::Instruction, level: 1, .. } => {
-                            update_cache_ids(&l1i_ids, cache_id);
+                            update_cache_ids(&mut l1i_ids, cache_id);
                         },
                         CacheProp { level: 2, .. } => {
-                            update_cache_ids(&l2_ids, cache_id);
+                            update_cache_ids(&mut l2_ids, cache_id);
                         },
                         CacheProp { level: 3, .. } => {
-                            update_cache_ids(&l3_ids, cache_id);
+                            update_cache_ids(&mut l3_ids, cache_id);
                         },
                         CacheProp { level: 4, .. } => {
-                            update_cache_ids(&l4_ids, cache_id);
+                            update_cache_ids(&mut l4_ids, cache_id);
                         },
                         _ => {},
                     }
                 }
-            }).join().unwrap();
+            }
         }
-
-        let [l1d_ids, l1i_ids, l2_ids, l3_ids, l4_ids] =
-            [l1d_ids, l1i_ids, l2_ids, l3_ids, l4_ids]
-            .map(|ids| Arc::try_unwrap(ids).unwrap().into_inner().unwrap() );
 
         let ids = [l1d_ids, l1i_ids, l2_ids, l3_ids, l4_ids];
 
@@ -212,35 +202,35 @@ impl TopoCacheInfo {
             match prop {
                 CacheProp { cache_type: CacheType::Data, level: 1, .. } => {
                     l1d = Some(CachePropCount {
-                        prop: Some(prop),
+                        prop,
                         count,
                         shared_between_topology,
                     })
                 },
                 CacheProp { cache_type: CacheType::Instruction, level: 1, .. } => {
                     l1i = Some(CachePropCount {
-                        prop: Some(prop),
+                        prop,
                         count,
                         shared_between_topology,
                     })
                 },
                 CacheProp { level: 2, .. } => {
                     l2 = Some(CachePropCount {
-                        prop: Some(prop),
+                        prop,
                         count,
                         shared_between_topology,
                     })
                 },
                 CacheProp { level: 3, .. } => {
                     l3 = Some(CachePropCount {
-                        prop: Some(prop),
+                        prop,
                         count,
                         shared_between_topology,
                     })
                 },
                 CacheProp { level: 4, .. } => {
                     l4 = Some(CachePropCount {
-                        prop: Some(prop),
+                        prop,
                         count,
                         shared_between_topology,
                     })
