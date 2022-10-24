@@ -78,26 +78,20 @@ pub(super) fn fam06h(m: u32, s: u32) -> Option<Self> {
             _ => Self::info("Kaby Lake-S", "Skylake", "14 nm"),
         },
 
-        0xA5 => Self::info(&[
-            "Comet Lake-S",
-            match s {
-                0x0 => " (G0)",
-                0x1 => " (P0)",
-                0x2 => " (R1)",
-                0x3 => " (G1)",
-                0x4 => " (P1)",
-                0x5 => " (Q0)",
-                _ => "",
-            },
-        ].concat(), "Skylake", "14 nm"),
+        0xA5 => Self::info(&["Comet Lake-S", match s {
+            0x0 => " (G0)",
+            0x1 => " (P0)",
+            0x2 => " (R1)",
+            0x3 => " (G1)",
+            0x4 => " (P1)",
+            0x5 => " (Q0)",
+            _ => "",
+        }].concat(), "Skylake", "14 nm"),
 
-        0xA6 => Self::info(&[
-            "Comet Lake-U",
-            match s {
-                0x0 => " (A0)",
-                _ => "",
-            }
-        ].concat(), "Skylake", "14 nm"),
+        0xA6 => Self::info(&["Comet Lake-U", match s {
+            0x0 => " (A0)",
+            _ => "",
+        }].concat(), "Skylake", "14 nm"),
 
         0x66 => Self::info("Cannon Lake-U", "Palm Cove", "10 nm"),
 
@@ -107,27 +101,21 @@ pub(super) fn fam06h(m: u32, s: u32) -> Option<Self> {
         0x7E => Self::info("Ice Lake-U", "Sunny Cove", "10nm"),
         0x9D => Self::info("Ice Lake-NNPI", "Sunny Cove", "10nm"),
 
-        0xA7 => Self::info(&[
-            "Rocket Lake-S",
-            match s {
-                0x0 => " (A0)",
-                0x1 => " (B0)",
-                _   => "",
-            }
-        ].concat(), "Cypress Cove", "14 nm"),
+        0xA7 => Self::info(&["Rocket Lake-S", match s {
+            0x0 => " (A0)",
+            0x1 => " (B0)",
+            _   => "",
+        }].concat(), "Cypress Cove", "14 nm"),
         /* Xeon W-1300 */
         /* 06_A8H: https://www.intel.com/content/www/us/en/developer/articles/technical/software-security-guidance/best-practices/data-operand-independent-timing-isa-guidance.html */
         0xA8 => Self::info("Rocket Lake (WS)", "Cypress Cove", "14 nm"),
         
-        0x8C => Self::info(&[
-            "Tiger Lake-U",
-            match s {
-                0x0 => " (A0)",
-                0x1 => " (B0)",
-                0x2 => " (C0)",
-                _   => "",
-            }
-        ].concat(), "Willow Cove", "10 nm SF"),
+        0x8C => Self::info(&["Tiger Lake-U", match s {
+            0x0 => " (A0)",
+            0x1 => " (B0)",
+            0x2 => " (C0)",
+            _   => "",
+        }].concat(), "Willow Cove", "10 nm SF"),
 
         0x8D => Self::info("Tiger Lake-H", "Willow Cove", "10 nm SF"),
         0x8F => Self::info("Sapphire Rapids-SP", "Golden Cove", "10nm eSF"),
@@ -137,17 +125,14 @@ pub(super) fn fam06h(m: u32, s: u32) -> Option<Self> {
 
         /* https://edc.intel.com/content/www/us/en/design/ipla/software-development-platforms/client/platforms/alder-lake-desktop/12th-generation-intel-core-processors-datasheet-volume-1-of-2/005/cpuid/ */
         /* https://github.com/coreboot/coreboot/blob/master/src/soc/intel/alderlake/Makefile.inc */
-        0x97 => Self::info(&[
-            "Alder Lake-S",
-            match s {
-                0x0 => " (A0, ES)",
-                0x1 => " (B0, ES)",
-                0x2 => " (C0, 8+8)",
-                0x4 => " (G0, ES)",
-                0x5 => " (H0, 6+0)",
-                _   => "",
-            }
-        ].concat(), "Golden Cove + Gracemont", "Intel 7"),
+        0x97 => Self::info(&["Alder Lake-S", match s {
+            0x0 => " (A0, ES)",
+            0x1 => " (B0, ES)",
+            0x2 => " (C0, 8+8)",
+            0x4 => " (G0, ES)",
+            0x5 => " (H0, 6+0)",
+            _   => "",
+        }].concat(), "Golden Cove + Gracemont", "Intel 7"),
         /* https://review.coreboot.org/c/coreboot/+/63299 */
         0x9A => {
             let [variant, stepping] = match s {

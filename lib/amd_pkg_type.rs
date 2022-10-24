@@ -31,7 +31,7 @@ pub enum AmdPkgType {
     FM2r2,
     SP3,
     SP3r2, // same as TR4
-    STRX4,
+    STRX4, // same as SP3r2/TR4?
     AM4,
     FP5,
     FT5,

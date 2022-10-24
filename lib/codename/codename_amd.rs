@@ -9,6 +9,7 @@ pub(super) fn fam17h(m: u32, s: u32) -> Option<Self> {
             0x02 => Self::info("Naples (B2)", "Zen", "14 nm"),
             _ => Self::info("Zen", "Zen", ""),
         },
+        0x11 => Self::info("Raven Ridge", "Zen", "14 nm"),
         0x20 => Self::info(&["Raven2 [Dali/Pollock]", match s {
             0x1 => " (A1)",
             _ => "",
@@ -42,9 +43,10 @@ pub(super) fn fam17h(m: u32, s: u32) -> Option<Self> {
 pub(super) fn fam19h(m: u32, s: u32) -> Option<Self> {
     Some(match m {
         /* Zen 3 */
+        /* Revision Guide for AMD Family 19h Models 00h-0Fh Processors: https://www.amd.com/system/files/TechDocs/56683-PUB-1.07.pdf */
         0x01 => Self::info(&["Milan", match s {
-            0x1 => " (B0)", // EPYC 7003
-            0x2 => " (B1)", // EPYC 7003 3D V-Cache
+            0x1 => " (B1)", // EPYC 7003
+            0x2 => " (B2)", // EPYC 7003 3D V-Cache
             _ => "",
         }].concat(), "Zen 3", "7 nm"),
         0x08 => Self::info("Chagall", "Zen 3", "7 nm"),
