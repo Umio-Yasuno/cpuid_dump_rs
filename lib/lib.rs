@@ -48,4 +48,7 @@ pub use hybrid_topology::*;
 mod addr_size;
 pub use addr_size::*;
 
+mod amd_pkg_type;
+pub use amd_pkg_type::*;
+
 // pub mod cpuid_macro;

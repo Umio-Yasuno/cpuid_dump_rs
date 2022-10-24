@@ -47,6 +47,7 @@ pub(super) fn fam19h(m: u32, s: u32) -> Option<Self> {
             0x2 => " (B1)", // EPYC 7003 3D V-Cache
             _ => "",
         }].concat(), "Zen 3", "7 nm"),
+        0x08 => Self::info("Chagall", "Zen 3", "7 nm"),
         0x21 => Self::info("Vermeer", "Zen 3", "7 nm"),
         /* https://www.openmp.org/wp-content/uploads/ecp_sollve_openmp_monthly.offload_perf_ana_craypat.marcus.hpe_.26aug2022.v2.pdf */
         0x30 => Self::info("Trento", "Zen 3", "7 nm"),

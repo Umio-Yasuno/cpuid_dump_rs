@@ -49,17 +49,9 @@ pub trait ParseAMD {
 
 impl ParseAMD for CpuidResult {
     fn pkgtype_amd_80_01h(&self) -> String {
-        let pkg_type = self.ebx >> 28;
-        /*
-        // Family 17h, 19h
-        let pkg_dec = match pkg_type {
-            0x0 => "FP5/FP6",
-            0x2 => "AM4",
-            _ => return "".to_string(),
-        };
-        */
+        let pkg_type = libcpuid_dump::AmdPkgType::from_cpuid(self);
 
-        format!("[PkgType: {pkg_type:#X}]")
+        format!("[PkgType: {pkg_type:?}]")
     }
 
     fn l1_amd_80_05h(&self) -> String {
