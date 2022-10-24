@@ -8,6 +8,14 @@ use crate::{_AX, cpuid, CpuidResult, FamModStep};
 
 #[derive(Debug)]
 pub enum AmdPkgType {
+    F1207,
+    AM2r2,
+    S1g3,
+    ASB2,
+    S1g2,
+    FS1,
+    FM1,
+    FT1,
     AM3r2,
     G34,
     C32,
@@ -43,6 +51,31 @@ impl AmdPkgType {
         let pkg_type = cpuid.ebx >> 28;
 
         match fms {
+            FamModStep { syn_fam: 0x10, .. } => match pkg_type {
+                0x0 => Self::F1207,
+                0x1 => Self::AM2r2,
+                0x2 => Self::S1g3,
+                0x3 => Self::G34,
+                0x4 => Self::ASB2,
+                0x5 => Self::C32,
+                _ => Self::Unknown,
+            },
+            /* Griffin, Turion */
+            FamModStep { syn_fam: 0x11, .. } => match pkg_type {
+                0x2 => Self::S1g2,
+                _ => Self::Unknown,
+            },
+            /* Llano */
+            FamModStep { syn_fam: 0x12, .. } => match pkg_type {
+                0x1 => Self::FS1,
+                0x2 => Self::FM1,
+                _ => Self::Unknown,
+            },
+            /* Bobcat */
+            FamModStep { syn_fam: 0x14, .. } => match pkg_type {
+                0x0 => Self::FT1,
+                _ => Self::Unknown,
+            },
             /* Bulldozer, Interlagos, Valencia, Zambezi */
             FamModStep { syn_fam: 0x15, syn_mod: 0x00..=0x0F, .. } => match pkg_type {
                 0x1 => Self::AM3r2,
