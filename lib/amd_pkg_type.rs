@@ -1,17 +1,26 @@
 use crate::{_AX, cpuid, CpuidResult, FamModStep};
 
 /* Leaf: 0x8000_0001, AMD CPU only */
+/* ref: https://en.wikipedia.org/wiki/List_of_AMD_CPU_microarchitectures */
 /* ref: https://www.amd.com/en/support/tech-docs */
 /* ref: https://github.com/illumos/illumos-gate/blob/master/usr/src/uts/intel/os/cpuid_subr.c */
 /* ref: https://github.com/coreboot/coreboot/blob/master/src/soc/amd/picasso/include/soc/soc_util.h */
 
 #[derive(Debug)]
 pub enum AmdPkgType {
-    FT3, // Family 16h Models 00h-0Fh
-    FS1b, // Family 16h Models 00h-0Fh
-    FT3b, // Family 16h Models 30h-3Fh
-    FP4, // Family 15h Models 70h-7Fh, Family 16h Models 30h-3Fh
-    FT4, // Family 15h Models 70h-7Fh
+    AM3r2,
+    G34,
+    C32,
+    FP2,
+    FS1r2,
+    FM2,
+    FP3,
+    FT3,
+    FS1b, // AM1
+    FT3b,
+    FP4,
+    FT4,
+    FM2r2,
     SP3,
     SP3r2, // same as TR4
     STRX4,
@@ -34,6 +43,52 @@ impl AmdPkgType {
         let pkg_type = cpuid.ebx >> 28;
 
         match fms {
+            /* Bulldozer, Interlagos, Valencia, Zambezi */
+            FamModStep { syn_fam: 0x15, syn_mod: 0x00..=0x0F, .. } => match pkg_type {
+                0x1 => Self::AM3r2,
+                0x3 => Self::G34,
+                0x5 => Self::C32,
+                _ => Self::Unknown,
+            },
+            /* Piledrive, Richland */
+            FamModStep { syn_fam: 0x15, syn_mod: 0x10..=0x1F, .. } => match pkg_type {
+                0x0 => Self::FP2,
+                0x1 => Self::FS1r2,
+                0x2 => Self::FM2,
+                _ => Self::Unknown,
+            },
+            /* Kaveri, Godavari */
+            FamModStep { syn_fam: 0x15, syn_mod: 0x30..=0x3F, .. } => match pkg_type {
+                0x0 => Self::FP3,
+                0x1 => Self::FM2r2,
+                _ => Self::Unknown,
+            },
+            /* Carrizo, Bristol Ridge */
+            FamModStep { syn_fam: 0x15, syn_mod: 0x60..=0x6F, .. } => match pkg_type {
+                0x0 => Self::FP4,
+                0x2 => Self::AM4,
+                0x3 => Self::FM2r2,
+                _ => Self::Unknown,
+            },
+            /* Stoney Ridge */
+            FamModStep { syn_fam: 0x15, syn_mod: 0x70..=0x7F, .. } => match pkg_type {
+                0x0 => Self::FP4,
+                0x2 => Self::AM4,
+                0x4 => Self::FT4,
+                _ => Self::Unknown,
+            },
+            /* Jaguar, Kabini, Termash */
+            FamModStep { syn_fam: 0x16, syn_mod: 0x00..=0x0F, .. } => match pkg_type {
+                0x0 => Self::FT3,
+                0x1 => Self::FS1b,
+                _ => Self::Unknown,
+            },
+            /* Puma, Beema, Mullins */
+            FamModStep { syn_fam: 0x16, syn_mod: 0x30..=0x3F, .. } => match pkg_type {
+                0x0 => Self::FT3b,
+                0x3 => Self::FP4,
+                _ => Self::Unknown,
+            },
             /* Summit Ridge, Naples */
             FamModStep { syn_fam: 0x17, syn_mod: 0x00..=0x0F, .. } |
             /* Raven, Picasso */
