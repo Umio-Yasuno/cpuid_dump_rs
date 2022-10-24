@@ -512,7 +512,7 @@ pub(crate) const fn ftr_amd_80_21_eax_x0() -> [&'static str; 32] {
     ftr[5] = "";
     ftr[6] = "NullSelectClearsBase";
     ftr[7] = "UpperAddressIgnore";
-    ftr[8] = "";
+    ftr[8] = "AutomaticIBRS";
     ftr[9] = "NoSmmCtlMSR";
     ftr[10] = "";
     ftr[11] = "";
