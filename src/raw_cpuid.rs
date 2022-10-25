@@ -21,7 +21,7 @@ impl RawCpuid {
     }
 
     fn parse(&self, vendor: &VendorFlag) -> String {
-        let parse_result = match self.leaf {
+        match self.leaf {
             0x0 => self.result.vendor_00_00h(),
             0x1 => [
                 self.result.info_00_01h(),
@@ -37,11 +37,6 @@ impl RawCpuid {
             },
             0xB => self.result.topo_ext_00_0bh(),
             0xD => self.result.xstate_00_0dh(self.sub_leaf),
-            0x1F => if vendor.intel {
-                self.result.v2_ext_topo_intel_1fh()
-            } else {
-                "".to_string()
-            },
             0x8000_0001 => [
                 if vendor.amd {
                     [
@@ -53,7 +48,7 @@ impl RawCpuid {
                 },
                 self.result.feature_80_01h(),
             ].concat(),
-            0x8000_0002..=0x8000_0004 => format!("[{}]", self.result.cpu_name()),
+            0x8000_0002..=0x8000_0004 => format!("[\"{}\"]", self.result.cpu_name()),
             0x8000_0008 => [
                 self.result.addr_size_80_08h(),
                 if vendor.amd {
@@ -90,18 +85,18 @@ impl RawCpuid {
                     0x4 => self.result.cache_prop(),
                     0x16 => self.result.clock_speed_intel_00_16h(),
                     0x1A => self.result.intel_hybrid_1ah(),
+                    0x1F => self.result.v2_ext_topo_intel_1fh(),
                     _ => "".to_string(),
                 }
             } else {
                 "".to_string()
             },
-        };
-
-        parse_result + "\n"
+        }
     }
 
     fn result(&self, end_str: &str) -> String {
-        format!("  {:#010X} {:#3X}:  {:#010X} {:#010X} {:#010X} {:#010X}  {}",
+        format!(
+            "  {:#010X} {:#3X}:  {:#010X} {:#010X} {:#010X} {:#010X}  {}\n",
             self.leaf,
             self.sub_leaf,
             self.result.eax,
@@ -113,24 +108,21 @@ impl RawCpuid {
     }
 
     pub fn raw_fmt(&self) -> String {
-        self.result("\n")
+        self.result("")
     }
 
     pub fn parse_fmt(&self, vendor: &VendorFlag) -> String {
         let parsed = self.parse(vendor);
-
-        if parsed.is_empty() {
-            return parsed;
-        }
 
         self.result(&parsed)
     }
 
     pub fn bin_fmt(&self) -> String {
         let separate = |reg: u32| -> String {
-            let tmp = format!("{:032b}", reg);
+            let tmp = format!("{reg:032b}");
 
-            format!("{}_{}_{}_{}",
+            format!(
+                "{}_{}_{}_{}",
                 &tmp[..8],
                 &tmp[8..16],
                 &tmp[16..24],
