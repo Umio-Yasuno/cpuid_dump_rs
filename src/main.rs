@@ -472,17 +472,15 @@ impl MainOpt {
 
         let (first_pool, topo_head) = {
             /* To confine the effects of pin_thread */
-            thread::scope(|s| {
-                s.spawn(|| {
-                    let cpu = cpu_list[0];
-                    libcpuid_dump::pin_thread(cpu).unwrap();
+            thread::scope(|s| s.spawn(|| {
+                let cpu = cpu_list[0];
+                libcpuid_dump::pin_thread(cpu).unwrap();
 
-                    (
-                        Arc::new(opt.rawcpuid_pool(&leaf_pool)),
-                        topo_info_with_threadid_head(cpu).into_bytes(),
-                    )
-                }).join().unwrap()
-            })
+                (
+                    Arc::new(opt.rawcpuid_pool(&leaf_pool)),
+                    topo_info_with_threadid_head(cpu).into_bytes(),
+                )
+            }).join().unwrap())
         };
 
         main_pool.extend(topo_head);

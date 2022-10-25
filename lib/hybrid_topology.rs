@@ -43,7 +43,7 @@ impl TopoCacheInfo {
         ];
 
         /* fill cache prop */
-        thread::scope(|s| { s.spawn(|| {
+        thread::scope(|s| s.spawn(|| {
             self::pin_thread(type_only_list[0]).unwrap();
             let eax = cpuid!(0x1, 0x0).eax;
             let apicid = initial_apic_id!(eax);
@@ -103,7 +103,7 @@ impl TopoCacheInfo {
                     _ => {},
                 }
             }
-        }).join().unwrap() });
+        }).join().unwrap());
 
         let update_cache_ids = |ids: &mut Vec<u32>, cache_id: u32| {
             if !ids.contains(&cache_id) {
@@ -142,26 +142,24 @@ impl TopoCacheInfo {
         }
 
         for h in handles {
-            for v in h.join().unwrap() {
-                if let Some((prop, cache_id)) = v {
-                    match prop {
-                        CacheProp { cache_type: CacheType::Data, level: 1, .. } => {
-                            update_cache_ids(&mut l1d_ids, cache_id);
-                        },
-                        CacheProp { cache_type: CacheType::Instruction, level: 1, .. } => {
-                            update_cache_ids(&mut l1i_ids, cache_id);
-                        },
-                        CacheProp { level: 2, .. } => {
-                            update_cache_ids(&mut l2_ids, cache_id);
-                        },
-                        CacheProp { level: 3, .. } => {
-                            update_cache_ids(&mut l3_ids, cache_id);
-                        },
-                        CacheProp { level: 4, .. } => {
-                            update_cache_ids(&mut l4_ids, cache_id);
-                        },
-                        _ => {},
-                    }
+            for (prop, cache_id) in h.join().unwrap().into_iter().flatten() {
+                match prop {
+                    CacheProp { cache_type: CacheType::Data, level: 1, .. } => {
+                        update_cache_ids(&mut l1d_ids, cache_id);
+                    },
+                    CacheProp { cache_type: CacheType::Instruction, level: 1, .. } => {
+                        update_cache_ids(&mut l1i_ids, cache_id);
+                    },
+                    CacheProp { level: 2, .. } => {
+                        update_cache_ids(&mut l2_ids, cache_id);
+                    },
+                    CacheProp { level: 3, .. } => {
+                        update_cache_ids(&mut l3_ids, cache_id);
+                    },
+                    CacheProp { level: 4, .. } => {
+                        update_cache_ids(&mut l4_ids, cache_id);
+                    },
+                    _ => {},
                 }
             }
         }
@@ -313,18 +311,16 @@ impl TopoPartInfo {
         let num_logical_proc = cpu_list.len() as u32;
 
         /* To confine the effects of pin_thread */
-        let (num_physical_proc, cache) = thread::scope(|s| {
-            s.spawn(move || {
-                    self::pin_thread(cpu_list[0]).unwrap();
+        let (num_physical_proc, cache) = thread::scope(|s| s.spawn(move || {
+            self::pin_thread(cpu_list[0]).unwrap();
 
-                    let threads_per_core = get_threads_per_core().unwrap_or(1);
+            let threads_per_core = get_threads_per_core().unwrap_or(1);
 
-                    (
-                        num_logical_proc / threads_per_core,
-                        TopoCacheInfo::get_topology_cache_info(&cpu_list),
-                    )
-            }).join().unwrap()
-        });
+            (
+                num_logical_proc / threads_per_core,
+                TopoCacheInfo::get_topology_cache_info(&cpu_list),
+            )
+        }).join().unwrap());
 
         Self {
             core_type,
