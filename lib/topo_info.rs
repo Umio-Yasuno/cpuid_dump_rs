@@ -41,7 +41,7 @@ impl TopoId {
             let level_type = {
                 let reg = (cpuid.ecx >> 8) & 0xFF;
 
-                TopoLevelType::from_reg(reg as u8)
+                TopoLevelType::from(reg as u8)
             };
             
             if level_type == target_level_type {

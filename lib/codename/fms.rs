@@ -1,5 +1,29 @@
 use crate::{cpuid, CpuidResult};
 
+pub(crate) enum ProcessNode {
+    #[allow(dead_code)]
+    UM(usize),
+    NM(usize),
+    Intel(usize),
+}
+
+use std::fmt;
+impl fmt::Display for ProcessNode {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::UM(size) => write!(f, "{size} um"),
+            Self::NM(size) => write!(f, "{size} nm"),
+            Self::Intel(size) => write!(f, "Intel {size}"),
+        }
+    }
+}
+
+impl From<ProcessNode> for String {
+    fn from(s: ProcessNode) -> Self {
+        s.to_string()
+    }
+}
+
 pub struct ProcInfo {
     pub codename: String,
     pub archname: String,
@@ -12,7 +36,7 @@ impl ProcInfo {
 
         match f {
             /* Intel */
-            0x5 => Some(ProcInfo::info("Quark X1000", "P5C", "32 nm")),
+            0x5 => Some(ProcInfo::info("Quark X1000", "P5C", ProcessNode::NM(32))),
             0x6 => ProcInfo::fam06h(m, s),
 
             /* AMD */

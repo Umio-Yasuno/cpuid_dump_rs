@@ -12,8 +12,8 @@ pub enum TopoLevelType {
     Die,
 }
 
-impl TopoLevelType {
-    pub(crate) fn from_reg(reg: u8) -> Self {
+impl From<u8> for TopoLevelType {
+    fn from(reg: u8) -> Self {
         match reg {
             0x1 => Self::SMT,
             0x2 => Self::Core,
@@ -47,7 +47,7 @@ impl From<&CpuidResult> for IntelExtTopo {
         let level_type = {
             let reg = (cpuid.ecx >> 8) & 0xFF;
 
-            TopoLevelType::from_reg(reg as u8)
+            TopoLevelType::from(reg as u8)
         };
 
         Self {
