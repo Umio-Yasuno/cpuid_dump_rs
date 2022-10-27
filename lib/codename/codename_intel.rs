@@ -162,7 +162,7 @@ pub(super) fn fam06h(m: u32, s: u32) -> Option<Self> {
             0x1 => " (B0)",
             0x2 => " (C0)",
             _   => "",
-        }].concat(), uarch::WillowCove, "10 nm SF"),
+        }].concat(), uarch::WillowCove, ProcessNode::NM(10)),
 
         0x8D => Self::info("Tiger Lake-H", uarch::WillowCove, ProcessNode::NM(10)),
         0x8F => Self::info("Sapphire Rapids-SP", uarch::GoldenCove, ProcessNode::NM(10)),
