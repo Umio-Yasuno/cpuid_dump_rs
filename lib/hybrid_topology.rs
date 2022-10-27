@@ -286,7 +286,7 @@ impl TopoPartInfo {
                 self::pin_thread(cpu).unwrap();
                 let leaf_1ah = cpuid!(0x1A, 0x0);
 
-                if let Some(cur_core_type) = HybridInfo::get_core_type(leaf_1ah) {
+                if let Some(cur_core_type) = HybridInfo::get_core_type(&leaf_1ah) {
                     if cur_core_type == *core_type {
                         return Some(cpu);
                     }
