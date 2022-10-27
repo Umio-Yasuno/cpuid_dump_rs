@@ -1,12 +1,14 @@
 use crate::{cpuid, CpuidResult};
 use std::fmt;
 
+/* https://github.com/slimbootloader/slimbootloader/blob/master/Platform/AlderlakeBoardPkg/Library/Stage2BoardInitLib/CpuInfoLib.c */
+
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd)]
 #[repr(u8)]
 pub enum HybridCoreType {
-    _Reserved1 = 0x10,
+    _Reserved1 = 0x10, // Quark?
     Atom = 0x20,
-    _Reserved2 = 0x30,
+    _Reserved2 = 0x30, // Knights?
     Core = 0x40,
     Invalid,
 }
