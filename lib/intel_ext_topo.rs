@@ -1,7 +1,7 @@
 use crate::CpuidResult;
 use std::fmt;
 
-#[derive(PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq)]
 #[repr(u8)]
 pub enum TopoLevelType {
     Invalid,
@@ -28,14 +28,7 @@ impl TopoLevelType {
 
 impl fmt::Display for TopoLevelType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Self::SMT => write!(f, "SMT"),
-            Self::Core => write!(f, "Core"),
-            Self::Module => write!(f, "Module"),
-            Self::Tile => write!(f, "Tile"),
-            Self::Die => write!(f, "Die"),
-            Self::Invalid => write!(f, "Invalid"),
-        }
+        write!(f, "{:?}", self)
     }
 }
 
@@ -46,8 +39,8 @@ pub struct IntelExtTopo {
     pub level_type: TopoLevelType,
 }
 
-impl IntelExtTopo {
-    pub fn from_cpuid(cpuid: &CpuidResult) -> Self {
+impl From<&CpuidResult> for IntelExtTopo {
+    fn from(cpuid: &CpuidResult) -> Self {
         let next_level = cpuid.eax & 0xF;
         let num_proc = cpuid.ebx & 0xFFFF;
         let x2apic_id = cpuid.edx;

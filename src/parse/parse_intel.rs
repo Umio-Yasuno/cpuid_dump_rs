@@ -29,7 +29,7 @@ impl ParseIntel for CpuidResult {
     }
 
     fn v2_ext_topo_intel_1fh(&self) -> String {
-        let topo = libcpuid_dump::IntelExtTopo::from_cpuid(self);
+        let topo = libcpuid_dump::IntelExtTopo::from(self);
 
         [
             format!("[{}]", topo.level_type),

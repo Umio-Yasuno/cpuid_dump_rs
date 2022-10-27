@@ -21,12 +21,7 @@ impl TlbType {
 
 impl fmt::Display for TlbType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Self::L1d => write!(f, "L1d"),
-            Self::L1i => write!(f, "L1i"),
-            Self::L2d => write!(f, "L2d"),
-            Self::L2i => write!(f, "L2i"),
-        }
+        write!(f, "{:?}", self)
     }
 }
 

@@ -1,4 +1,4 @@
-use crate::cpuid;
+use crate::{cpuid, CpuidResult};
 
 pub struct ProcInfo {
     pub codename: String,
@@ -21,11 +21,11 @@ impl ProcInfo {
             _ => None,
         }
     }
-    pub fn info(code: &str, arch: &str, process: &str) -> Self {
+    pub fn info<T: Into<String>, U: Into<String>>(code: &str, arch: T, process: U) -> Self {
         Self {
-            codename: code.to_string(),
-            archname: arch.to_string(),
-            process: process.to_string(),
+            codename: code.into(),
+            archname: arch.into(),
+            process: process.into(),
         }
     }
 }
@@ -37,17 +37,25 @@ pub struct FamModStep {
     pub raw_eax: u32,
 }
 
-impl FamModStep {
-    pub fn from_cpuid(eax: u32) -> Self {
-         Self {
+impl From<u32> for FamModStep {
+    fn from(eax: u32) -> Self {
+        Self {
             syn_fam: ((eax >> 8) & 0xF) + ((eax >> 20) & 0xFF),
             syn_mod: ((eax >> 4) & 0xF) + ((eax >> 12) & 0xF0),
             step: eax & 0xF,
             raw_eax: eax,
         }
     }
-    
+}
+
+impl From<&CpuidResult> for FamModStep {
+    fn from(cpuid: &CpuidResult) -> Self {
+        Self::from(cpuid.eax)
+    }
+}
+
+impl FamModStep {
     pub fn get() -> Self {
-        Self::from_cpuid(cpuid!(0x1).eax)
+        Self::from(&cpuid!(0x1))
     }
 }

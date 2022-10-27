@@ -45,9 +45,9 @@ pub enum AmdPkgType {
     Unknown,
 }
 
-impl AmdPkgType {
-    pub fn from_cpuid(cpuid: &CpuidResult) -> Self {
-        let fms = FamModStep::from_cpuid(cpuid.eax);
+impl From<&CpuidResult> for AmdPkgType {
+    fn from(cpuid: &CpuidResult) -> Self {
+        let fms = FamModStep::from(cpuid.eax);
         let pkg_type = cpuid.ebx >> 28;
 
         match fms {
@@ -183,8 +183,10 @@ impl AmdPkgType {
             _ => Self::Unknown,
         }
     }
+}
 
+impl AmdPkgType {
     pub fn get() -> Self {
-        Self::from_cpuid(&cpuid!(_AX+0x1, 0x0))
+        Self::from(&cpuid!(_AX+0x1, 0x0))
     }
 }

@@ -5,6 +5,17 @@ use crate::ProcInfo;
 
 // TODO: use enum and fmt::Display ?
 
+/*
+#[derive(Debug)]
+pub(self) enum IntelMicroArch {
+    Broadwell,
+    SkyLake,
+    GoldenCove,
+    Gracemont,
+    Hybrid(Box<Self>, Box<Self>),
+    _Reserved,
+}
+*/
 impl ProcInfo {
 pub(super) fn fam06h(m: u32, s: u32) -> Option<Self> {
     Some(match m {

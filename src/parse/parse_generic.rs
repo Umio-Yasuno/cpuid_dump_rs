@@ -23,7 +23,7 @@ impl ParseGeneric for CpuidResult {
     }
 
     fn info_00_01h(&self) -> String {
-        let fms = libcpuid_dump::FamModStep::from_cpuid(self.eax);
+        let fms = libcpuid_dump::FamModStep::from(self);
         let codename = match libcpuid_dump::ProcInfo::from_fms(&fms) {
             Some(info) => format!("{}[Codename: {}]", lnpad!(), info.codename),
             None => "".to_string(),
@@ -111,7 +111,7 @@ impl ParseGeneric for CpuidResult {
     }
 
     fn topo_ext_00_0bh(&self) -> String {
-        let topo = libcpuid_dump::IntelExtTopo::from_cpuid(self);
+        let topo = libcpuid_dump::IntelExtTopo::from(self);
 
         format!("[LevelType: {}, num: {}]", topo.level_type, topo.num_proc)
     }
@@ -167,7 +167,7 @@ impl ParseGeneric for CpuidResult {
         const LEN: usize = "[Address size:".len();
         const PAD: &str = unsafe { std::str::from_utf8_unchecked(&[b' '; LEN]) };
 
-        let addr_size = libcpuid_dump::AddressSize::from_cpuid(self);
+        let addr_size = libcpuid_dump::AddressSize::from(self);
         let phy = addr_size.physical;
         let virt = addr_size.virtual_;
 

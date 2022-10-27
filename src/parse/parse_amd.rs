@@ -49,7 +49,7 @@ pub trait ParseAMD {
 
 impl ParseAMD for CpuidResult {
     fn pkgtype_amd_80_01h(&self) -> String {
-        let pkg_type = libcpuid_dump::AmdPkgType::from_cpuid(self);
+        let pkg_type = libcpuid_dump::AmdPkgType::from(self);
 
         format!("[PkgType: {pkg_type:?}]")
     }
