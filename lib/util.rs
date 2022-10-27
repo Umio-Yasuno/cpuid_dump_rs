@@ -125,7 +125,7 @@ pub fn get_threads_per_core() -> Option<u32> {
     if let Some(cache_leaf) = CacheProp::get_cache_prop_leaf() {
         /* L1 Data Cache or L1 Instruction Cache */
         let cpuid = cpuid!(cache_leaf, 0x0);
-        let cache_prop = CacheProp::from_cpuid(&cpuid);
+        let cache_prop = CacheProp::from(&cpuid);
 
         if cache_prop.level != 1 {
             return None;

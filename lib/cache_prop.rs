@@ -37,12 +37,7 @@ impl Unit {
 use std::fmt;
 impl fmt::Display for Unit {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Self::Byte => write!(f, "Byte"),
-            Self::KiB => write!(f, "KiB"),
-            Self::MiB => write!(f, "MiB"),
-            Self::GiB => write!(f, "GiB"),
-        }
+        write!(f, "{:?}", self)
     }
 }
 
@@ -67,12 +62,7 @@ impl CacheType {
 
 impl fmt::Display for CacheType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Self::Data => write!(f, "Data"),
-            Self::Instruction => write!(f, "Instruction"),
-            Self::Unified => write!(f, "Unified"),
-            Self::Unknown => write!(f, "Unknown"),
-        }
+        write!(f, "{:?}", self)
     }
 }
 
@@ -89,36 +79,8 @@ pub struct CacheProp {
     pub inclusive: bool,
 }
 
-impl CacheProp {
-    pub fn get_cache_prop_leaf() -> Option<u32> {
-        let vendor = VendorFlag::check();
-
-        if vendor.intel {
-            return Some(0x4);
-        }
-        /*
-            AMD TopologyExtensions: CPUID[Leaf=0x8000_0001, SubLeaf=0x0].ECX[22]
-        */
-        let check_cpuid = ((cpuid!(_AX+0x1, 0x0).ecx >> 22) & 0b1) != 0;
-
-        if vendor.amd && check_cpuid {
-            return Some(_AX+0x1D);
-        }
-
-        None
-    }
-
-    pub fn option_from_cpuid(cpuid: &CpuidResult) -> Option<Self> {
-        let prop = Self::from_cpuid(cpuid);
-
-        if prop.level != 0 {
-            Some(prop)
-        } else {
-            None
-        }
-    }
-    
-    pub fn from_cpuid(cpuid: &CpuidResult) -> Self {
+impl From<&CpuidResult> for CacheProp {
+    fn from(cpuid: &CpuidResult) -> Self {
         let [eax, ebx, ecx, edx] = [cpuid.eax, cpuid.ebx, cpuid.ecx, cpuid.edx];
 
         let cache_type = CacheType::from_reg(eax & 0x1F);
@@ -149,6 +111,34 @@ impl CacheProp {
     }
 }
 
+impl CacheProp {
+    pub fn get_cache_prop_leaf() -> Option<u32> {
+        let vendor = VendorFlag::check();
+
+        if vendor.intel {
+            return Some(0x4);
+        }
+        /* AMD TopologyExtensions: CPUID[Leaf=0x8000_0001, SubLeaf=0x0].ECX[22] */
+        let check_cpuid = ((cpuid!(_AX+0x1, 0x0).ecx >> 22) & 0b1) != 0;
+
+        if vendor.amd && check_cpuid {
+            return Some(_AX+0x1D);
+        }
+
+        None
+    }
+
+    pub fn option_from_cpuid(cpuid: &CpuidResult) -> Option<Self> {
+        let prop = Self::from(cpuid);
+
+        if prop.level != 0 {
+            Some(prop)
+        } else {
+            None
+        }
+    }
+}
+
 #[test]
 fn test_cache_prop() {
     /* CPUID Ryzen 5 5600G, 0x8000001D_x3 */
@@ -159,7 +149,7 @@ fn test_cache_prop() {
         edx: 0x00000001,
     };
 
-    let cache = CacheProp::from_cpuid(&cpuid);
+    let cache = CacheProp::from(&cpuid);
 
     let test = {
         let cache_type = CacheType::Unified;
