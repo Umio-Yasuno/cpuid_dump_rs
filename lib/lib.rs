@@ -30,8 +30,8 @@ pub use proc_name::*;
 mod cache_prop;
 pub use cache_prop::*;
 
-mod intel_ext_topo;
-pub use intel_ext_topo::*;
+mod intel_ext_topo_0bh_1fh;
+pub use intel_ext_topo_0bh_1fh::*;
 
 mod amd_tlb_info;
 pub use amd_tlb_info::*;
@@ -45,10 +45,10 @@ pub use topo_info::*;
 mod hybrid_topology;
 pub use hybrid_topology::*;
 
-mod addr_size;
-pub use addr_size::*;
+mod addr_size_80_08;
+pub use addr_size_80_08::*;
 
-mod amd_pkg_type;
-pub use amd_pkg_type::*;
+mod amd_pkg_type_80_01;
+pub use amd_pkg_type_80_01::*;
 
 // pub mod cpuid_macro;
