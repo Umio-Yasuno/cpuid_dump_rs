@@ -51,4 +51,5 @@ pub use addr_size_80_08h::*;
 mod amd_pkg_type_80_01h;
 pub use amd_pkg_type_80_01h::*;
 
-// pub mod cpuid_macro;
+mod amd_proc_topo_80_1eh;
+pub use amd_proc_topo_80_1eh::*;

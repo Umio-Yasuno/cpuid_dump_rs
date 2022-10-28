@@ -153,14 +153,12 @@ impl ParseAMD for CpuidResult {
     }
 
     fn cpu_topo_amd_80_1eh(&self) -> String {
-        let core_id = self.ebx & 0xFF;
-        let th_per_core = ((self.ebx >> 8) & 0xFF) + 1;
-        let node_id = self.ecx & 0xFF;
+        let topo = libcpuid_dump::AmdProcTopo::from(self);
 
         [
-            format!("[NodeID: {node_id}, CoreID: {core_id}]"),
+            format!("[NodeID: {}, CoreID: {}]", topo.node_id, topo.core_id),
             lnpad!(),
-            format!("[Thread(s) per core: {th_per_core}]"),
+            format!("[Thread(s) per core: {}]", topo.threads_per_core),
         ].concat()
     }
 
@@ -186,12 +184,13 @@ impl ParseAMD for CpuidResult {
 
     fn ext_amd_80_21h(&self) -> String {
         let ftr = align_mold_ftr(&str_detect_ftr(self.eax, &ftr_amd_80_21_eax_x0()));
+        let ucode_patch_size = self.ebx & 0xFFF;
 
-        if 0 < self.ebx {
+        if 0 < ucode_patch_size {
             [
                 ftr,
                 lnpad!(),
-                format!("[uCodePatchSize: {}]", self.ebx),
+                format!("[uCodePatchSize: {ucode_patch_size}]"),
             ].concat()
         } else {
             ftr
