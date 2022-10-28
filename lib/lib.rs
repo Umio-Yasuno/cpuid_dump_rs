@@ -45,10 +45,10 @@ pub use topo_info::*;
 mod hybrid_topology;
 pub use hybrid_topology::*;
 
-mod addr_size_80_08;
-pub use addr_size_80_08::*;
+mod addr_size_80_08h;
+pub use addr_size_80_08h::*;
 
-mod amd_pkg_type_80_01;
-pub use amd_pkg_type_80_01::*;
+mod amd_pkg_type_80_01h;
+pub use amd_pkg_type_80_01h::*;
 
 // pub mod cpuid_macro;
