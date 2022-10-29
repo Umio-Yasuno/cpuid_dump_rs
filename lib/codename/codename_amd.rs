@@ -16,7 +16,10 @@ impl fmt::Display for AmdMicroArch {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Self::ZenPlus => write!(f, "Zen+"),
-            Self::Zen3Plus => write!(f, "Zen3+"),
+            Self::Zen2 => write!(f, "Zen 2"),
+            Self::Zen3 => write!(f, "Zen 3"),
+            Self::Zen3Plus => write!(f, "Zen 3+"),
+            Self::Zen4 => write!(f, "Zen 4"),
             _ => write!(f, "{:?}", self),
         }
     }
@@ -87,7 +90,7 @@ pub(super) fn fam19h(m: u32, s: u32) -> Option<Self> {
         0x30 => Self::info("Trento", uarch::Zen3, ProcessNode::NM(7)),
         /* 0x44: Rembrandt */
         0x40..=0x4F => Self::info("Rembrandt", uarch::Zen3Plus, ProcessNode::NM(6)),
-        0x50..=0x5F => Self::info("Cezanne", uarch::Zen3, ProcessNode::NM(7)),
+        0x50..=0x5F => Self::info("Cezanne/Barcelo", uarch::Zen3, ProcessNode::NM(7)),
 
         /* Zen 4 */
         0x60..=0x6F => Self::info("Phoenix", uarch::Zen4, ""),
