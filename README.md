@@ -1,12 +1,12 @@
 ```
 CPUID Dump 0.1.0
-[Pkg: 000, Core: 003, SMT: 001, x2APIC: 007]
-     (in)EAX ECX:  (out)EAX   (out)EBX   (out)ECX   (out)EDX
+[Pkg: 000, Core: 000, SMT: 000, x2APIC: 000]
+       [Leaf.Sub]    [EAX]      [EBX]      [ECX]      [EDX]   
 ====================================================================================================
   0x00000000 0x0:  0x00000010 0x68747541 0x444D4163 0x69746E65  [AuthenticAMD]
-  0x00000001 0x0:  0x00A50F00 0x070C0800 0x7EF8320B 0x178BFBFF  [F: 0x19, M: 0x50, S: 0x0]
+  0x00000001 0x0:  0x00A50F00 0x000C0800 0x7EF8320B 0x178BFBFF  [F: 0x19, M: 0x50, S: 0x0]
                                                                 [Codename: Cezanne]
-                                                                [APIC ID: 7] [Max APIC ID: 12]
+                                                                [APIC ID: 0] [Max APIC ID: 12]
                                                                 [CLFlush (Byte): 64]
                                                                 [FPU] [VME] [DE] [PSE] [TSC] [MSR] 
                                                                 [PAE] [MCE] [CX8] [APIC] [SEP] 
@@ -27,8 +27,8 @@ CPUID Dump 0.1.0
                                                                 [RDSEED] [ADX] [SMAP] [CLFLUSHOPT] 
                                                                 [CLWB] [SHA] [UMIP] [PKU] [CET_SS] 
                                                                 [VAES] [VPCLMULQDQ] [RDPID] [FSRM] 
-  0x0000000B 0x0:  0x00000001 0x00000002 0x00000100 0x00000007  [LevelType: SMT, num: 2]
-  0x0000000B 0x1:  0x00000004 0x0000000C 0x00000201 0x00000007  [LevelType: Core, num: 12]
+  0x0000000B 0x0:  0x00000001 0x00000002 0x00000100 0x00000000  [LevelType: SMT, num: 2]
+  0x0000000B 0x1:  0x00000004 0x0000000C 0x00000201 0x00000000  [LevelType: Core, num: 12]
   0x0000000D 0x0:  0x00000207 0x00000988 0x00000988 0x00000000  [-XFEATURE Mask-]
                                                                 [X87] [SSE] [AVX256] 
                                                                 [Protection Key User] 
@@ -41,7 +41,7 @@ CPUID Dump 0.1.0
   0x0000000F 0x0:  0x00000000 0x000000FF 0x00000000 0x00000002  
   0x00000010 0x0:  0x00000000 0x00000002 0x00000000 0x00000000  
   0x80000000 0x0:  0x80000023 0x68747541 0x444D4163 0x69746E65  
-  0x80000001 0x0:  0x00A50F00 0x20000000 0x75C237FF 0x2FD3FBFF  [PkgType: 0x2]
+  0x80000001 0x0:  0x00A50F00 0x20000000 0x75C237FF 0x2FD3FBFF  [PkgType: AM4]
                                                                 [LAHF/SAHF] [CmpLegacy] [SVM] 
                                                                 [Ext_APIC_Space] [Alt_MOV_CR8] 
                                                                 [ABM] [SSE4A] [MisAlignSSE] 
@@ -53,9 +53,9 @@ CPUID Dump 0.1.0
                                                                 [MONITORX] [AddrMaskExt] 
                                                                 [SYSCALL/SYSRET] [NXbit] [Page1GB] 
                                                                 [RDTSCP] [LongMode] 
-  0x80000002 0x0:  0x20444D41 0x657A7952 0x2035206E 0x30303635  [AMD Ryzen 5 5600]
-  0x80000003 0x0:  0x69772047 0x52206874 0x6F656461 0x7247206E  [G with Radeon Gr]
-  0x80000004 0x0:  0x69687061 0x20207363 0x20202020 0x00202020  [aphics          ]
+  0x80000002 0x0:  0x20444D41 0x657A7952 0x2035206E 0x30303635  ["AMD Ryzen 5 5600"]
+  0x80000003 0x0:  0x69772047 0x52206874 0x6F656461 0x7247206E  ["G with Radeon Gr"]
+  0x80000004 0x0:  0x69687061 0x20207363 0x20202020 0x00202020  ["aphics          "]
   0x80000005 0x0:  0xFF40FF40 0xFF40FF40 0x20080140 0x20080140  [L1D 32K/L1I 32K]
                                                                 [L1iTLB 4K:   64_entry, full_way
                                                                         2M:   64_entry, full_way
@@ -74,7 +74,7 @@ CPUID Dump 0.1.0
                                                                 [TscInvariant] [CPB] [EffFreqRO] 
                                                                 [ConnectedStandby] [RAPL] 
   0x80000008 0x0:  0x00003030 0x191EF657 0x0000400B 0x00010000  [Address size: 48-bits physical 
-                                                                                48-bits virtual]
+                                                                               48-bits virtual]
                                                                 [CLZERO] [InstRetCntMsr] 
                                                                 [RstrFpErrPtrs] [RDPRU] [WBNOINVD] 
                                                                 [IBPB] [INT_WBINVD] [IBRS] [STIBP] 
@@ -106,7 +106,7 @@ CPUID Dump 0.1.0
   0x8000001D 0x1:  0x00004122 0x01C0003F 0x0000003F 0x00000000  [L1I,  8_way,  32_K]
   0x8000001D 0x2:  0x00004143 0x01C0003F 0x000003FF 0x00000002  [L2U,  8_way, 512_K] [Inclusive]
   0x8000001D 0x3:  0x0002C163 0x03C0003F 0x00003FFF 0x00000001  [L3U, 16_way,  16_M]
-  0x8000001E 0x0:  0x00000007 0x00000103 0x00000000 0x00000000  [NodeID: 0, CoreID: 3]
+  0x8000001E 0x0:  0x00000000 0x00000100 0x00000000 0x00000000  [NodeID: 0, CoreID: 0]
                                                                 [Thread(s) per core: 2]
   0x8000001F 0x0:  0x0001780F 0x00000000 0x00000000 0x00000001  [SME] [SEV] [PageFlushMSR] [SEV-ES] 
                                                                 [64BitHost] [RestrictedInjection] 
@@ -133,6 +133,8 @@ FLAGS:
          Display raw/hex result.
      -bin
          Display binary result.
+     -c, -compat
+         Display the same format as `cpuid -r` (cpuid by Todd Allen)
      -full
          Combine "-disp-zero" and "-no-diff"
      -disp-zero
