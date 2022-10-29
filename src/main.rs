@@ -407,49 +407,31 @@ impl MainOpt {
         }
     }
 
-    fn raw_pool(&self, cpuid_pool: &[RawCpuid]) -> Vec<u8> {
-        let mut pool: Vec<u8> = Vec::with_capacity(cpuid_pool.len() * TOTAL_WIDTH);
+    fn select_pool(&self, rawcpuid_pool: &[RawCpuid]) -> Vec<u8> {
+        let len = rawcpuid_pool.len();
+        let (cap, fmt_func): (usize, fn(&RawCpuid, &VendorFlag) -> String) = match self.fmt {
+            DumpFormat::Raw => (
+                len * TOTAL_WIDTH,
+                RawCpuid::raw_fmt
+            ),
+            DumpFormat::Binary => (
+                len * TOTAL_WIDTH * 2,
+                RawCpuid::bin_fmt
+            ),
+            DumpFormat::Parse => (
+                len * TOTAL_WIDTH * 3,
+                RawCpuid::parse_fmt
+            ),
+        };
 
-        for cpuid in cpuid_pool {
-            pool.extend(
-                cpuid.raw_fmt().into_bytes()
-            )
-        }
-
-        pool
-    }
-
-    fn bin_pool(&self, cpuid_pool: &[RawCpuid]) -> Vec<u8> {
-        let mut pool: Vec<u8> = Vec::with_capacity(cpuid_pool.len() * TOTAL_WIDTH * 2);
-
-        for cpuid in cpuid_pool {
-            pool.extend(
-                cpuid.bin_fmt().into_bytes()
-            )
-        }
-
-        pool
-    }
-
-    fn parse_pool(&self, cpuid_pool: &[RawCpuid]) -> Vec<u8> {
-        let mut parse_pool: Vec<u8> = Vec::with_capacity(cpuid_pool.len() * TOTAL_WIDTH * 3);
+        let mut parse_pool: Vec<u8> = Vec::with_capacity(cap);
         let vendor = VendorFlag::check();
-        
-        for cpuid in cpuid_pool {
-            parse_pool.extend(
-                cpuid.parse_fmt(&vendor).into_bytes()
-            )
+
+        for rawcpuid in rawcpuid_pool {
+            parse_pool.extend(fmt_func(&rawcpuid, &vendor).into_bytes())
         }
 
         parse_pool
-    }
-
-    fn select_pool(&self, cpuid_pool: &[RawCpuid]) -> Vec<u8> {
-        match self.fmt {
-            DumpFormat::Raw => self.raw_pool(cpuid_pool),
-            DumpFormat::Binary => self.bin_pool(cpuid_pool),
-            DumpFormat::Parse => self.parse_pool(cpuid_pool),
-        }
     }
 
     fn pool_all_thread(&self) -> Vec<u8> {
@@ -535,10 +517,11 @@ impl MainOpt {
 
     fn only_leaf(&self, leaf: u32, sub_leaf: u32) -> io::Result<()> {
         let raw_result = RawCpuid::exe(leaf, sub_leaf);
+        let vendor = VendorFlag::check();
         let dump_fmt = match self.fmt {
-            DumpFormat::Raw => raw_result.raw_fmt(),
-            DumpFormat::Binary => raw_result.bin_fmt(),
-            DumpFormat::Parse => raw_result.parse_fmt(&VendorFlag::check()),
+            DumpFormat::Raw => raw_result.raw_fmt(&vendor),
+            DumpFormat::Binary => raw_result.bin_fmt(&vendor),
+            DumpFormat::Parse => raw_result.parse_fmt(&vendor),
         };
 
         let tmp = [

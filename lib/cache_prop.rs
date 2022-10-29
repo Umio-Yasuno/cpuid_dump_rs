@@ -1,4 +1,5 @@
 use crate::{cpuid, _AX, CpuidResult, VendorFlag};
+use std::fmt;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum Unit {
@@ -9,9 +10,9 @@ pub enum Unit {
 }
 
 impl Unit {
-    pub const KIB_BYTE: u64 = 1 << 10;
-    pub const MIB_BYTE: u64 = 1 << 20;
-    pub const GIB_BYTE: u64 = 1 << 30;
+    const KIB_BYTE: u64 = 1 << 10;
+    const MIB_BYTE: u64 = 1 << 20;
+    const GIB_BYTE: u64 = 1 << 30;
 
     pub fn from_byte(size: u64) -> Unit {
         if Self::GIB_BYTE < size {
@@ -24,6 +25,7 @@ impl Unit {
             Self::Byte
         }
     }
+
     pub fn to_byte(&self) -> u64 {
         match self {
             Self::Byte => 1,
@@ -34,7 +36,6 @@ impl Unit {
     }
 }
 
-use std::fmt;
 impl fmt::Display for Unit {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{:?}", self)

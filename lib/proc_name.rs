@@ -38,13 +38,14 @@ impl ProcName {
     
     fn from_cpuid_array(array: [CpuidResult; 3]) -> String {
         /* 4 (0x8000_0002 .. 0x8000_0004) * u32 ([u8; 4]) * 4 (E{A,B,C,D}X) */
-        let name = array.iter().flat_map(Self::dec_cpuid).collect();
+        let name: Vec<u8> = array.iter().flat_map(Self::dec_cpuid).collect();
 
         String::from_utf8(name).unwrap()
     }
     
     pub fn get_name() -> String {
         let cpuid = Self::set_cpuid();
+
         Self::from_cpuid_array(cpuid)
     }
     
@@ -65,9 +66,4 @@ fn test_proc_name() {
     let name = "AMD Ryzen 5 5600G with Radeon Graphics          ".to_string();
 
     assert_eq!(name, ProcName::from_cpuid_array(cpuid));
-
-    /*
-    println!("Processor Name       : [{}]", ProcName::get_name());
-    println!("Processor Name (trim): [{}]", ProcName::get_trim_name());
-    */
 }

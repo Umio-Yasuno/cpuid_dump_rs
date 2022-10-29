@@ -107,7 +107,7 @@ impl RawCpuid {
         )
     }
 
-    pub fn raw_fmt(&self) -> String {
+    pub fn raw_fmt(&self, _: &VendorFlag) -> String {
         self.result("")
     }
 
@@ -117,7 +117,7 @@ impl RawCpuid {
         self.result(&parsed)
     }
 
-    pub fn bin_fmt(&self) -> String {
+    pub fn bin_fmt(&self, _: &VendorFlag) -> String {
         let separate = |reg: u32| -> String {
             let tmp = format!("{reg:032b}");
 
