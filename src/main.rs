@@ -99,16 +99,13 @@ fn leaf_pool() -> Vec<(u32, u32)> {
 
     /* Ext */
     for leaf in _AX..=max_ext_leaf {
-        /* Cache Properties, AMD, same format as Intel Leaf 0x4 */
-        const LF_80_1D: u32 = _AX + 0x1D;
-        /* AMD Platform QoS Enforcement for Memory Bandwidth */
-        const LF_80_20: u32 = _AX + 0x20;
-
         match leaf {
-            LF_80_1D => for sub_leaf in 0x0..=0x4 {
+            /* Cache Properties, AMD, same format as Intel Leaf 0x4 */
+            0x8000_001D => for sub_leaf in 0x0..=0x4 {
                 leaf_pool.push((leaf, sub_leaf))
             },
-            LF_80_20 => for sub_leaf in 0x0..=0x1 {
+            /* AMD Platform QoS Enforcement for Memory Bandwidth */
+            0x8000_0020 => for sub_leaf in 0x0..=0x1 {
                 leaf_pool.push((leaf, sub_leaf))
             },
             _ => leaf_pool.push((leaf, 0x0)),
