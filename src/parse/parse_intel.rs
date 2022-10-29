@@ -31,10 +31,6 @@ impl ParseIntel for CpuidResult {
     fn v2_ext_topo_intel_1fh(&self) -> String {
         let topo = libcpuid_dump::IntelExtTopo::from(self);
 
-        [
-            format!("[{}]", topo.level_type),
-            lnpad!(),
-            format!("[x2apic id: {}]", topo.x2apic_id),
-        ].concat()
+        format!("[LevelType: {}, num: {}]", topo.level_type, topo.num_proc)
     }
 }
