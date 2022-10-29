@@ -145,6 +145,10 @@ fn bin_head() -> String {
     \n")
 }
 
+fn thread_id_head(thread_id: usize) -> String {
+    format!("CPU {thread_id}:\n")
+}
+
 fn topo_info_head() -> String {
     let topo_info = match libcpuid_dump::TopoId::get_topo_info() {
         Some(topo) => topo,
@@ -216,6 +220,8 @@ fn help_msg() {
         \x20        Display raw/hex result.\n\
         \x20    -bin\n\
         \x20        Display binary result.\n\
+        \x20    -c, -compat\n\
+        \x20        Display the same format as `cpuid -r` (cpuid by Todd Allen)\n\
         \x20    -full\n\
         \x20        Combine \"-disp-zero\" and \"-no-diff\"\n\
         \x20    -disp-zero\n\
@@ -240,6 +246,7 @@ enum DumpFormat {
     Raw,
     Binary,
     Parse,
+    CompatCpuid,
 }
 
 #[derive(Debug, Clone)]
@@ -297,7 +304,9 @@ impl MainOpt {
             let arg = arg.trim_start_matches('-');
 
             match arg {
-                "a" | "all" => opt.dump_all = true,
+                "a" | "all" => {
+                    opt.dump_all = true;
+                },
                 "r" | "raw" => {
                     opt.fmt = DumpFormat::Raw;
                     // opt.skip_zero = false;
@@ -363,15 +372,21 @@ impl MainOpt {
                 "bin" => {
                     opt.fmt = DumpFormat::Binary;
                 },
+                "c" | "compat" => {
+                    opt.dump_all = true;
+                    opt.fmt = DumpFormat::CompatCpuid;
+                    opt.skip_zero = false;
+                    opt.diff = false;
+                },
                 "h" | "help" => {
                     help_msg();
                     std::process::exit(0);
                 },
                 "disp-zero" => {
-                    opt.skip_zero = false
+                    opt.skip_zero = false;
                 },
                 "no-diff" => {
-                    opt.diff = false
+                    opt.diff = false;
                 },
                 "full" => {
                     opt.skip_zero = false;
@@ -403,6 +418,7 @@ impl MainOpt {
     fn head_fmt(&self) -> String {
         match self.fmt {
             DumpFormat::Binary => bin_head(),
+            DumpFormat::CompatCpuid => "".to_string(),
             _ => hex_head(),
         }
     }
@@ -421,6 +437,10 @@ impl MainOpt {
             DumpFormat::Parse => (
                 len * TOTAL_WIDTH * 3,
                 RawCpuid::parse_fmt
+            ),
+            DumpFormat::CompatCpuid => (
+                len * TOTAL_WIDTH,
+                RawCpuid::compat_fmt,
             ),
         };
 
@@ -455,9 +475,14 @@ impl MainOpt {
                 let cpu = cpu_list[0];
                 libcpuid_dump::pin_thread(cpu).unwrap();
 
+                let topo_head = match opt.fmt {
+                    DumpFormat::CompatCpuid => thread_id_head(cpu),
+                    _ => topo_info_with_threadid_head(cpu),
+                };
+
                 (
                     Arc::new(opt.rawcpuid_pool(&leaf_pool)),
-                    topo_info_with_threadid_head(cpu).into_bytes(),
+                    topo_head.into_bytes(),
                 )
             }).join().unwrap())
         };
@@ -466,14 +491,14 @@ impl MainOpt {
         main_pool.extend(opt.head_fmt().into_bytes());
         main_pool.extend(opt.select_pool(&first_pool));
 
-        for i in &cpu_list[1..] {
-            let i = *i;
+        for cpu in &cpu_list[1..] {
+            let cpu = *cpu;
             let opt = Arc::clone(&opt);
             let leaf_pool = Arc::clone(&leaf_pool);
             let first_pool = Arc::clone(&first_pool);
 
             handles.push(thread::spawn(move || {
-                libcpuid_dump::pin_thread(i).unwrap();
+                libcpuid_dump::pin_thread(cpu).unwrap();
 
                 let diff = {
                     let mut sub_pool = opt.rawcpuid_pool(&leaf_pool);
@@ -486,8 +511,13 @@ impl MainOpt {
                     sub_pool
                 };
 
+                let topo_head = match opt.fmt {
+                    DumpFormat::CompatCpuid => thread_id_head(cpu),
+                    _ => topo_info_with_threadid_head(cpu),
+                };
+
                 [
-                    topo_info_with_threadid_head(i).into_bytes(),
+                    topo_head.into_bytes(),
                     opt.select_pool(&diff),
                 ].concat()
             }));
@@ -522,6 +552,7 @@ impl MainOpt {
             DumpFormat::Raw => raw_result.raw_fmt(&vendor),
             DumpFormat::Binary => raw_result.bin_fmt(&vendor),
             DumpFormat::Parse => raw_result.parse_fmt(&vendor),
+            DumpFormat::CompatCpuid => raw_result.compat_fmt(&vendor),
         };
 
         let tmp = [
