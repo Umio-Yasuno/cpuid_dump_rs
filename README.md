@@ -5,7 +5,8 @@ CPUID Dump 0.1.0
 ====================================================================================================
   0x00000000 0x0:  0x00000010 0x68747541 0x444D4163 0x69746E65  [AuthenticAMD]
   0x00000001 0x0:  0x00A50F00 0x000C0800 0x7EF8320B 0x178BFBFF  [F: 0x19, M: 0x50, S: 0x0]
-                                                                [Codename: Cezanne]
+                                                                [Cezanne/Barcelo, 7 nm]
+                                                                [Zen 3]
                                                                 [APIC ID: 0] [Max APIC ID: 12]
                                                                 [CLFlush (Byte): 64]
                                                                 [FPU] [VME] [DE] [PSE] [TSC] [MSR] 
