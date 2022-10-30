@@ -145,10 +145,6 @@ fn bin_head() -> String {
     \n")
 }
 
-fn thread_id_head(thread_id: usize) -> String {
-    format!("CPU {thread_id}:\n")
-}
-
 fn topo_info_head() -> String {
     let topo_info = match libcpuid_dump::TopoId::get_topo_info() {
         Some(topo) => topo,
@@ -415,6 +411,13 @@ impl MainOpt {
         cpuid_pool
     }
 
+    fn thread_id_head(&self, thread_id: usize) -> String {
+        match self.fmt {
+            DumpFormat::CompatCpuid => format!("CPU {thread_id}:\n"),
+            _ => topo_info_with_threadid_head(thread_id),
+        }
+    }
+
     fn head_fmt(&self) -> String {
         match self.fmt {
             DumpFormat::Binary => bin_head(),
@@ -475,10 +478,7 @@ impl MainOpt {
                 let cpu = cpu_list[0];
                 libcpuid_dump::pin_thread(cpu).unwrap();
 
-                let topo_head = match opt.fmt {
-                    DumpFormat::CompatCpuid => thread_id_head(cpu),
-                    _ => topo_info_with_threadid_head(cpu),
-                };
+                let topo_head = opt.thread_id_head(cpu);
 
                 (
                     Arc::new(opt.rawcpuid_pool(&leaf_pool)),
@@ -511,10 +511,7 @@ impl MainOpt {
                     sub_pool
                 };
 
-                let topo_head = match opt.fmt {
-                    DumpFormat::CompatCpuid => thread_id_head(cpu),
-                    _ => topo_info_with_threadid_head(cpu),
-                };
+                let topo_head = opt.thread_id_head(cpu);
 
                 [
                     topo_head.into_bytes(),
