@@ -35,18 +35,18 @@ impl ProcInfo {
 
         match f {
             /* Intel */
-            0x5 => ProcInfo::fam05h(m, s),
-            0x6 => ProcInfo::fam06h(m, s),
+            0x5 => Self::fam05h(m, s),
+            0x6 => Self::fam06h(m, s),
 
             /* AMD */
-            0x10 => ProcInfo::fam10h(m, s),
-            0x11 => ProcInfo::fam11h(m, s),
-            0x12 => ProcInfo::fam12h(m, s),
-            0x14 => ProcInfo::fam14h(m, s),
-            0x15 => ProcInfo::fam15h(m, s),
-            0x16 => ProcInfo::fam16h(m, s),
-            0x17 => ProcInfo::fam17h(m, s),
-            0x19 => ProcInfo::fam19h(m, s),
+            0x10 => Self::fam10h(m, s),
+            0x11 => Self::fam11h(m, s),
+            0x12 => Self::fam12h(m, s),
+            0x14 => Self::fam14h(m, s),
+            0x15 => Self::fam15h(m, s),
+            0x16 => Self::fam16h(m, s),
+            0x17 => Self::fam17h(m, s),
+            0x19 => Self::fam19h(m, s),
             _ => None,
         }
     }
