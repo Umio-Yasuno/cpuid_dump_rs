@@ -40,6 +40,7 @@ pub enum AmdPkgType {
     SP5,
     FP7,
     FP7r2,
+    // FP7r7, // ?, AMD Ryzen 9 6900HS, Ryzen 7 6800HS
     AM5,
     FT6,
     Unknown,
@@ -158,6 +159,10 @@ impl From<&CpuidResult> for AmdPkgType {
                 0x0 => Self::AM5,
                 0x1 => Self::FP7,
                 0x2 => Self::FP7r2,
+                /* AMD Ryzne 7 6800H: https://linux-hardware.org/?probe=147556bf0a&log=cpuid */
+                0x4 => Self::FP7r2,
+                /* AMD Ryzen 5 9 PRO 6950HS: https://linux-hardware.org/?probe=b4a34edd03&log=cpuid */
+                0x5 => Self::FP7r2,
                 _ => Self::Unknown,
             },
             /* Mendocino */
