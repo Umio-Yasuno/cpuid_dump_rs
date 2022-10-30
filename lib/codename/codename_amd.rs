@@ -1,7 +1,17 @@
 use crate::{ProcInfo, ProcessNode};
+/* ref: https://en.wikipedia.org/wiki/List_of_AMD_CPU_microarchitectures */
 
 #[derive(Debug)]
 pub(self) enum AmdMicroArch {
+    Puma2008,
+    K10,
+    Bobcat,
+    Bulldozer,
+    Piledriver,
+    Steamroller,
+    Excavator,
+    Jaguar,
+    Puma2014,
     Zen,
     ZenPlus,
     Zen2,
@@ -32,6 +42,181 @@ impl From<AmdMicroArch> for String {
 }
 
 impl ProcInfo {
+pub(super) fn fam10h(m: u32, s: u32) -> Option<Self> {
+    use AmdMicroArch as uarch;
+
+    /* https://www.amd.com/system/files/TechDocs/41322_10h_Rev_Gd.pdf */
+    /* https://www.amd.com/system/files/TechDocs/43374.pdf */
+    Some(match m {
+        0x02 => Self::info(
+            match s {
+                0x1 => "DR-B1",
+                0x2 => "DR-B2",
+                0x3 => "DR-B3",
+                0xA => "DR-BA",
+                _=> "",
+            },
+            uarch::K10,
+            ProcessNode::NM(65),
+        ),
+        0x04 => Self::info(
+            match s {
+                0x2 => "RB-C2",
+                0x3 => "RB-C3",
+                _ => "",
+            },
+            uarch::K10,
+            ProcessNode::NM(45),
+        ),
+        0x05 => Self::info(
+            match s {
+                0x2 => "BL-C2",
+                0x3 => "BL-C3",
+                _ => "",
+            },
+            uarch::K10,
+            ProcessNode::NM(45),
+        ),
+        0x06 => Self::info(
+            match s {
+                0x2 => "DA-C2",
+                0x3 => "DA-C3",
+                _ => "",
+            },
+            uarch::K10,
+            ProcessNode::NM(45),
+        ),
+        0x08 => Self::info(
+            match s {
+                0x0 => "HY-D0",
+                0x1 => "HY-D1",
+                _ => "",
+            },
+            uarch::K10,
+            ProcessNode::NM(45),
+        ),
+        0x09 => Self::info(
+            match s {
+                0x1 => "HY-D1",
+                _ => "",
+            },
+            uarch::K10,
+            ProcessNode::NM(45),
+        ),
+        0x0A => Self::info(
+            match s {
+                0x0 => "PH-E0",
+                _ => "",
+            },
+            uarch::K10,
+            ProcessNode::NM(45),
+        ),
+        _ => return None,
+    })
+}
+
+pub(super) fn fam11h(m: u32, _s: u32) -> Option<Self> {
+    use AmdMicroArch as uarch;
+
+    Some(match m {
+        0x03 => Self::info("LG-B1", uarch::Puma2008, ProcessNode::NM(65)),
+        _ => return None,
+    })
+}
+
+pub(super) fn fam12h(m: u32, _s: u32) -> Option<Self> {
+    use AmdMicroArch as uarch;
+
+    Some(match m {
+        0x01 => Self::info("Llano (B0)", uarch::K10, ProcessNode::NM(32)),
+        _ => return None,
+    })
+}
+
+pub(super) fn fam14h(m: u32, _s: u32) -> Option<Self> {
+    use AmdMicroArch as uarch;
+
+    Some(match m {
+        /* https://www.amd.com/system/files/TechDocs/47534_14h_Mod_00h-0Fh_Rev_Guide.pdf */
+        0x01 => Self::info("Ontario/Zacate (B0)", uarch::Bobcat, ProcessNode::NM(40)),
+        0x02 => Self::info("Ontario/Zacate (C0)", uarch::Bobcat, ProcessNode::NM(40)),
+        _ => return None,
+    })
+}
+
+pub(super) fn fam15h(m: u32, s: u32) -> Option<Self> {
+    use AmdMicroArch as uarch;
+
+    Some(match m {
+        0x01 => Self::info(
+            &["Orochi", match s {
+                0x2 => " (B2)",
+                _ => "",
+            }].concat(),
+            uarch::Bulldozer,
+            ProcessNode::NM(32)
+        ),
+        0x02 => Self::info("Orochi (C0)", uarch::Bulldozer, ProcessNode::NM(32)),
+        0x10 => Self::info(
+            &["Trinity", match s {
+                0x0 => " (A0)",
+                0x1 => " (A1)",
+                _ => "",
+            }].concat(),
+            uarch::Piledriver,
+            ProcessNode::NM(32),
+        ),
+        0x13 => Self::info(
+            &["Richland", match s {
+                0x1 => " (A1)",
+                _ => "",
+            }].concat(),
+            uarch::Piledriver,
+            ProcessNode::NM(32)
+        ),
+        0x30 => Self::info(
+            &["Kaveri", match s {
+                0x1 => " (A1)",
+                _ => "",
+            }].concat(),
+            uarch::Steamroller,
+            ProcessNode::NM(28),
+        ),
+        0x38 => Self::info("Godavari", uarch::Steamroller, ProcessNode::NM(28)),
+        0x60 => Self::info("Carrizo", uarch::Excavator, ProcessNode::NM(28)),
+        /* https://github.com/coreboot/coreboot/blob/master/src/soc/amd/stoneyridge/cpu.c */
+        0x65 |
+        0x70 => Self::info("Stoney Ridge", uarch::Excavator, ProcessNode::NM(28)),
+        _ => return None,
+    })
+}
+
+pub(super) fn fam16h(m: u32, s: u32) -> Option<Self> {
+    use AmdMicroArch as uarch;
+
+    Some(match m {
+        0x00 => Self::info(
+            &["Kabini/Temash", match s {
+                0x1 => " (A1)",
+                _ => "",
+            }].concat(),
+            uarch::Jaguar,
+            ProcessNode::NM(28)
+        ),
+        /* A9-9820: https://linux-hardware.org/?probe=1053adf355 */
+        0x26 => Self::info("Cato", uarch::Jaguar, ProcessNode::NM(28)),
+        0x30 => Self::info(
+            &["Beema/Mullins",  match s {
+                0x1 => " (A1)",
+                _ => "",
+            }].concat(),
+            uarch::Puma2014,
+            ProcessNode::NM(28),
+        ),
+        _ => return None,
+    })
+}
+
 pub(super) fn fam17h(m: u32, s: u32) -> Option<Self> {
     use AmdMicroArch as uarch;
 
@@ -43,27 +228,43 @@ pub(super) fn fam17h(m: u32, s: u32) -> Option<Self> {
             _ => Self::info("Zen", "Zen", ""),
         },
         0x11 => Self::info("Raven Ridge", uarch::Zen, ProcessNode::NM(14)),
-        0x20 => Self::info(&["Raven2 [Dali/Pollock]", match s {
-            0x1 => " (A1)",
-            _ => "",
-        }].concat(), uarch::Zen, ProcessNode::NM(14)),
+        0x20 => Self::info(
+            &["Raven2 [Dali/Pollock]", match s {
+                0x1 => " (A1)",
+                _ => "",
+            }].concat(),
+            uarch::Zen,
+            ProcessNode::NM(14)
+        ),
 
         /* Zen+ */
-        0x08 => Self::info(&["Pinnacle Ridge", match s {
-            0x2 => " (B2)",
-            _ => "",
-        }].concat(), uarch::ZenPlus, ProcessNode::NM(12)),
-        0x18 => Self::info(&["Picasso", match s {
-            0x1 => " (B1)",
-            _ => "",
-        }].concat(), uarch::ZenPlus, ProcessNode::NM(12)),
+        0x08 => Self::info(
+            &["Pinnacle Ridge", match s {
+                0x2 => " (B2)",
+                _ => "",
+            }].concat(),
+            uarch::ZenPlus,
+            ProcessNode::NM(12)
+        ),
+        0x18 => Self::info(
+            &["Picasso", match s {
+                0x1 => " (B1)",
+                _ => "",
+            }].concat(),
+            uarch::ZenPlus,
+            ProcessNode::NM(12)
+        ),
 
         /* Zen 2 */
         0x31 => Self::info("Rome", "Zen 2", ProcessNode::NM(7)),
-        0x60 => Self::info(&["Renoir", match s {
-            0x1 => " (A1)",
-            _ => "",
-        }].concat(), uarch::Zen2, ProcessNode::NM(7)),
+        0x60 => Self::info(
+            &["Renoir", match s {
+                0x1 => " (A1)",
+                _ => "",
+            }].concat(),
+            uarch::Zen2,
+            ProcessNode::NM(7)
+        ),
         0x68 => Self::info("Lucienne", uarch::Zen2, ProcessNode::NM(7)),
         0x71 => Self::info("Matisse", uarch::Zen2, ProcessNode::NM(7)),
         0x90 => Self::info("VanGogh", uarch::Zen2, ProcessNode::NM(7)),
@@ -79,11 +280,15 @@ pub(super) fn fam19h(m: u32, s: u32) -> Option<Self> {
     Some(match m {
         /* Zen 3 */
         /* Revision Guide for AMD Family 19h Models 00h-0Fh Processors: https://www.amd.com/system/files/TechDocs/56683-PUB-1.07.pdf */
-        0x01 => Self::info(&["Milan", match s {
-            0x1 => " (B1)", // EPYC 7003
-            0x2 => " (B2)", // EPYC 7003 3D V-Cache
-            _ => "",
-        }].concat(), uarch::Zen3, ProcessNode::NM(7)),
+        0x01 => Self::info(
+            &["Milan", match s {
+                0x1 => " (B1)", // EPYC 7003
+                0x2 => " (B2)", // EPYC 7003 3D V-Cache
+                _ => "",
+            }].concat(),
+            uarch::Zen3,
+            ProcessNode::NM(7)
+        ),
         0x08 => Self::info("Chagall", uarch::Zen3, ProcessNode::NM(7)),
         0x21 => Self::info("Vermeer", uarch::Zen3, ProcessNode::NM(7)),
         /* https://www.openmp.org/wp-content/uploads/ecp_sollve_openmp_monthly.offload_perf_ana_craypat.marcus.hpe_.26aug2022.v2.pdf */
