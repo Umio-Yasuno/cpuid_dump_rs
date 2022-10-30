@@ -184,8 +184,15 @@ pub(super) fn fam15h(m: u32, s: u32) -> Option<Self> {
         ),
         0x38 => Self::info("Godavari", uarch::Steamroller, ProcessNode::NM(28)),
         0x60 => Self::info("Carrizo", uarch::Excavator, ProcessNode::NM(28)),
-        0x65 |
-        0x70 => Self::info("Stoney Ridge", uarch::Excavator, ProcessNode::NM(28)),
+        0x65 => Self::info("Bristol Ridge", uarch::Excavator, ProcessNode::NM(28)),
+        0x70 => Self::info(
+            &["Stoney Ridge", match s {
+                0x0 => " (A0)",
+                _ => "",
+            }].concat(),
+            uarch::Excavator,
+            ProcessNode::NM(28),
+        ),
         _ => return None,
     })
 }
