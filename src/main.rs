@@ -164,7 +164,7 @@ fn topo_info_head() -> String {
     ]\n")
 }
 
-fn topo_info_with_threadid_head(thread_id: usize) -> String {
+fn topo_info_thread_id_head(thread_id: usize) -> String {
     let topo_info = match libcpuid_dump::TopoId::get_topo_info() {
         Some(topo) => topo,
         None => return format!("[Thread: {thread_id:03}]\n"),
@@ -414,7 +414,7 @@ impl MainOpt {
     fn thread_id_head(&self, thread_id: usize) -> String {
         match self.fmt {
             DumpFormat::CompatCpuid => format!("CPU {thread_id}:\n"),
-            _ => topo_info_with_threadid_head(thread_id),
+            _ => topo_info_thread_id_head(thread_id),
         }
     }
 
@@ -579,8 +579,6 @@ impl MainOpt {
     }
 
     fn run(&self) -> io::Result<()> {
-        print!("{VERSION_HEAD}");
-
         match self {
             Self { leaf: Some(leaf), .. } => self.only_leaf(leaf.0, leaf.1),
             Self { save_path: Some(path), .. } => self.save_file(path),
