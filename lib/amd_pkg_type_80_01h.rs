@@ -1,4 +1,4 @@
-use crate::{_AX, cpuid, CpuidResult, FamModStep};
+use crate::{cpuid, CpuidResult, FamModStep};
 
 /* Leaf: 0x8000_0001, AMD CPU only */
 /* ref: https://en.wikipedia.org/wiki/List_of_AMD_CPU_microarchitectures */
@@ -192,6 +192,6 @@ impl From<&CpuidResult> for AmdPkgType {
 
 impl AmdPkgType {
     pub fn get() -> Self {
-        Self::from(&cpuid!(_AX+0x1, 0x0))
+        Self::from(&cpuid!(0x8000_0001, 0x0))
     }
 }

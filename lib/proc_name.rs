@@ -1,4 +1,4 @@
-use crate::{_AX, cpuid, CpuidResult};
+use crate::{cpuid, CpuidResult};
 
 pub struct ProcName;
 
@@ -30,9 +30,9 @@ impl ProcName {
     
     fn set_cpuid() -> [CpuidResult; 3] {
         [
-            cpuid!(_AX+0x2, 0x0),
-            cpuid!(_AX+0x3, 0x0),
-            cpuid!(_AX+0x4, 0x0),
+            cpuid!(0x8000_0002, 0x0),
+            cpuid!(0x8000_0003, 0x0),
+            cpuid!(0x8000_0004, 0x0),
         ]
     }
     

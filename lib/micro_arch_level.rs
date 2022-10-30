@@ -1,4 +1,4 @@
-use crate::{_AX, cpuid, CpuidResult};
+use crate::{cpuid, CpuidResult};
 
 #[allow(non_camel_case_types)]
 #[repr(u8)]
@@ -81,7 +81,7 @@ impl MicroArchLevel {
         [
             cpuid!(0x1, 0x0),
             cpuid!(0x7, 0x0),
-            cpuid!(_AX+0x1, 0x0),
+            cpuid!(0x8000_0001, 0x0),
         ]
     }
 

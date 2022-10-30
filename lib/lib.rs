@@ -1,6 +1,6 @@
 use core::arch::x86_64::CpuidResult;
 
-pub const _AX: u32 = 0x8000_0000;
+// pub const _AX: u32 = 0x8000_0000;
 
 #[macro_export]
 macro_rules! cpuid {

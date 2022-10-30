@@ -1,4 +1,4 @@
-use crate::{cpuid, _AX, CpuidResult, VendorFlag};
+use crate::{cpuid, CpuidResult, VendorFlag};
 use std::fmt;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -120,10 +120,10 @@ impl CacheProp {
             return Some(0x4);
         }
         /* AMD TopologyExtensions: CPUID[Leaf=0x8000_0001, SubLeaf=0x0].ECX[22] */
-        let check_cpuid = ((cpuid!(_AX+0x1, 0x0).ecx >> 22) & 0b1) != 0;
+        let check_cpuid = ((cpuid!(0x8000_0001, 0x0).ecx >> 22) & 0b1) != 0;
 
         if vendor.amd && check_cpuid {
-            return Some(_AX+0x1D);
+            return Some(0x8000_001D);
         }
 
         None

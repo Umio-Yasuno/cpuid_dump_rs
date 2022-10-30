@@ -1,4 +1,4 @@
-use crate::{_AX, CpuidResult};
+use crate::{CpuidResult};
 
 pub struct AddressSize {
     pub physical: u8,
@@ -16,6 +16,6 @@ impl From<&CpuidResult> for AddressSize {
 
 impl AddressSize {
     pub fn get() -> Self {
-        Self::from(&cpuid!(_AX+0x8, 0x0))
+        Self::from(&cpuid!(0x8000_0008, 0x0))
     }
 }

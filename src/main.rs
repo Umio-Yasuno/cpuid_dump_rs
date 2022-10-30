@@ -4,7 +4,7 @@
 use core::arch::x86_64::CpuidResult;
 use std::io;
 
-use libcpuid_dump::{cpuid, VendorFlag, _AX};
+use libcpuid_dump::{cpuid, VendorFlag};
 
 pub const INPUT_WIDTH: usize = "  0x00000000 0x0:  ".len();
 pub const OUTPUT_WIDTH: usize = "0x00000000 ".len() * 4;
@@ -63,7 +63,7 @@ fn leaf_pool() -> Vec<(u32, u32)> {
     /* CPUID[Leaf=0x7, SubLeaf=0x0].EAX, StructExtFeatIdMax */
     let leaf_07h_subc = RawCpuid::exe(0x7, 0x0).result.eax;
     /* LFuncExt: largest extended function */
-    let max_ext_leaf = RawCpuid::exe(_AX, 0x0).result.eax;
+    let max_ext_leaf = RawCpuid::exe(0x8000_0000, 0x0).result.eax;
 
     /* Base */
     for leaf in 0x0..=max_std_leaf {
@@ -98,7 +98,7 @@ fn leaf_pool() -> Vec<(u32, u32)> {
     }
 
     /* Ext */
-    for leaf in _AX..=max_ext_leaf {
+    for leaf in 0x8000_0000..=max_ext_leaf {
         match leaf {
             /* Cache Properties, AMD, same format as Intel Leaf 0x4 */
             0x8000_001D => for sub_leaf in 0x0..=0x4 {

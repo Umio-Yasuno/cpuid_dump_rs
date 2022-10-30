@@ -113,9 +113,9 @@ pub fn get_threads_per_core() -> Option<u32> {
     /*
         AMD TopologyExtensions flag: CPUID[Leaf=0x8000_0001, SubLeaf=0x0].ECX[22]
     */
-    let check_topoext = ((cpuid!(_AX+0x1, 0x0).ecx >> 22) & 0b1) != 0;
+    let check_topoext = ((cpuid!(0x8000_0001, 0x0).ecx >> 22) & 0b1) != 0;
     if check_topoext {
-        let cpuid = cpuid!(_AX+0x1E, 0x0).ebx;
+        let cpuid = cpuid!(0x8000_001E, 0x0).ebx;
         let per_core = (cpuid >> 8) & 0xFF;
 
         return Some(per_core);
