@@ -1,4 +1,5 @@
 use crate::{ProcInfo, ProcessNode};
+/* ref: https://github.com/illumos/illumos-gate/blob/master/usr/src/uts/intel/os/cpuid_subr.c */
 /* ref: https://en.wikipedia.org/wiki/List_of_AMD_CPU_microarchitectures */
 
 #[derive(Debug)]
@@ -183,7 +184,15 @@ impl ProcInfo {
                 ProcessNode::NM(28),
             ),
             0x38 => Self::info("Godavari", uarch::Steamroller, ProcessNode::NM(28)),
-            0x60 => Self::info("Carrizo", uarch::Excavator, ProcessNode::NM(28)),
+            0x60 => Self::info(
+                &["Carrizo", match s {
+                    0x0 => " (A0)",
+                    0x1 => " (A1)",
+                    _ => "",
+                }].concat(),
+                uarch::Excavator,
+                ProcessNode::NM(28)
+            ),
             0x65 => Self::info("Bristol Ridge", uarch::Excavator, ProcessNode::NM(28)),
             0x70 => Self::info(
                 &["Stoney Ridge", match s {
@@ -228,6 +237,7 @@ impl ProcInfo {
 
         Some(match m {
             /* Zen */
+            /* Naples, Zeppelin/ZP */
             0x01 => match s {
                 0x01 => Self::info("Summit Ridge (B1)", uarch::Zen, ProcessNode::NM(14)),
                 0x02 => Self::info("Naples (B2)", uarch::Zen, ProcessNode::NM(14)),
@@ -262,7 +272,9 @@ impl ProcInfo {
             ),
 
             /* Zen 2 */
-            0x31 => Self::info("Rome", "Zen 2", ProcessNode::NM(7)),
+            /* Rome, Starship/SSP */
+            0x30 => Self::info("Rome/Starship (A0)", "Zen 2", ProcessNode::NM(7)),
+            0x31 => Self::info("Rome/Starship (B0)", "Zen 2", ProcessNode::NM(7)),
             0x60 => Self::info(
                 &["Renoir", match s {
                     0x1 => " (A1)",
@@ -285,9 +297,12 @@ impl ProcInfo {
 
         Some(match m {
             /* Zen 3 */
+            /* Milan, Genesis/GN */
+            0x00 => Self::info("Milan/Genesis (A0)", uarch::Zen3, ProcessNode::NM(7)),
             /* Revision Guide for AMD Family 19h Models 00h-0Fh Processors: https://www.amd.com/system/files/TechDocs/56683-PUB-1.07.pdf */
             0x01 => Self::info(
-                &["Milan", match s {
+                &["Milan/Genesis", match s {
+                    0x0 => " (B0)",
                     0x1 => " (B1)", // EPYC 7003
                     0x2 => " (B2)", // EPYC 7003 3D V-Cache
                     _ => "",
@@ -296,14 +311,51 @@ impl ProcInfo {
                 ProcessNode::NM(7)
             ),
             0x08 => Self::info("Chagall", uarch::Zen3, ProcessNode::NM(7)),
-            0x21 => Self::info("Vermeer", uarch::Zen3, ProcessNode::NM(7)),
+            0x20 => Self::info("Vermeer (A0)", uarch::Zen3, ProcessNode::NM(7)),
+            0x21 => Self::info(
+                &["Vermeer", match s {
+                    0x0 => " (B0)",
+                    0x2 => " (B2)",
+                    _ => "",
+                }].concat(),
+                uarch::Zen3,
+                ProcessNode::NM(7)
+            ),
             /* https://www.openmp.org/wp-content/uploads/ecp_sollve_openmp_monthly.offload_perf_ana_craypat.marcus.hpe_.26aug2022.v2.pdf */
             0x30 => Self::info("Trento", uarch::Zen3, ProcessNode::NM(7)),
-            /* 0x44: Rembrandt */
-            0x40..=0x4F => Self::info("Rembrandt", uarch::Zen3Plus, ProcessNode::NM(6)),
-            0x50..=0x5F => Self::info("Cezanne/Barcelo", uarch::Zen3, ProcessNode::NM(7)),
+            0x40..=0x4F => Self::info(
+                &["Rembrandt", match (m, s) {
+                    (0x40, _) => " (A0)",
+                    (0x44, 0x0) => " (B0)",
+                    (0x44, 0x1) => " (B1)", // product
+                    _ => "",
+                }].concat(),
+                uarch::Zen3Plus,
+                ProcessNode::NM(6)
+            ),
+            0x50..=0x5F => Self::info(
+                &["Cezanne/Barcelo", match (m, s) {
+                    (0x50, 0x0) => " (A0)",
+                    _ => "",
+                }].concat(),
+                uarch::Zen3,
+                ProcessNode::NM(7)
+            ),
 
             /* Zen 4 */
+            /* Genoa, Stones, RS */
+            /*
+                0x11 => "Genoa/Stones (B0)"
+                https://github.com/redhat-performance/autohpl-wrapper/issues/22
+            */
+            0x10..=0x1F => Self::info(
+                &["Genoa/Stones", match (m, s) {
+                    (0x10, _) => " (A0)",
+                    _ => "",
+                }].concat(),
+                uarch::Zen4,
+                ProcessNode::NM(5)
+            ),
             0x60..=0x6F => Self::info("Phoenix", uarch::Zen4, ""),
             0x70..=0x7F => Self::info("Raphael", uarch::Zen4, ProcessNode::NM(5)),
 

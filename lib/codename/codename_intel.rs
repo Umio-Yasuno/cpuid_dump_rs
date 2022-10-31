@@ -334,6 +334,7 @@ impl ProcInfo {
             0x9C => Self::info("Jasper Lake", uarch::Tremont, ProcessNode::NM(10)),
             /* Gracemont */
             0xBE => Self::info("Alder Lake-N", uarch::Gracemont, ProcessNode::Intel(7)),
+            /* Crestmont ? */
             0xAF => Self::info("Sierra Forest", "", ProcessNode::Intel(3)),
             0xB6 => Self::info("Grand Ridge", "", ""),
             /* Xeon Phi */

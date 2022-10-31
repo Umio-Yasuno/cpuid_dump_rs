@@ -20,7 +20,7 @@ impl From<u8> for TopoLevelType {
             0x3 => Self::Module,
             0x4 => Self::Tile,
             0x5 => Self::Die,
-            0x0 |
+            /* 0x0 | */
             _ => Self::Invalid,
         }
     }

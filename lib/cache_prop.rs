@@ -56,7 +56,8 @@ impl CacheType {
             0x1 => Self::Data,
             0x2 => Self::Instruction,
             0x3 => Self::Unified,
-            0x0 | _ => Self::Unknown,
+            /* 0x0 | */
+            _ => Self::Unknown,
         }
     }
 }
