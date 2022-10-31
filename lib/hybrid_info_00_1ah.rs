@@ -36,8 +36,8 @@ pub struct HybridInfo;
 impl HybridInfo {
     pub fn get_hybrid_info_from_cpuid(cpuid: &CpuidResult) -> (Option<HybridCoreType>, u32) {
         (
-            Self::get_core_type(&cpuid),
-            Self::get_native_model_id(&cpuid),
+            Self::get_core_type(cpuid),
+            Self::get_native_model_id(cpuid),
         )
     }
     

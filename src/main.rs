@@ -451,7 +451,7 @@ impl MainOpt {
         let vendor = VendorFlag::check();
 
         for rawcpuid in rawcpuid_pool {
-            parse_pool.extend(fmt_func(&rawcpuid, &vendor).into_bytes())
+            parse_pool.extend(fmt_func(rawcpuid, &vendor).into_bytes())
         }
 
         parse_pool
