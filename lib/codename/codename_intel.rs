@@ -114,10 +114,14 @@ impl ProcInfo {
             0x56 => Self::info("Broadwell-DE", uarch::Broadwell, ProcessNode::NM(14)),
             /* Skylake */
             0x4E => Self::info("Skylake-U", uarch::Skylake, ProcessNode::NM(14)),
-            0x5E => Self::info(match s {
-                0x8 => "Kaby Lake (HA0)",
-                _ => "Skylake-S",
-            }, uarch::Skylake, ProcessNode::NM(14)),
+            0x5E => Self::info(
+                match s {
+                    0x8 => "Kaby Lake (HA0)",
+                    _ => "Skylake-S",
+                },
+                uarch::Skylake,
+                ProcessNode::NM(14)
+            ),
             0x55 => match s {
                 0x7 => Self::info(
                     "Cascade Lake-SP",
@@ -160,15 +164,19 @@ impl ProcInfo {
                 _ => Self::info("Kaby Lake-S", uarch::Skylake, ProcessNode::NM(14)),
             },
             /* Comet Lake */
-            0xA5 => Self::info(&["Comet Lake-S", match s {
-                0x0 => " (G0)",
-                0x1 => " (P0)",
-                0x2 => " (R1)",
-                0x3 => " (G1)",
-                0x4 => " (P1)",
-                0x5 => " (Q0)",
-                _ => "",
-            }].concat(), uarch::Skylake, ProcessNode::NM(14)),
+            0xA5 => Self::info(
+                &["Comet Lake-S", match s {
+                    0x0 => " (G0)",
+                    0x1 => " (P0)",
+                    0x2 => " (R1)",
+                    0x3 => " (G1)",
+                    0x4 => " (P1)",
+                    0x5 => " (Q0)",
+                    _ => "",
+                }].concat(),
+                uarch::Skylake,
+                ProcessNode::NM(14)
+            ),
             0xA6 => Self::info(
                 &["Comet Lake-U", match s {
                     0x0 => " (A0)",

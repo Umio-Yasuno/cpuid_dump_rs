@@ -239,11 +239,17 @@ impl ProcInfo {
         Some(match m {
             /* Zen */
             /* Naples, Zeppelin/ZP */
-            0x01 => match s {
-                0x01 => Self::info("Summit Ridge (B1)", uarch::Zen, ProcessNode::NM(14)),
-                0x02 => Self::info("Naples (B2)", uarch::Zen, ProcessNode::NM(14)),
-                _ => Self::info("Zen", "Zen", ""),
-            },
+            0x00 |
+            0x01 => Self::info(
+                &["Naples/Zeppelin", match (m, s) {
+                    (0x00, _) => " (A0)",
+                    (0x01, 0x1) => " (B1)", // Ryzen, Summit Ridge
+                    (0x01, 0x2) => " (B2)",
+                    _ => "",
+                }].concat(),
+                uarch::Zen,
+                ProcessNode::NM(14),
+            ),
             0x11 => Self::info("Raven Ridge", uarch::Zen, ProcessNode::NM(14)),
             0x20 => Self::info(
                 &["Raven2 [Dali/Pollock]", match s {
@@ -274,8 +280,16 @@ impl ProcInfo {
 
             /* Zen 2 */
             /* Rome, Starship/SSP */
-            0x30 => Self::info("Rome/Starship (A0)", "Zen 2", ProcessNode::NM(7)),
-            0x31 => Self::info("Rome/Starship (B0)", "Zen 2", ProcessNode::NM(7)),
+            0x30 |
+            0x31 => Self::info(
+                &["Rome/Starship", match (m, s) {
+                    (0x30, 0x0) => " (A0)",
+                    (0x31, 0x0) => " (B0)",
+                    _ => "",
+                }].concat(),
+                uarch::Zen2,
+                ProcessNode::NM(7)
+            ),
             0x60 => Self::info(
                 &["Renoir", match s {
                     0x1 => " (A1)",
@@ -299,24 +313,26 @@ impl ProcInfo {
         Some(match m {
             /* Zen 3 */
             /* Milan, Genesis/GN */
-            0x00 => Self::info("Milan/Genesis (A0)", uarch::Zen3, ProcessNode::NM(7)),
             /* Revision Guide for AMD Family 19h Models 00h-0Fh Processors: https://www.amd.com/system/files/TechDocs/56683-PUB-1.07.pdf */
+            0x00 |
             0x01 => Self::info(
-                &["Milan/Genesis", match s {
-                    0x0 => " (B0)",
-                    0x1 => " (B1)", // EPYC 7003
-                    0x2 => " (B2)", // EPYC 7003 3D V-Cache
+                &["Milan/Genesis", match (m, s) {
+                    (0x00, _) => " (A0)",
+                    (0x01, 0x0) => " (B0)",
+                    (0x01, 0x1) => " (B1)", // EPYC 7003
+                    (0x01, 0x2) => " (B2)", // EPYC 7003 3D V-Cache
                     _ => "",
                 }].concat(),
                 uarch::Zen3,
                 ProcessNode::NM(7)
             ),
             0x08 => Self::info("Chagall", uarch::Zen3, ProcessNode::NM(7)),
-            0x20 => Self::info("Vermeer (A0)", uarch::Zen3, ProcessNode::NM(7)),
+            0x20 |
             0x21 => Self::info(
-                &["Vermeer", match s {
-                    0x0 => " (B0)",
-                    0x2 => " (B2)",
+                &["Vermeer", match (m, s) {
+                    (0x20, _) => " (A0)",
+                    (0x21, 0x0) => " (B0)",
+                    (0x21, 0x2) => " (B2)",
                     _ => "",
                 }].concat(),
                 uarch::Zen3,
