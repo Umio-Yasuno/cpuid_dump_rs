@@ -1,6 +1,7 @@
 use crate::{ProcInfo, ProcessNode};
 /* ref: https://github.com/illumos/illumos-gate/blob/master/usr/src/uts/intel/os/cpuid_subr.c */
 /* ref: https://en.wikipedia.org/wiki/List_of_AMD_CPU_microarchitectures */
+/* ref: https://developer.amd.com/resources/developer-guides-manuals/ */
 
 #[derive(Debug)]
 pub(self) enum AmdMicroArch {

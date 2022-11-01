@@ -3,6 +3,7 @@ use crate::{cpuid, CpuidResult, FamModStep};
 /* Leaf: 0x8000_0001, AMD CPU only */
 /* ref: https://en.wikipedia.org/wiki/List_of_AMD_CPU_microarchitectures */
 /* ref: https://www.amd.com/en/support/tech-docs */
+/* ref: https://developer.amd.com/resources/developer-guides-manuals/ */
 /* ref: https://github.com/illumos/illumos-gate/blob/master/usr/src/uts/intel/os/cpuid_subr.c */
 /* ref: https://github.com/coreboot/coreboot/blob/master/src/soc/amd/picasso/include/soc/soc_util.h */
 
