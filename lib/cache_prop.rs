@@ -1,4 +1,4 @@
-use crate::{cpuid, CpuidResult, VendorFlag};
+use crate::{cpuid, CpuidResult, CpuVendor};
 use std::fmt;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -115,19 +115,22 @@ impl From<&CpuidResult> for CacheProp {
 
 impl CacheProp {
     pub fn get_cache_prop_leaf() -> Option<u32> {
-        let vendor = VendorFlag::check();
+        let vendor = CpuVendor::get();
 
-        if vendor.intel {
-            return Some(0x4);
+        match vendor {
+            CpuVendor::AuthenticAMD => {
+                /* AMD TopologyExtensions: CPUID[Leaf=0x8000_0001, SubLeaf=0x0].ECX[22] */
+                let amd_topo_ext = ((cpuid!(0x8000_0001, 0x0).ecx >> 22) & 0b1) != 0;
+
+                if amd_topo_ext {
+                    Some(0x8000_001D)
+                } else {
+                    None
+                }
+            },
+            CpuVendor::GenuineIntel => Some(0x4),
+            _ => None,
         }
-        /* AMD TopologyExtensions: CPUID[Leaf=0x8000_0001, SubLeaf=0x0].ECX[22] */
-        let check_cpuid = ((cpuid!(0x8000_0001, 0x0).ecx >> 22) & 0b1) != 0;
-
-        if vendor.amd && check_cpuid {
-            return Some(0x8000_001D);
-        }
-
-        None
     }
 
     pub fn option_from_cpuid(cpuid: &CpuidResult) -> Option<Self> {

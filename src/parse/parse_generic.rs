@@ -1,8 +1,6 @@
 use crate::*;
-use libcpuid_dump::Vendor;
 
 pub trait ParseGeneric {
-    fn vendor_00_00h(&self) -> String;
     fn info_00_01h(&self) -> String;
     fn monitor_mwait_00_05h(&self) -> String;
     fn feature_00_01h(&self) -> String;
@@ -18,10 +16,6 @@ pub trait ParseGeneric {
 }
 
 impl ParseGeneric for CpuidResult {
-    fn vendor_00_00h(&self) -> String {
-        format!("[{}]", Vendor::from_cpuid(self).get_name())
-    }
-
     fn info_00_01h(&self) -> String {
         let fms = libcpuid_dump::FamModStep::from(self);
         let proc_info = match libcpuid_dump::ProcInfo::from_fms(&fms) {

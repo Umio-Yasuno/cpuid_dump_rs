@@ -4,7 +4,7 @@
 use core::arch::x86_64::CpuidResult;
 use std::io;
 
-use libcpuid_dump::{cpuid, VendorFlag};
+use libcpuid_dump::{cpuid, CpuVendor};
 
 pub const INPUT_WIDTH: usize = "  0x00000000 0x0:  ".len();
 pub const OUTPUT_WIDTH: usize = "0x00000000 ".len() * 4;
@@ -428,7 +428,7 @@ impl MainOpt {
 
     fn select_pool(&self, rawcpuid_pool: &[RawCpuid]) -> Vec<u8> {
         let len = rawcpuid_pool.len();
-        let (cap, fmt_func): (usize, fn(&RawCpuid, &VendorFlag) -> String) = match self.fmt {
+        let (cap, fmt_func): (usize, fn(&RawCpuid, &CpuVendor) -> String) = match self.fmt {
             DumpFormat::Raw => (
                 len * TOTAL_WIDTH,
                 RawCpuid::raw_fmt
@@ -448,7 +448,7 @@ impl MainOpt {
         };
 
         let mut parse_pool: Vec<u8> = Vec::with_capacity(cap);
-        let vendor = VendorFlag::check();
+        let vendor = CpuVendor::get();
 
         for rawcpuid in rawcpuid_pool {
             parse_pool.extend(fmt_func(rawcpuid, &vendor).into_bytes())
@@ -544,7 +544,7 @@ impl MainOpt {
 
     fn only_leaf(&self, leaf: u32, sub_leaf: u32) -> io::Result<()> {
         let raw_result = RawCpuid::exe(leaf, sub_leaf);
-        let vendor = VendorFlag::check();
+        let vendor = CpuVendor::get();
         let dump_fmt = match self.fmt {
             DumpFormat::Raw => raw_result.raw_fmt(&vendor),
             DumpFormat::Binary => raw_result.bin_fmt(&vendor),
