@@ -115,9 +115,7 @@ impl From<&CpuidResult> for CacheProp {
 
 impl CacheProp {
     pub fn get_cache_prop_leaf() -> Option<u32> {
-        let vendor = CpuVendor::get();
-
-        match vendor {
+        match CpuVendor::get() {
             CpuVendor::AuthenticAMD => {
                 /* AMD TopologyExtensions: CPUID[Leaf=0x8000_0001, SubLeaf=0x0].ECX[22] */
                 let amd_topo_ext = ((cpuid!(0x8000_0001, 0x0).ecx >> 22) & 0b1) != 0;

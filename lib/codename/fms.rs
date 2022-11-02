@@ -1,4 +1,4 @@
-use crate::{cpuid, CpuidResult};
+use crate::{cpuid, CpuidResult, CpuVendor};
 
 pub(crate) enum ProcessNode {
     _UM(u8),
@@ -33,26 +33,29 @@ impl ProcInfo {
     pub fn from_fms(fms: &FamModStep) -> Option<Self> {
         let [f, m, s] = [fms.syn_fam, fms.syn_mod, fms.step];
 
-        match f {
-            /* Intel */
-            0x5 => Self::intel_fam05h(m, s),
-            0x6 => match m {
-                0x0F | 0x19 => Self::zhaoxin_fam06h(m, s),
-                _ => Self::intel_fam06h(m, s),
+        match CpuVendor::get() {
+            CpuVendor::AuthenticAMD => match f {
+                0x10 => Self::amd_fam10h(m, s),
+                0x11 => Self::amd_fam11h(m, s),
+                0x12 => Self::amd_fam12h(m, s),
+                0x14 => Self::amd_fam14h(m, s),
+                0x15 => Self::amd_fam15h(m, s),
+                0x16 => Self::amd_fam16h(m, s),
+                0x17 => Self::amd_fam17h(m, s),
+                0x19 => Self::amd_fam19h(m, s),
+                _ => None, 
             },
-
-            /* Zhaoxin */
-            0x7 => Self::zhaoxin_fam07h(m, s),
-
-            /* AMD */
-            0x10 => Self::amd_fam10h(m, s),
-            0x11 => Self::amd_fam11h(m, s),
-            0x12 => Self::amd_fam12h(m, s),
-            0x14 => Self::amd_fam14h(m, s),
-            0x15 => Self::amd_fam15h(m, s),
-            0x16 => Self::amd_fam16h(m, s),
-            0x17 => Self::amd_fam17h(m, s),
-            0x19 => Self::amd_fam19h(m, s),
+            CpuVendor::GenuineIntel => match f {
+                0x5 => Self::intel_fam05h(m, s),
+                0x6 => Self::intel_fam06h(m, s),
+                _ => None,
+            },
+            CpuVendor::CentaurHauls |
+            CpuVendor::Shanghai => match f {
+                0x6 => Self::zhaoxin_fam06h(m, s),
+                0x7 => Self::zhaoxin_fam07h(m, s),
+                _ => None,
+            },
             _ => None,
         }
     }
