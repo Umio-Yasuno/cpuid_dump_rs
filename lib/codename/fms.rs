@@ -36,7 +36,13 @@ impl ProcInfo {
         match f {
             /* Intel */
             0x5 => Self::fam05h(m, s),
-            0x6 => Self::fam06h(m, s),
+            0x6 => match m {
+                0x0F | 0x19 => Self::zhaoxin_fam06h(m, s),
+                _ => Self::fam06h(m, s),
+            },
+
+            /* Zhaoxin */
+            0x7 => Self::zhaoxin_fam07h(m, s),
 
             /* AMD */
             0x10 => Self::fam10h(m, s),
