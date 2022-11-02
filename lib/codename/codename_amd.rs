@@ -44,7 +44,7 @@ impl From<AmdMicroArch> for String {
 }
 
 impl ProcInfo {
-    pub(super) fn fam10h(m: u32, s: u32) -> Option<Self> {
+    pub(super) fn amd_fam10h(m: u32, s: u32) -> Option<Self> {
         use AmdMicroArch as uarch;
 
         /* https://www.amd.com/system/files/TechDocs/41322_10h_Rev_Gd.pdf */
@@ -117,7 +117,7 @@ impl ProcInfo {
         })
     }
 
-    pub(super) fn fam11h(m: u32, _s: u32) -> Option<Self> {
+    pub(super) fn amd_fam11h(m: u32, _s: u32) -> Option<Self> {
         use AmdMicroArch as uarch;
 
         Some(match m {
@@ -126,7 +126,7 @@ impl ProcInfo {
         })
     }
 
-    pub(super) fn fam12h(m: u32, _s: u32) -> Option<Self> {
+    pub(super) fn amd_fam12h(m: u32, _s: u32) -> Option<Self> {
         use AmdMicroArch as uarch;
 
         Some(match m {
@@ -135,7 +135,7 @@ impl ProcInfo {
         })
     }
 
-    pub(super) fn fam14h(m: u32, _s: u32) -> Option<Self> {
+    pub(super) fn amd_fam14h(m: u32, _s: u32) -> Option<Self> {
         use AmdMicroArch as uarch;
 
         Some(match m {
@@ -146,7 +146,7 @@ impl ProcInfo {
         })
     }
 
-    pub(super) fn fam15h(m: u32, s: u32) -> Option<Self> {
+    pub(super) fn amd_fam15h(m: u32, s: u32) -> Option<Self> {
         use AmdMicroArch as uarch;
 
         Some(match m {
@@ -207,7 +207,7 @@ impl ProcInfo {
         })
     }
 
-    pub(super) fn fam16h(m: u32, s: u32) -> Option<Self> {
+    pub(super) fn amd_fam16h(m: u32, s: u32) -> Option<Self> {
         use AmdMicroArch as uarch;
 
         Some(match m {
@@ -233,7 +233,7 @@ impl ProcInfo {
         })
     }
 
-    pub(super) fn fam17h(m: u32, s: u32) -> Option<Self> {
+    pub(super) fn amd_fam17h(m: u32, s: u32) -> Option<Self> {
         use AmdMicroArch as uarch;
 
         Some(match m {
@@ -307,7 +307,7 @@ impl ProcInfo {
         })
     }
 
-    pub(super) fn fam19h(m: u32, s: u32) -> Option<Self> {
+    pub(super) fn amd_fam19h(m: u32, s: u32) -> Option<Self> {
         use AmdMicroArch as uarch;
 
         Some(match m {

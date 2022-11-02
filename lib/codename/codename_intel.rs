@@ -68,7 +68,7 @@ impl From<IntelMicroArch> for String {
 }
 
 impl ProcInfo {
-    pub(super) fn fam05h(m: u32, _s: u32) -> Option<Self> {
+    pub(super) fn intel_fam05h(m: u32, _s: u32) -> Option<Self> {
         use IntelMicroArch as uarch;
 
         Some(match m {
@@ -77,7 +77,7 @@ impl ProcInfo {
         })
     }
 
-    pub(super) fn fam06h(m: u32, s: u32) -> Option<Self> {
+    pub(super) fn intel_fam06h(m: u32, s: u32) -> Option<Self> {
         use IntelMicroArch as uarch;
 
         Some(match m {
