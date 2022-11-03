@@ -1,4 +1,5 @@
-use crate::*;
+use crate::{CpuidResult, CpuVendor};
+use super::*;
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct RawCpuid {

@@ -1,4 +1,4 @@
-use crate::*;
+use crate::{cpuid, CpuidResult, TopoLevelType};
 
 pub struct TopoId {
     pub smt_id: u32,

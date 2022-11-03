@@ -1,4 +1,4 @@
-use crate::*;
+use super::*;
 use libcpuid_dump::{TlbType, TlbInfo, Tlb};
 
 trait PrintEntryWay {

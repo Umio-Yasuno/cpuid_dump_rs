@@ -1,4 +1,5 @@
-use crate::*;
+use crate::CpuidResult;
+use super::*;
 
 pub trait ParseGeneric {
     fn info_00_01h(&self) -> String;

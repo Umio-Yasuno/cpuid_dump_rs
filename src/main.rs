@@ -12,11 +12,11 @@ pub const TOTAL_WIDTH: usize = 100;
 pub const PARSE_WIDTH: usize = TOTAL_WIDTH - INPUT_WIDTH - OUTPUT_WIDTH - 1; // " ".len()
 pub const VERSION_HEAD: &str = concat!("CPUID Dump ", env!("CARGO_PKG_VERSION"), "\n");
 
-mod parse;
-pub use crate::parse::*;
-
 mod raw_cpuid;
-pub use crate::raw_cpuid::*;
+pub use raw_cpuid::*;
+
+mod parse;
+pub use parse::*;
 
 /*
 #[path = "./load_file.rs"]
@@ -459,10 +459,11 @@ impl MainOpt {
     fn pool_all_thread(&self) -> Vec<u8> {
         use std::thread;
         use std::sync::Arc;
+        use libcpuid_dump::util;
 
         let opt = Arc::new(self.clone());
         let leaf_pool = Arc::new(leaf_pool());
-        let cpu_list = libcpuid_dump::cpu_set_list().unwrap();
+        let cpu_list = util::cpu_set_list().unwrap();
         /* this with_capacity is experiental */
         let mut main_pool = Vec::<u8>::with_capacity( if opt.diff {
             TOTAL_WIDTH * leaf_pool.len() * cpu_list.len() / 2
@@ -475,7 +476,7 @@ impl MainOpt {
             /* To confine the effects of pin_thread */
             thread::scope(|s| s.spawn(|| {
                 let cpu = cpu_list[0];
-                libcpuid_dump::pin_thread(cpu).unwrap();
+                util::pin_thread(cpu).unwrap();
 
                 let topo_head = opt.thread_id_head(cpu);
 
@@ -497,7 +498,7 @@ impl MainOpt {
             let first_pool = Arc::clone(&first_pool);
 
             handles.push(thread::spawn(move || {
-                libcpuid_dump::pin_thread(cpu).unwrap();
+                util::pin_thread(cpu).unwrap();
 
                 let diff = {
                     let mut sub_pool = opt.rawcpuid_pool(&leaf_pool);

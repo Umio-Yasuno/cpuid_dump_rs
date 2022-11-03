@@ -1,4 +1,5 @@
-use crate::*;
+use crate::{cpuid, CacheType, CacheProp, HybridCoreType, HybridInfo};
+use crate::util::*;
 
 use std::sync::Arc;
 use std::thread;

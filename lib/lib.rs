@@ -12,8 +12,9 @@ macro_rules! cpuid {
     };
 }
 
-mod util;
-pub use util::*;
+#[macro_use]
+pub mod util;
+// pub use util::*;
 
 mod codename;
 pub use codename::*;

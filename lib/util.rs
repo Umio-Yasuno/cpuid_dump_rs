@@ -1,4 +1,4 @@
-use crate::*;
+use crate::{cpuid, CacheProp, TopoId, TopoLevelType};
 
 pub fn pin_thread(cpu: usize) -> Result<(), i32> {
     #[cfg(unix)]

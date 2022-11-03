@@ -1,4 +1,4 @@
-use crate::*;
+use crate::{INPUT_WIDTH, OUTPUT_WIDTH, PARSE_WIDTH};
 
 const PAD_WIDTH: usize = INPUT_WIDTH + OUTPUT_WIDTH + 1;
 // pub const PAD: &str = unsafe { std::str::from_utf8_unchecked(&[b' '; PAD_WIDTH]) };

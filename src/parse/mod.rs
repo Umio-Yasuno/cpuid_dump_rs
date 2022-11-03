@@ -1,3 +1,5 @@
+use crate::CpuidResult;
+
 mod const_feature_str;
 pub use const_feature_str::*;
 

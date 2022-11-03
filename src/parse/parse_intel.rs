@@ -1,4 +1,4 @@
-use crate::*;
+use super::*;
 
 pub trait ParseIntel {
     fn clock_speed_intel_00_16h(&self) -> String;
