@@ -79,11 +79,11 @@ pub enum CpuVendor {
 
 impl From<&Vendor> for CpuVendor {
     fn from(vendor: &Vendor) -> Self {
-        match vendor {
-            &Vendor::REG_AMD => Self::AuthenticAMD,
-            &Vendor::REG_INTEL => Self::GenuineIntel,
-            &Vendor::REG_CENTAUR => Self::CentaurHauls,
-            &Vendor::REG_SHANGHAI => Self::Shanghai,
+        match *vendor {
+            Vendor::REG_AMD => Self::AuthenticAMD,
+            Vendor::REG_INTEL => Self::GenuineIntel,
+            Vendor::REG_CENTAUR => Self::CentaurHauls,
+            Vendor::REG_SHANGHAI => Self::Shanghai,
             _ => Self::Unknown,
         }
     }

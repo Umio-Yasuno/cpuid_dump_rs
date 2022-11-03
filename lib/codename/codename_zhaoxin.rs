@@ -12,9 +12,7 @@ pub(self) enum ZhaoxinMicroArch {
 use std::fmt;
 impl fmt::Display for ZhaoxinMicroArch {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            _ => write!(f, "{:?}", self),
-        }
+        write!(f, "{:?}", self)
     }
 }
 

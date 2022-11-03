@@ -252,7 +252,7 @@ impl ProcInfo {
             ),
             0x11 => Self::info("Raven Ridge", uarch::Zen, ProcessNode::NM(14)),
             0x20 => Self::info(
-                &["Raven2 [Dali/Pollock]", match s {
+                &["Raven2 (Dali/Pollock)", match s {
                     0x1 => " (A1)",
                     _ => "",
                 }].concat(),

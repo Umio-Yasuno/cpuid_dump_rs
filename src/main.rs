@@ -560,6 +560,7 @@ impl MainOpt {
         .into_bytes();
 
         dump_write(&tmp)?;
+
         Ok(())
     }
 
@@ -577,15 +578,21 @@ impl MainOpt {
         Ok(())
     }
 
-    fn run(&self) -> io::Result<()> {
+    fn run(&self) {
         match self {
-            Self { leaf: Some(leaf), .. } => self.only_leaf(leaf.0, leaf.1),
-            Self { save_path: Some(path), .. } => self.save_file(path),
-            _ => dump_write(&self.dump_pool()),
+            Self { leaf: Some(leaf), .. } => {
+                self.only_leaf(leaf.0, leaf.1).expect("faild only_leaf")
+            },
+            Self { save_path: Some(path), .. } => {
+                self.save_file(path).expect("faild save_file")
+            },
+            _ => {
+                dump_write(&self.dump_pool()).expect("faild dump_write")
+            },
         }
     }
 }
 
 fn main() {
-    MainOpt::main_parse().run().unwrap();
+    MainOpt::main_parse().run();
 }
