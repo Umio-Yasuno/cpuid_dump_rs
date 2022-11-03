@@ -88,13 +88,12 @@ fn leaf_pool() -> Vec<(u32, u32)> {
             0xD => for sub_leaf in 0x0..0xF {
                 leaf_pool.push((leaf, sub_leaf))
             },
+            /* 0x1F: V2 Extended Topology Enumeration Leaf, Intel */
+            0x1F => for sub_leaf in 0x0..=0x4 {
+                leaf_pool.push((0x1F, sub_leaf))
+            },
             _ => leaf_pool.push((leaf, 0x0)),
         }
-    }
-
-    /* 0x1F: V2 Extended Topology Enumeration Leaf, Intel */
-    for sub_leaf in 0x0..=0x4 {
-        leaf_pool.push((0x1F, sub_leaf))
     }
 
     /* Ext */
@@ -546,16 +545,16 @@ impl MainOpt {
         let raw_result = RawCpuid::exe(leaf, sub_leaf);
         let vendor = CpuVendor::get();
         let dump_fmt = match self.fmt {
-            DumpFormat::Raw => raw_result.raw_fmt(&vendor),
-            DumpFormat::Binary => raw_result.bin_fmt(&vendor),
-            DumpFormat::Parse => raw_result.parse_fmt(&vendor),
-            DumpFormat::CompatCpuid => raw_result.compat_fmt(&vendor),
+            DumpFormat::Raw => RawCpuid::raw_fmt,
+            DumpFormat::Binary => RawCpuid::bin_fmt,
+            DumpFormat::Parse => RawCpuid::parse_fmt,
+            DumpFormat::CompatCpuid => RawCpuid::compat_fmt,
         };
 
         let tmp = [
             topo_info_head(),
             self.head_fmt(),
-            dump_fmt,
+            dump_fmt(&raw_result, &vendor),
         ]
         .concat()
         .into_bytes();
