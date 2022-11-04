@@ -30,10 +30,10 @@ pub struct ProcInfo {
 }
 
 impl ProcInfo {
-    pub fn from_fms(fms: &FamModStep) -> Option<Self> {
+    pub fn from_fms(fms: &FamModStep, vendor: &CpuVendor) -> Option<Self> {
         let [f, m, s] = [fms.syn_fam, fms.syn_mod, fms.step];
 
-        match CpuVendor::get() {
+        match *vendor {
             CpuVendor::AuthenticAMD => match f {
                 0x10 => Self::amd_fam10h(m, s),
                 0x11 => Self::amd_fam11h(m, s),
@@ -59,6 +59,7 @@ impl ProcInfo {
             _ => None,
         }
     }
+
     pub fn info<T: Into<String>, U: Into<String>>(code: &str, arch: T, process: U) -> Self {
         Self {
             codename: code.into(),

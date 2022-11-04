@@ -25,7 +25,7 @@ impl RawCpuid {
         match self.leaf {
             0x0 => format!("[{vendor}]"),
             0x1 => [
-                self.result.info_00_01h(),
+                self.result.info_00_01h(vendor),
                 lnpad!(),
                 self.result.feature_00_01h(),
             ].concat(),

@@ -1,8 +1,8 @@
-use crate::CpuidResult;
+use crate::{CpuidResult, CpuVendor};
 use super::*;
 
 pub trait ParseGeneric {
-    fn info_00_01h(&self) -> String;
+    fn info_00_01h(&self, vendor: &CpuVendor) -> String;
     fn monitor_mwait_00_05h(&self) -> String;
     fn feature_00_01h(&self) -> String;
     fn thermal_power_00_06h(&self) -> String;
@@ -17,9 +17,9 @@ pub trait ParseGeneric {
 }
 
 impl ParseGeneric for CpuidResult {
-    fn info_00_01h(&self) -> String {
+    fn info_00_01h(&self, vendor: &CpuVendor) -> String {
         let fms = libcpuid_dump::FamModStep::from(self);
-        let proc_info = match libcpuid_dump::ProcInfo::from_fms(&fms) {
+        let proc_info = match libcpuid_dump::ProcInfo::from_fms(&fms, vendor) {
             Some(info) => format!(
                 "{LN_PAD}[{}, {}]{LN_PAD}[{}]", info.codename, info.process, info.archname,
             ),
