@@ -31,6 +31,9 @@ pub use proc_name::*;
 mod cache_prop;
 pub use cache_prop::*;
 
+mod info_01h_ebx;
+pub use info_01h_ebx::*;
+
 mod intel_ext_topo_0bh_1fh;
 pub use intel_ext_topo_0bh_1fh::*;
 

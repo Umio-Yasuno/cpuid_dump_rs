@@ -27,17 +27,23 @@ impl ParseGeneric for CpuidResult {
             None => "".to_string(),
         };
 
-        let apic_id = self.ebx >> 24;
-        let max_apic_id = (self.ebx >> 16) & 0xFF;
-        let clflush_size = ((self.ebx >> 8) & 0xFF) * 8;
+        let info01h = libcpuid_dump::Info01h::from(self);
 
         [
-            format!("[F: {:#X}, M: {:#X}, S: {:#X}]", fms.syn_fam, fms.syn_mod, fms.step),
+            format!(
+                "[F: {:#X}, M: {:#X}, S: {:#X}]",
+                fms.syn_fam,
+                fms.syn_mod,
+                fms.step
+            ),
             proc_info,
             lnpad!(),
-            format!("[APIC ID: {apic_id}] [Max APIC ID: {max_apic_id}]"),
-            lnpad!(),
-            format!("[CLFlush (Byte): {clflush_size}]"),
+            format!(
+                "[APIC ID: {}, Max: {}] [CLFlush: {}B]",
+                info01h.local_apic_id,
+                info01h.max_apic_id,
+                info01h.clflush_size,
+            ),
         ].concat()
     }
 
