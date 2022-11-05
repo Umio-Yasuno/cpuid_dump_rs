@@ -37,7 +37,8 @@ pub trait ParseAMD {
     fn apmi_amd_80_07h(&self) -> String;
     fn spec_amd_80_08h(&self) -> String;
     fn size_amd_80_08h(&self) -> String;
-    fn rev_id_amd_80_0ah(&self) -> String;
+    fn svm_rev_amd_80_0ah_eax_ebx(&self) -> String;
+    fn svm_ftr_amd_80_0ah_edx(&self) -> String;
     fn l1l2tlb_1g_amd_80_19h(&self) -> String;
     fn fpu_width_amd_80_1ah(&self) -> String;
     fn ibs_amd_80_1bh(&self) -> String;
@@ -105,17 +106,27 @@ impl ParseAMD for CpuidResult {
     }
 
     fn size_amd_80_08h(&self) -> String {
-        let num_t = (self.ecx & 0xFF) + 1;
-        let apicid_size = (self.ecx >> 12) & 0xF;
+        let size_id = libcpuid_dump::AmdSizeId::from(self);
         
         [
-            format!("[Num Threads: {num_t}]"),
+            format!(
+                "[Num Threads: {}] [APIC ID: {}-bits]",
+                size_id.num_thread,
+                size_id.apic_id_size,
+            ),
             lnpad!(),
-            format!("[APIC ID size: {apicid_size}-bits]"),
+            format!("[Perf TSC size: {}]", size_id.perf_tsc_size),
         ].concat()
     }
 
-    fn rev_id_amd_80_0ah(&self) -> String {
+    fn svm_rev_amd_80_0ah_eax_ebx(&self) -> String {
+        let rev = self.eax & 0xFF;
+        let nasid = self.ebx;
+
+        format!("[SVM Rev: {rev:#X}] [NASID: {nasid:#X}]")
+    }
+
+    fn svm_ftr_amd_80_0ah_edx(&self) -> String {
         align_mold_ftr(&str_detect_ftr(self.edx, &ftr_amd_80_0a_edx_x0()))
     }
 

@@ -410,7 +410,7 @@ pub const fn ftr_amd_80_0a_edx_x0() -> [&'static str; 32] {
     let mut ftr = [""; 32];
 
     ftr[0] = "NestedPaging";
-    ftr[1] = "LBR_Virt";
+    ftr[1] = "LbrVirt";
     ftr[2] = "SVM_Lock";
     ftr[3] = "NRIP_Save";
     ftr[4] = "TSC_Rate_MSR";
@@ -427,12 +427,14 @@ pub const fn ftr_amd_80_0a_edx_x0() -> [&'static str; 32] {
     ftr[15] = "V_VMSAVE_VMLOAD";
     ftr[16] = "vGIF"; // Virtualized GIF
     ftr[17] = "GMET"; // Guest Mode Execute Trap
-    ftr[18] = "";
+    ftr[18] = "x2AVIC";
     ftr[19] = "SupervisorShadowStack";
     ftr[20] = "GuestSpecCtrl";
-    ftr[21] = "";
+    ftr[21] = "ROGPT"; // Read-Only Guest Page Table
     ftr[22] = "";
     ftr[23] = "HOST_MCE_OVERRIDE";
+    ftr[25] = "VNMI"; // NMI Virtualization
+    ftr[26] = "IbsVirt";
 
     ftr
 }
@@ -459,6 +461,7 @@ pub const fn ftr_amd_80_1b_eax_x0() -> [&'static str; 32] {
     ftr[6] = "OpCntExt"; // IbsOpCurCnt and IbsOpMaxCnt extend by 7 bits
     ftr[7] = "RipInvalidChk"; // Invalid RIP indication
     ftr[8] = "OpBrnFuse"; // Fused branch micro-op indication
+    ftr[11] = "IbsL3MissFiltering";
 
     ftr
 }

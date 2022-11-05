@@ -46,8 +46,11 @@ pub use topo_info::*;
 mod hybrid_topology;
 pub use hybrid_topology::*;
 
-mod addr_size_80_08h;
-pub use addr_size_80_08h::*;
+mod addr_size_80_08h_eax;
+pub use addr_size_80_08h_eax::*;
+
+mod amd_size_id_80_08h_ecx;
+pub use amd_size_id_80_08h_ecx::*;
 
 mod amd_pkg_type_80_01h;
 pub use amd_pkg_type_80_01h::*;

@@ -39,28 +39,26 @@ impl RawCpuid {
             0xB => self.result.topo_ext_00_0bh(),
             0xD => self.result.xstate_00_0dh(self.sub_leaf),
             0x8000_0001 => [
-                match vendor {
-                    CpuVendor::AuthenticAMD => {
-                        [self.result.pkgtype_amd_80_01h(), lnpad!()].concat()
-                    },
-                    _ => "".to_string(),
+                if let CpuVendor::AuthenticAMD = vendor {
+                    [self.result.pkgtype_amd_80_01h(), lnpad!()].concat()
+                } else {
+                    "".to_string()
                 },
                 self.result.feature_80_01h(),
             ].concat(),
             0x8000_0002..=0x8000_0004 => format!("[\"{}\"]", self.result.cpu_name()),
             0x8000_0008 => [
                 self.result.addr_size_80_08h(),
-                match vendor {
-                    CpuVendor::AuthenticAMD => {
-                        [
-                            lnpad!(),
-                            self.result.spec_amd_80_08h(),
-                            lnpad!(),
-                            self.result.size_amd_80_08h(),
-                        ].concat()
-                    },
-                    _ => "".to_string(),
-                }
+                if let CpuVendor::AuthenticAMD = vendor {
+                    [
+                        lnpad!(),
+                        self.result.spec_amd_80_08h(),
+                        lnpad!(),
+                        self.result.size_amd_80_08h(),
+                    ].concat()
+                } else {
+                    "".to_string()
+                },
             ].concat(),
             _ => match vendor {
                 CpuVendor::AuthenticAMD => {
@@ -68,7 +66,11 @@ impl RawCpuid {
                         0x8000_0005 => self.result.l1_amd_80_05h(),
                         0x8000_0006 => self.result.l2_amd_80_06h(),
                         0x8000_0007 => self.result.apmi_amd_80_07h(),
-                        0x8000_000A => self.result.rev_id_amd_80_0ah(),
+                        0x8000_000A => [
+                            self.result.svm_rev_amd_80_0ah_eax_ebx(),
+                            lnpad!(),
+                            self.result.svm_ftr_amd_80_0ah_edx()
+                        ].concat(),
                         0x8000_0019 => self.result.l1l2tlb_1g_amd_80_19h(),
                         0x8000_001A => self.result.fpu_width_amd_80_1ah(),
                         0x8000_001B => self.result.ibs_amd_80_1bh(),

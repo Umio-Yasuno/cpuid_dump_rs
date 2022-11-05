@@ -11,7 +11,7 @@ pub struct AmdProcTopo {
 impl From<&CpuidResult> for AmdProcTopo {
     fn from(cpuid: &CpuidResult) -> Self {
         let ext_apic_id = cpuid.eax;
-        let threads_per_core = ((cpuid.ebx >> 8) & 0xFF) as u8 + 1;
+        let threads_per_core = (((cpuid.ebx >> 8) & 0xFF) as u8).saturating_add(1);
         let core_id = (cpuid.ebx & 0xFF) as u8;
         let nodes_per_processor = (cpuid.ecx & 0b111) as u8;
         let node_id = (cpuid.ecx & 0xFF) as u8;
