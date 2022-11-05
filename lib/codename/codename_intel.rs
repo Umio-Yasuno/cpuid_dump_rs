@@ -220,6 +220,9 @@ impl ProcInfo {
             0x8D => Self::info("Tiger Lake-H", uarch::WillowCove, ProcessNode::NM(10)),
 
             0x8F => Self::info("Sapphire Rapids-SP", uarch::GoldenCove, ProcessNode::NM(10)),
+            // Stepping 8?: Self::info("Emerald Rapids-SP", uarch::GoldenCove, ProcessNode::NM(10)),
+            0xAD |
+            0xAE => Self::info("Granite Rapids-SP", "", ProcessNode::Intel(3)),
 
             /* Hybrid */
             0x8A => Self::info(
@@ -290,6 +293,11 @@ impl ProcInfo {
                 "Meteor Lake-S",
                 uarch::hybrid(uarch::RedwoodCove, uarch::Crestmont),
                 ""
+            ),
+            0xB5 => Self::info(
+                "Meteor Lake (0xB5)",
+                "",
+                "",
             ),
 
             /* Atom */
