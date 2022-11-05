@@ -12,6 +12,7 @@ pub trait ParseGeneric {
     fn xstate_00_0dh(&self, sub_leaf: u32) -> String;
     fn feature_80_01h(&self) -> String;
     fn addr_size_80_08h(&self) -> String;
+    fn ftr_ext_id_80_08h_ebx(&self) -> String;
     fn cpu_name(&self) -> String;
     fn cache_prop(&self) -> String;
 }
@@ -169,6 +170,10 @@ impl ParseGeneric for CpuidResult {
         let virt = addr_size.virtual_;
 
         format!("[Address size: {phy:2}-bits physical {LN_PAD}{PAD} {virt:2}-bits virtual]")
+    }
+
+    fn ftr_ext_id_80_08h_ebx(&self) -> String {
+        align_mold_ftr(&str_detect_ftr(self.ebx, &ftr_80_08_ebx_x0()))
     }
 
     fn cpu_name(&self) -> String {

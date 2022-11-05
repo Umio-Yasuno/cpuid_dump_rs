@@ -370,7 +370,7 @@ pub(crate) const fn ftr_amd_80_07_edx_x0() -> [&'static str; 32] {
     ftr
 }
 
-pub(crate) const fn ftr_amd_80_08_ebx_x0() -> [&'static str; 32] {
+pub(crate) const fn ftr_80_08_ebx_x0() -> [&'static str; 32] {
     let mut ftr = [""; 32];
 
     ftr[0] = "CLZERO";

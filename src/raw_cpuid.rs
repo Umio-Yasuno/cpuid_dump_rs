@@ -49,13 +49,10 @@ impl RawCpuid {
             0x8000_0002..=0x8000_0004 => format!("[\"{}\"]", self.result.cpu_name()),
             0x8000_0008 => [
                 self.result.addr_size_80_08h(),
+                lnpad!(),
+                self.result.ftr_ext_id_80_08h_ebx(),
                 if let CpuVendor::AuthenticAMD = vendor {
-                    [
-                        lnpad!(),
-                        self.result.spec_amd_80_08h(),
-                        lnpad!(),
-                        self.result.size_amd_80_08h(),
-                    ].concat()
+                    [lnpad!(), self.result.size_id_amd_80_08h()].concat()
                 } else {
                     "".to_string()
                 },

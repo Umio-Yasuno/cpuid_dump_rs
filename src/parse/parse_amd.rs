@@ -35,8 +35,7 @@ pub trait ParseAMD {
     fn l1_amd_80_05h(&self) -> String;
     fn l2_amd_80_06h(&self) -> String;
     fn apmi_amd_80_07h(&self) -> String;
-    fn spec_amd_80_08h(&self) -> String;
-    fn size_amd_80_08h(&self) -> String;
+    fn size_id_amd_80_08h(&self) -> String;
     fn svm_rev_amd_80_0ah_eax_ebx(&self) -> String;
     fn svm_ftr_amd_80_0ah_edx(&self) -> String;
     fn l1l2tlb_1g_amd_80_19h(&self) -> String;
@@ -101,11 +100,7 @@ impl ParseAMD for CpuidResult {
         align_mold_ftr(&str_detect_ftr(self.edx, &ftr_amd_80_07_edx_x0()))
     }
 
-    fn spec_amd_80_08h(&self) -> String {
-        align_mold_ftr(&str_detect_ftr(self.ebx, &ftr_amd_80_08_ebx_x0()))
-    }
-
-    fn size_amd_80_08h(&self) -> String {
+    fn size_id_amd_80_08h(&self) -> String {
         let size_id = libcpuid_dump::AmdSizeId::from(self);
         
         [
