@@ -146,12 +146,7 @@ impl RawCpuid {
 
     pub fn compat_fmt(&self, _: &CpuVendor) -> String {
         let [leaf, sub_leaf] = [self.leaf, self.sub_leaf];
-        let [eax, ebx, ecx, edx] = [
-            self.result.eax,
-            self.result.ebx,
-            self.result.ecx,
-            self.result.edx,
-        ];
+        let CpuidResult { eax, ebx, ecx, edx } = self.result;
 
         format!("   {leaf:#010x} {sub_leaf:#04x}: eax={eax:#010x} ebx={ebx:#010x} ecx={ecx:#010x} edx={edx:#010x}\n")
     }

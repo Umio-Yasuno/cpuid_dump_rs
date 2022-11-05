@@ -83,7 +83,7 @@ pub struct CacheProp {
 
 impl From<&CpuidResult> for CacheProp {
     fn from(cpuid: &CpuidResult) -> Self {
-        let [eax, ebx, ecx, edx] = [cpuid.eax, cpuid.ebx, cpuid.ecx, cpuid.edx];
+        let CpuidResult { eax, ebx, ecx, edx } = cpuid;
 
         let cache_type = CacheType::from_reg(eax & 0x1F);
 

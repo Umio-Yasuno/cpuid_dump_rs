@@ -55,12 +55,7 @@ impl ParseAMD for CpuidResult {
     }
 
     fn l1_amd_80_05h(&self) -> String {
-        let [eax, ebx, ecx, edx] = [
-            self.eax,
-            self.ebx,
-            self.ecx,
-            self.edx,
-        ];
+        let CpuidResult { eax, ebx, ecx, edx } = self;
 
         let l1d_size = ecx >> 24;
         let l1i_size = edx >> 24;
@@ -76,12 +71,7 @@ impl ParseAMD for CpuidResult {
     }
 
     fn l2_amd_80_06h(&self) -> String {
-        let [eax, ebx, ecx, edx] = [
-            self.eax,
-            self.ebx,
-            self.ecx,
-            self.edx,
-        ];
+        let CpuidResult { eax, ebx, ecx, edx } = self;
 
         let l2_size = ecx >> 16;
         let l3_size = (edx >> 18) / 2;
