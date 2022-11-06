@@ -203,9 +203,9 @@ impl ProcInfo {
                 uarch::CypressCove,
                 ProcessNode::NM(14)
             ),
-            /* Xeon W-1300 */
+            /* Xeon W-1300? */
             /* 06_A8H: https://www.intel.com/content/www/us/en/developer/articles/technical/software-security-guidance/best-practices/data-operand-independent-timing-isa-guidance.html */
-            0xA8 => Self::info("Rocket Lake (WS)", uarch::CypressCove, ProcessNode::NM(14)),
+            // 0xA8 => Self::info("Rocket Lake (WS)", uarch::CypressCove, ProcessNode::NM(14)),
             /* Tiger Lake */ 
             0x8C => Self::info(
                 &["Tiger Lake-U", match s {
@@ -220,9 +220,10 @@ impl ProcInfo {
             0x8D => Self::info("Tiger Lake-H", uarch::WillowCove, ProcessNode::NM(10)),
 
             0x8F => Self::info("Sapphire Rapids-SP", uarch::GoldenCove, ProcessNode::NM(10)),
-            // Stepping 8?: Self::info("Emerald Rapids-SP", uarch::GoldenCove, ProcessNode::NM(10)),
-            0xAD |
-            0xAE => Self::info("Granite Rapids-SP", "", ProcessNode::Intel(3)),
+            /* https://lore.kernel.org/lkml/20221103203310.5058-1-tony.luck@intel.com/ */
+            0xCF => Self::info("Emerald Rapids-SP", uarch::GoldenCove, ""),
+            0xAD => Self::info("Granite Rapids-SP", "", ProcessNode::Intel(3)),
+            0xAE => Self::info("Granite Rapids-D", "", ProcessNode::Intel(3)),
 
             /* Hybrid */
             0x8A => Self::info(

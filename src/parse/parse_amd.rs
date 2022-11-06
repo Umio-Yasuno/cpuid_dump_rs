@@ -57,8 +57,8 @@ impl ParseAMD for CpuidResult {
     fn l1_amd_80_05h(&self) -> String {
         let CpuidResult { eax, ebx, ecx, edx } = self;
 
-        let l1d_size = ecx >> 24;
-        let l1i_size = edx >> 24;
+        let l1d_size = ecx >> 24; // KiB
+        let l1i_size = edx >> 24; // KiB
 
         let l1dtlb = Tlb::reg(TlbType::L1d, (ebx >> 16) as u16, (eax >> 16) as u16);
         let l1itlb = Tlb::reg(TlbType::L1i, (ebx & 0xFFFF) as u16, (eax & 0xFFFF) as u16);
@@ -73,8 +73,8 @@ impl ParseAMD for CpuidResult {
     fn l2_amd_80_06h(&self) -> String {
         let CpuidResult { eax, ebx, ecx, edx } = self;
 
-        let l2_size = ecx >> 16;
-        let l3_size = (edx >> 18) / 2;
+        let l2_size = ecx >> 16; // KiB
+        let l3_size = (edx >> 18) / 2; // 512 KiB
 
         let l2dtlb = Tlb::reg(TlbType::L2d, (ebx >> 16) as u16, (eax >> 16) as u16);
         let l2itlb = Tlb::reg(TlbType::L2i, (ebx & 0xFFFF) as u16, (eax & 0xFFFF) as u16);

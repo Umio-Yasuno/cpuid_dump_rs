@@ -53,6 +53,7 @@ impl TlbInfo {
             assoc: self.assoc.clone(),
         }
     }
+
     pub fn from_reg(reg: u16, offset: u16) -> Self {
         let shift = offset.trailing_ones();
         let assoc = reg >> shift;
