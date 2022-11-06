@@ -7,7 +7,7 @@ trait PrintEntryWay {
 
 impl PrintEntryWay for TlbInfo {
     fn print_entry_way(&self) -> String {
-        format!("{:>4}_entry, {:>3}_way", self.size, self.assoc)
+        format!("{:>4}_entry, {:>4}_way", self.size, self.assoc)
     }
 }
 

@@ -34,8 +34,8 @@ pub enum TlbAssoc {
 impl fmt::Display for TlbAssoc {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Self::Way(way) => write!(f, "{way}"),
-            Self::Full => write!(f, "full"),
+            Self::Way(way) => f.pad(&way.to_string()),
+            Self::Full => f.pad("full"),
         }
     }
 }
