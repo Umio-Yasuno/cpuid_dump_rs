@@ -10,28 +10,38 @@ pub enum Unit {
 }
 
 impl Unit {
-    const KIB_BYTE: u64 = 1 << 10;
-    const MIB_BYTE: u64 = 1 << 20;
-    const GIB_BYTE: u64 = 1 << 30;
+    const KIB_BYTE: u32 = 1 << 10;
+    const MIB_BYTE: u32 = 1 << 20;
+    const GIB_BYTE: u32 = 1 << 30;
 
-    pub fn from_byte(size: u64) -> Unit {
-        if Self::GIB_BYTE < size {
-            Self::GiB
-        } else if Self::MIB_BYTE < size {
-            Self::MiB
-        } else if Self::KIB_BYTE < size {
-            Self::KiB
-        } else {
-            Self::Byte
-        }
-    }
-
-    pub fn to_byte(&self) -> u64 {
+    pub fn to_byte(&self) -> u32 {
         match self {
             Self::Byte => 1,
             Self::KiB => Self::KIB_BYTE,
             Self::MiB => Self::MIB_BYTE,
             Self::GiB => Self::GIB_BYTE,
+        }
+    }
+
+    pub fn size_in_the_unit_f32(byte: u32) -> f32 {
+        let value = match Self::from(byte) {
+            Self::GiB => byte / Self::MIB_BYTE,
+            Self::MiB => byte / Self::KIB_BYTE,
+            Self::KiB => byte,
+            Self::Byte => return byte as f32,
+        } as f32;
+
+        value / 1024f32
+    }
+}
+
+impl From<u32> for Unit {
+    fn from(byte: u32) -> Self {
+        match byte {
+            Self::GIB_BYTE.. => Self::GiB,
+            Self::MIB_BYTE.. => Self::MiB,
+            Self::KIB_BYTE.. => Self::KiB,
+            _ => Self::Byte,
         }
     }
 }
@@ -75,7 +85,7 @@ pub struct CacheProp {
     pub line_size: u32,
     pub way: u32,
     pub set: u32,
-    pub size: u64,
+    pub size: u32,
     pub size_unit: Unit,
     pub share_thread: u32,
     pub inclusive: bool,
@@ -91,11 +101,11 @@ impl From<&CpuidResult> for CacheProp {
         let line_size = (ebx & 0xFFF) + 1;
         let way = (ebx >> 22) + 1;
         let set = ecx + 1;
-        let size = line_size as u64 * way as u64 * set as u64;
+        let size = line_size * way * set;
 
         let share_thread = ((eax >> 14) & 0xFFF) + 1;
 
-        let size_unit = Unit::from_byte(size);
+        let size_unit = Unit::from(size);
 
         let inclusive = (edx & 0b10) != 0;
 

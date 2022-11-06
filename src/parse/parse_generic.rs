@@ -205,8 +205,8 @@ impl ParseGeneric for CpuidResult {
                 cache.level,
                 &cache.cache_type.to_string()[..1],
                 cache.way,
-                cache.size / cache.size_unit.to_byte(),
-                &cache.size_unit.to_string()[..1]
+                libcpuid_dump::Unit::size_in_the_unit_f32(cache.size),
+                &cache.size_unit.to_string()[..1],
             ),
             // format!("[Shared {}T]", cache.share_thread),
             inclusive,
