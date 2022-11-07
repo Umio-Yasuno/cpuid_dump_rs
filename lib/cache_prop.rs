@@ -10,9 +10,9 @@ pub enum Unit {
 }
 
 impl Unit {
-    const KIB_BYTE: u32 = 1 << 10;
-    const MIB_BYTE: u32 = 1 << 20;
-    const GIB_BYTE: u32 = 1 << 30;
+    pub(self) const KIB_BYTE: u32 = 1 << 10;
+    pub(self) const MIB_BYTE: u32 = 1 << 20;
+    pub(self) const GIB_BYTE: u32 = 1 << 30;
 
     pub fn to_byte(&self) -> u32 {
         match self {
@@ -21,17 +21,6 @@ impl Unit {
             Self::MiB => Self::MIB_BYTE,
             Self::GiB => Self::GIB_BYTE,
         }
-    }
-
-    pub fn size_in_the_unit_f32(byte: u32) -> f32 {
-        let value = match Self::from(byte) {
-            Self::GiB => byte / Self::MIB_BYTE,
-            Self::MiB => byte / Self::KIB_BYTE,
-            Self::KiB => byte,
-            Self::Byte => return byte as f32,
-        } as f32;
-
-        value / 1024f32
     }
 }
 
@@ -66,7 +55,7 @@ impl CacheType {
             0x1 => Self::Data,
             0x2 => Self::Instruction,
             0x3 => Self::Unified,
-            /* 0x0 | */
+            // 0x0 |
             _ => Self::Unknown,
         }
     }
@@ -149,6 +138,17 @@ impl CacheProp {
         } else {
             None
         }
+    }
+
+    pub fn size_in_the_unit_f32(&self) -> f32 {
+        let value = match self.size_unit {
+            Unit::GiB => self.size / Unit::MIB_BYTE,
+            Unit::MiB => self.size / Unit::KIB_BYTE,
+            Unit::KiB => self.size,
+            Unit::Byte => return self.size as f32,
+        } as f32;
+
+        value / 1024f32
     }
 }
 
