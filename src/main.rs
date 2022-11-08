@@ -145,15 +145,14 @@ fn bin_head() -> String {
 }
 
 fn topo_info_head() -> String {
-    let topo_info = match libcpuid_dump::TopoId::get_topo_info() {
+    use libcpuid_dump::TopoId;
+
+    let topo_info = match TopoId::get_topo_info() {
         Some(topo) => topo,
         None => return "".to_string(),
     };
 
-    let pkg_id = topo_info.pkg_id;
-    let core_id = topo_info.core_id;
-    let smt_id = topo_info.smt_id;
-    let x2apic_id = topo_info.x2apic_id;
+    let TopoId { pkg_id, core_id, smt_id, x2apic_id } = topo_info;
 
     format!("[\
         Pkg: {pkg_id:03}, \
@@ -164,15 +163,14 @@ fn topo_info_head() -> String {
 }
 
 fn topo_info_thread_id_head(thread_id: usize) -> String {
-    let topo_info = match libcpuid_dump::TopoId::get_topo_info() {
+    use libcpuid_dump::TopoId;
+
+    let topo_info = match TopoId::get_topo_info() {
         Some(topo) => topo,
         None => return format!("[Thread: {thread_id:03}]\n"),
     };
 
-    let pkg_id = topo_info.pkg_id;
-    let core_id = topo_info.core_id;
-    let smt_id = topo_info.smt_id;
-    let x2apic_id = topo_info.x2apic_id;
+    let TopoId { pkg_id, core_id, smt_id, x2apic_id } = topo_info;
 
     format!("[\
         Pkg: {pkg_id:03}, \
@@ -249,25 +247,25 @@ struct MainOpt {
     fmt: DumpFormat,
     dump_all: bool,
     save_path: Option<String>,
-    // load: (bool, String),
     leaf: Option<(u32, u32)>,
     skip_zero: bool,
     diff: bool,
 }
 
-impl MainOpt {
-    fn init() -> Self {
+impl Default for MainOpt {
+    fn default() -> Self {
         Self {
             fmt: DumpFormat::Parse,
             dump_all: false,
             save_path: None,
-            // load: (false, "cpuid_dump.txt".to_string()),
             leaf: None,
             skip_zero: true,
             diff: true,
         }
     }
+}
 
+impl MainOpt {
     fn parse_value(raw_value: &str) -> u32 {
         /* for like "0x8000_0000" */
         let raw_value = raw_value.replace('_', "");
@@ -280,7 +278,7 @@ impl MainOpt {
     }
 
     fn main_parse() -> Self {
-        let mut opt = MainOpt::init();
+        let mut opt = MainOpt::default();
         let mut skip = false;
 
         let args: Vec<String> = std::env::args().collect();
@@ -325,25 +323,6 @@ impl MainOpt {
 
                     opt.save_path = Some(path);
                 },
-                /*
-                "l" | "load" => {
-                    opt.load.0 = true;
-                    opt.load.1 = match args.get(idx+1) {
-                        Some(v) => {
-                            if v.starts_with("-") {
-                                skip = true;
-                                continue;
-                            }
-
-                            v.to_string()
-                        },
-                        _ => {
-                            eprintln!("Please load path");
-                            std::process::exit(1);
-                        },
-                    };
-                },
-                */
                 "leaf" => {
                     if let Some(v) = args.get(idx+1) {
                         let leaf = Self::parse_value(v);
@@ -395,7 +374,7 @@ impl MainOpt {
     }
 
     fn rawcpuid_pool(&self, leaf_pool: &[(u32, u32)]) -> Vec<RawCpuid> {
-        let mut cpuid_pool: Vec<RawCpuid> = Vec::with_capacity(64);
+        let mut cpuid_pool: Vec<RawCpuid> = Vec::with_capacity(leaf_pool.len());
 
         for (leaf, sub_leaf) in leaf_pool {
             let cpuid = RawCpuid::exe(*leaf, *sub_leaf);

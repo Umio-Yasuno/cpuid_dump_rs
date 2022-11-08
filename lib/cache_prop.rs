@@ -140,7 +140,7 @@ impl CacheProp {
         }
     }
 
-    pub fn size_in_the_unit_f32(&self) -> f32 {
+    pub fn size_in_the_unit(&self) -> f32 {
         let value = match self.size_unit {
             Unit::GiB => self.size / Unit::MIB_BYTE,
             Unit::MiB => self.size / Unit::KIB_BYTE,
