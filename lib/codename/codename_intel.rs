@@ -1,7 +1,8 @@
 use crate::{ProcInfo, ProcessNode};
 /* ref:
     https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/intel-family.h
-    https://github.com/coreboot/coreboot/blob/master/src/include/cpu/intel/cpu_ids.h */
+    https://github.com/coreboot/coreboot/blob/master/src/include/cpu/intel/cpu_ids.h
+    https://github.com/intel/Intel-Linux-Processor-Microcode-Data-Files */
 
 #[derive(Debug)]
 #[allow(non_camel_case_types)]
@@ -211,7 +212,7 @@ impl ProcInfo {
                 &["Tiger Lake-U", match s {
                     0x0 => " (A0)",
                     0x1 => " (B0)",
-                    0x2 => " (C0)",
+                    0x2 => " (C0)", // TGL-R
                     _   => "",
                 }].concat(),
                 uarch::WillowCove,
@@ -270,17 +271,28 @@ impl ProcInfo {
             },
             /* Raptor Lake */
             0xB7 => Self::info(
-                "Raptor Lake-S",
+                &["Raptor Lake-S", match s {
+                    0x1 => " (B0)",
+                    _ => "",
+                }].concat(),
                 uarch::hybrid(uarch::GoldenCove, uarch::Gracemont),
                 ProcessNode::Intel(7)
             ),
             0xBA => Self::info(
-                "Raptor Lake-P",
+                &["Raptor Lake-P", match s {
+                    0x2 => " (J0)",
+                    0x3 => " (Q0)",
+                    _ => "",
+                }].concat(),
                 uarch::hybrid(uarch::GoldenCove, uarch::Gracemont),
                 ProcessNode::Intel(7)
             ),
             0xBF => Self::info(
-                "Raptor Lake-S (0xBF)",
+                &["Raptor Lake-S/Alder Lake", match s {
+                    0x2 |
+                    0x5 => " (C0)",
+                    _ => "",
+                }].concat(),
                 uarch::hybrid(uarch::GoldenCove, uarch::Gracemont),
                 ProcessNode::Intel(7)
             ),
