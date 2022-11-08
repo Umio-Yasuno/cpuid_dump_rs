@@ -100,7 +100,7 @@ impl ParseAMD for CpuidResult {
                 size_id.apic_id_size,
             ),
             lnpad!(),
-            format!("[Perf TSC size: {}]", size_id.perf_tsc_size),
+            format!("[Perf TSC size: {}-bits]", size_id.perf_tsc_size),
         ].concat()
     }
 
