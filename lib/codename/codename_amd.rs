@@ -151,7 +151,7 @@ impl ProcInfo {
 
         Some(match m {
             0x01 => Self::info(
-                &["Orochi", match s {
+                ["Orochi", match s {
                     0x2 => " (B2)",
                     _ => "",
                 }].concat(),
@@ -160,7 +160,7 @@ impl ProcInfo {
             ),
             0x02 => Self::info("Orochi (C0)", uarch::Bulldozer, ProcessNode::NM(32)),
             0x10 => Self::info(
-                &["Trinity", match s {
+                ["Trinity", match s {
                     0x0 => " (A0)",
                     0x1 => " (A1)",
                     _ => "",
@@ -169,7 +169,7 @@ impl ProcInfo {
                 ProcessNode::NM(32),
             ),
             0x13 => Self::info(
-                &["Richland", match s {
+                ["Richland", match s {
                     0x1 => " (A1)",
                     _ => "",
                 }].concat(),
@@ -177,7 +177,7 @@ impl ProcInfo {
                 ProcessNode::NM(32)
             ),
             0x30 => Self::info(
-                &["Kaveri", match s {
+                ["Kaveri", match s {
                     0x1 => " (A1)",
                     _ => "",
                 }].concat(),
@@ -186,7 +186,7 @@ impl ProcInfo {
             ),
             0x38 => Self::info("Godavari", uarch::Steamroller, ProcessNode::NM(28)),
             0x60 => Self::info(
-                &["Carrizo", match s {
+                ["Carrizo", match s {
                     0x0 => " (A0)",
                     0x1 => " (A1)",
                     _ => "",
@@ -196,7 +196,7 @@ impl ProcInfo {
             ),
             0x65 => Self::info("Bristol Ridge", uarch::Excavator, ProcessNode::NM(28)),
             0x70 => Self::info(
-                &["Stoney Ridge", match s {
+                ["Stoney Ridge", match s {
                     0x0 => " (A0)",
                     _ => "",
                 }].concat(),
@@ -212,7 +212,7 @@ impl ProcInfo {
 
         Some(match m {
             0x00 => Self::info(
-                &["Kabini/Temash", match s {
+                ["Kabini/Temash", match s {
                     0x1 => " (A1)",
                     _ => "",
                 }].concat(),
@@ -222,7 +222,7 @@ impl ProcInfo {
             /* A9-9820: https://linux-hardware.org/?probe=1053adf355 */
             0x26 => Self::info("Cato", uarch::Jaguar, ProcessNode::NM(28)),
             0x30 => Self::info(
-                &["Beema/Mullins",  match s {
+                ["Beema/Mullins",  match s {
                     0x1 => " (A1)",
                     _ => "",
                 }].concat(),
@@ -241,7 +241,7 @@ impl ProcInfo {
             /* Naples, Zeppelin/ZP */
             0x00 |
             0x01 => Self::info(
-                &["Naples/Zeppelin", match (m, s) {
+                ["Naples/Zeppelin", match (m, s) {
                     (0x00, _) => " (A0)",
                     (0x01, 0x1) => " (B1)", // Ryzen, Summit Ridge
                     (0x01, 0x2) => " (B2)",
@@ -252,7 +252,7 @@ impl ProcInfo {
             ),
             0x11 => Self::info("Raven Ridge", uarch::Zen, ProcessNode::NM(14)),
             0x20 => Self::info(
-                &["Raven2 (Dali/Pollock)", match s {
+                ["Raven2 (Dali/Pollock)", match s {
                     0x1 => " (A1)",
                     _ => "",
                 }].concat(),
@@ -262,7 +262,7 @@ impl ProcInfo {
 
             /* Zen+ */
             0x08 => Self::info(
-                &["Pinnacle Ridge", match s {
+                ["Pinnacle Ridge", match s {
                     0x2 => " (B2)",
                     _ => "",
                 }].concat(),
@@ -270,7 +270,7 @@ impl ProcInfo {
                 ProcessNode::NM(12)
             ),
             0x18 => Self::info(
-                &["Picasso", match s {
+                ["Picasso", match s {
                     0x1 => " (B1)",
                     _ => "",
                 }].concat(),
@@ -282,7 +282,7 @@ impl ProcInfo {
             /* Rome, Starship/SSP */
             0x30 |
             0x31 => Self::info(
-                &["Rome/Starship", match (m, s) {
+                ["Rome/Starship", match (m, s) {
                     (0x30, 0x0) => " (A0)",
                     (0x31, 0x0) => " (B0)",
                     _ => "",
@@ -291,7 +291,7 @@ impl ProcInfo {
                 ProcessNode::NM(7)
             ),
             0x60 => Self::info(
-                &["Renoir", match s {
+                ["Renoir", match s {
                     0x1 => " (A1)",
                     _ => "",
                 }].concat(),
@@ -316,7 +316,7 @@ impl ProcInfo {
             /* Revision Guide for AMD Family 19h Models 00h-0Fh Processors: https://www.amd.com/system/files/TechDocs/56683-PUB-1.07.pdf */
             0x00 |
             0x01 => Self::info(
-                &["Milan/Genesis", match (m, s) {
+                ["Milan/Genesis", match (m, s) {
                     (0x00, _) => " (A0)",
                     (0x01, 0x0) => " (B0)",
                     (0x01, 0x1) => " (B1)", // EPYC 7003
@@ -329,7 +329,7 @@ impl ProcInfo {
             0x08 => Self::info("Chagall", uarch::Zen3, ProcessNode::NM(7)),
             0x20 |
             0x21 => Self::info(
-                &["Vermeer", match (m, s) {
+                ["Vermeer", match (m, s) {
                     (0x20, _) => " (A0)",
                     (0x21, 0x0) => " (B0)",
                     (0x21, 0x2) => " (B2)",
@@ -341,7 +341,7 @@ impl ProcInfo {
             /* https://www.openmp.org/wp-content/uploads/ecp_sollve_openmp_monthly.offload_perf_ana_craypat.marcus.hpe_.26aug2022.v2.pdf */
             0x30 => Self::info("Trento", uarch::Zen3, ProcessNode::NM(7)),
             0x40..=0x4F => Self::info(
-                &["Rembrandt", match (m, s) {
+                ["Rembrandt", match (m, s) {
                     (0x40, _) => " (A0)",
                     (0x44, 0x0) => " (B0)",
                     (0x44, 0x1) => " (B1)", // product
@@ -351,7 +351,7 @@ impl ProcInfo {
                 ProcessNode::NM(6)
             ),
             0x50..=0x5F => Self::info(
-                &["Cezanne/Barcelo", match (m, s) {
+                ["Cezanne/Barcelo", match (m, s) {
                     (0x50, 0x0) => " (A0)",
                     _ => "",
                 }].concat(),
@@ -362,7 +362,7 @@ impl ProcInfo {
             /* Zen 4 */
             /* Genoa, Stones, RS */
             0x10..=0x1F => Self::info(
-                &["Genoa/Stones", match (m, s) {
+                ["Genoa/Stones", match (m, s) {
                     (0x10, _) => " (A0)",
                     (0x11, 0x0) => " (B0)",
                     (0x11, 0x1) => " (B1)",

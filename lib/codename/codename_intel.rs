@@ -166,7 +166,7 @@ impl ProcInfo {
             },
             /* Comet Lake */
             0xA5 => Self::info(
-                &["Comet Lake-S", match s {
+                ["Comet Lake-S", match s {
                     0x0 => " (G0)",
                     0x1 => " (P0)",
                     0x2 => " (R1)",
@@ -179,7 +179,7 @@ impl ProcInfo {
                 ProcessNode::NM(14)
             ),
             0xA6 => Self::info(
-                &["Comet Lake-U", match s {
+                ["Comet Lake-U", match s {
                     0x0 => " (A0)",
                     _ => "",
                 }].concat(),
@@ -196,7 +196,7 @@ impl ProcInfo {
             0x9D => Self::info("Ice Lake-NNPI", uarch::SunnyCove, ProcessNode::NM(10)),
             /* Rocket Lake */
             0xA7 => Self::info(
-                &["Rocket Lake-S", match s {
+                ["Rocket Lake-S", match s {
                     0x0 => " (A0)",
                     0x1 => " (B0)",
                     _   => "",
@@ -209,7 +209,7 @@ impl ProcInfo {
             // 0xA8 => Self::info("Rocket Lake (WS)", uarch::CypressCove, ProcessNode::NM(14)),
             /* Tiger Lake */ 
             0x8C => Self::info(
-                &["Tiger Lake-U", match s {
+                ["Tiger Lake-U", match s {
                     0x0 => " (A0)",
                     0x1 => " (B0)",
                     0x2 => " (C0)", // TGL-R
@@ -236,7 +236,7 @@ impl ProcInfo {
             /* https://edc.intel.com/content/www/us/en/design/ipla/software-development-platforms/client/platforms/alder-lake-desktop/12th-generation-intel-core-processors-datasheet-volume-1-of-2/005/cpuid/ */
             /* https://github.com/coreboot/coreboot/blob/master/src/soc/intel/alderlake/Makefile.inc */
             0x97 => Self::info(
-                &["Alder Lake-S", match s {
+                ["Alder Lake-S", match s {
                     0x0 => " (A0, ES)",
                     0x1 => " (B0, ES)",
                     0x2 => " (C0, 8+8)",
@@ -271,7 +271,7 @@ impl ProcInfo {
             },
             /* Raptor Lake */
             0xB7 => Self::info(
-                &["Raptor Lake-S", match s {
+                ["Raptor Lake-S", match s {
                     0x1 => " (B0)",
                     _ => "",
                 }].concat(),
@@ -279,7 +279,7 @@ impl ProcInfo {
                 ProcessNode::Intel(7)
             ),
             0xBA => Self::info(
-                &["Raptor Lake-P", match s {
+                ["Raptor Lake-P", match s {
                     0x2 => " (J0)",
                     0x3 => " (Q0)",
                     _ => "",
@@ -288,7 +288,7 @@ impl ProcInfo {
                 ProcessNode::Intel(7)
             ),
             0xBF => Self::info(
-                &["Raptor Lake-S/Alder Lake", match s {
+                ["Raptor Lake-S/Alder Lake", match s {
                     0x2 |
                     0x5 => " (C0)",
                     _ => "",
@@ -335,7 +335,7 @@ impl ProcInfo {
             0x75 => Self::info("Lightning Mountain/Butter", uarch::Airmont, ProcessNode::NM(14)),
             /* Goldmont */
             0x5C => Self::info(
-                &["Apollo Lake", match s {
+                ["Apollo Lake", match s {
                     0x8 => " (A0)",
                     0x9 => " (B0)",
                     0xA => " (E0)",
@@ -348,7 +348,7 @@ impl ProcInfo {
             0x5F => Self::info("Denverton", uarch::Goldmont, ProcessNode::NM(14)),
             /* Goldmont Plus */
             0x7A => Self::info(
-                &["Gemini Lake", match s {
+                ["Gemini Lake", match s {
                     0x0 => " (A0)",
                     0x1 => " (B0)",
                     0x8 => " (R0)",

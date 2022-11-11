@@ -60,7 +60,7 @@ impl ProcInfo {
         }
     }
 
-    pub fn info<T: Into<String>, U: Into<String>>(code: &str, arch: T, process: U) -> Self {
+    pub fn info<S: Into<String>, T: Into<String>, U: Into<String>>(code: S, arch: T, process: U) -> Self {
         Self {
             codename: code.into(),
             archname: arch.into(),
