@@ -361,13 +361,11 @@ impl ProcInfo {
 
             /* Zen 4 */
             /* Genoa, Stones, RS */
-            /*
-                0x11 => "Genoa/Stones (B0)"
-                https://github.com/redhat-performance/autohpl-wrapper/issues/22
-            */
             0x10..=0x1F => Self::info(
                 &["Genoa/Stones", match (m, s) {
                     (0x10, _) => " (A0)",
+                    (0x11, 0x0) => " (B0)",
+                    (0x11, 0x1) => " (B1)",
                     _ => "",
                 }].concat(),
                 uarch::Zen4,
