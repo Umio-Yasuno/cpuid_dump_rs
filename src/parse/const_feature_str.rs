@@ -257,7 +257,7 @@ pub(crate) const fn ftr_00_07_edx_x1() -> [&'static str; 32] {
     ftr
 }
 
-/*  Ref: https://github.com/torvalds/linux/blob/master/arch/x86/kernel/fpu/xstate.c */
+/* Ref: https://github.com/torvalds/linux/blob/master/arch/x86/kernel/fpu/xstate.c */
 pub(crate) const fn xfeature_mask_00_0d_eax_x0() -> [&'static str; 32] {
     let mut ftr = [""; 32];
 
@@ -266,7 +266,7 @@ pub(crate) const fn xfeature_mask_00_0d_eax_x0() -> [&'static str; 32] {
     ftr[2] = "AVX256";
     ftr[3] = "MPX bounds";
     ftr[4] = "MPX CSR";
-    ftr[5] = "AVX512 opmask";
+    ftr[5] = "AVX512 opmask"; // KREGS
     ftr[6] = "AVX512 Hi256";
     ftr[7] = "AVX512 ZMM_Hi256";
     ftr[8] = "Processor Trace"; // unused
@@ -292,6 +292,15 @@ pub(crate) const fn xsave_00_0d_eax_x1() -> [&'static str; 32] {
     ftr[2] = "XGETBV";
     ftr[3] = "XSAVES";
     ftr[4] = "XFD";
+
+    ftr
+}
+
+pub(crate) const fn xsave_00_0d_ecx_x1() -> [&'static str; 32] {
+    let mut ftr = [""; 32];
+
+    ftr[11] = "CET User";
+    ftr[12] = "CET SuperVisor";
 
     ftr
 }
@@ -486,10 +495,15 @@ pub const fn ftr_amd_80_1f_eax_x0() -> [&'static str; 32] {
     ftr[14] = "DebugSwap";
     ftr[15] = "PreventHostIBS";
     ftr[16] = "VTE"; // Virtual Transparent Encryption
-    ftr[17] = "";
+    ftr[17] = "VmgexitParameter";
+    ftr[18] = "VirtualTomMsr";
+    ftr[19] = "IbsVirtGuestCtl";
     /* .. */
-    ftr[23] = "";
     ftr[24] = "VMSARegProt"; // VMSA Register Protection
+    ftr[25] = "SmtProtection";
+    /* .. */
+    ftr[28] = "SvsmCommPageMSR"; // SVSM Communication Page MSR
+    ftr[29] = "NestedVirtSnpMsr";
 
     ftr
 }
@@ -508,21 +522,22 @@ pub(crate) const fn ftr_amd_80_21_eax_x0() -> [&'static str; 32] {
     let mut ftr = [""; 32];
 
     ftr[0] = "NoNestedDataBp"; // Processor ignores nested data breakpoints
-    ftr[1] = "";
+    ftr[1] = "FsGsKernelGsBaseNonSerializing";
     ftr[2] = "LFenceAlwaysSerializing";
     ftr[3] = "SmmPgCfgLock";
-    ftr[4] = "";
-    ftr[5] = "";
+    // ftr[4] = "";
+    // ftr[5] = "";
     ftr[6] = "NullSelectClearsBase";
     ftr[7] = "UpperAddressIgnore";
     ftr[8] = "AutomaticIBRS";
     ftr[9] = "NoSmmCtlMSR";
-    ftr[10] = "";
-    ftr[11] = "";
-    ftr[12] = "";
+    ftr[10] = "FSRS"; // Fast Short Rep Stosb
+    ftr[11] = "FSRC"; // Fast Short Repe Cmpsb
+    // ftr[12] = "";
     ftr[13] = "PrefetchCtlMsr";
     /* */
-    ftr[17] = "CpuidUserDis";
+    ftr[17] = "CpuidUserDis"; // GpOnUserCpuid
+    ftr[18] = "EPSF"; // Enhanced Predictive Store Forwarding
 
     ftr
 }

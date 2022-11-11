@@ -121,24 +121,10 @@ impl ParseGeneric for CpuidResult {
     }
 
     fn xstate_00_0dh(&self, sub_leaf: u32) -> String {
-        let x0 = |eax: u32| -> String {
-            let tmp = align_mold_ftr(&str_detect_ftr(eax, &xfeature_mask_00_0d_eax_x0()));
-
-            if !tmp.is_empty() {
-                format!("[-XFEATURE Mask-]{LN_PAD}{tmp}")
-            } else {
-                tmp
-            }
-        };
-
-        let x1 = |eax: u32| -> String {
-            align_mold_ftr(&str_detect_ftr(eax, &xsave_00_0d_eax_x1()))
-        };
-
         let size = |eax: u32, txt: &str| -> String {
             /* 00_0D_X{SUB}:EAX is the state size, EAX = 0 indicates not supported it */
             if eax != 0x0 {
-                format!("[{}: size({})]", txt, eax)
+                format!("[{txt:<16} save size: {eax:>3}B]")
             } else {
                 "".to_string()
             }
@@ -147,18 +133,33 @@ impl ParseGeneric for CpuidResult {
         let eax = self.eax;
 
         match sub_leaf {
-            0x0 => x0(eax),
-            0x1 => x1(eax),
-            0x2 => size(eax, "XSTATE"),
+            0x0 => {
+                [
+                    format!("[-XFEATURE Mask-]{LN_PAD}"),
+                    align_mold_ftr(&str_detect_ftr(eax, &xfeature_mask_00_0d_eax_x0())),
+                ]
+                .concat()
+            },
+            0x1 => {
+                [
+                    align_mold_ftr(&str_detect_ftr(self.eax, &xsave_00_0d_eax_x1())),
+                    align_mold_ftr(&str_detect_ftr(self.ecx, &xsave_00_0d_ecx_x1())),
+                ]
+                .concat()
+            },
+            0x2 => size(eax, "YMMHI"),
+            0x5 => size(eax, "KREGS"),
+            0x6 => size(eax, "ZMMHI"),
+            0x7 => size(eax, "HIZMM"),
             0x9 => size(eax, "Protection Key"),
             0xB => size(eax, "CET User"),
             0xC => size(eax, "CET SuperVisor"),
-            _ => "".to_string(),
+            _ => size(eax, "Unknown"),
         }
     }
 
     fn feature_80_01h(&self) -> String {
-        // 0x8000_0001_E{CD}X_x0
+        /* 0x8000_0001_E{CD}X_x0 */
         let buff = [
             str_detect_ftr(self.ecx, &ftr_80_01_ecx_x0()),
             str_detect_ftr(self.edx, &ftr_80_01_edx_x0()),
