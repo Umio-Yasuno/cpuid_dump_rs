@@ -47,6 +47,14 @@ pub enum AmdPkgType {
     Unknown,
 }
 
+use std::fmt;
+impl fmt::Display for AmdPkgType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+
 impl From<&CpuidResult> for AmdPkgType {
     fn from(cpuid: &CpuidResult) -> Self {
         let fms = FamModStep::from(cpuid.eax);

@@ -58,7 +58,7 @@ pub(crate) fn align_mold_ftr(ftrs: &[String]) -> String {
             rest = PARSE_WIDTH.saturating_sub(len);
         }
 
-        [ "[", f, "] " ].map(|s| mold.push_str(s));
+        [ "[", f, "] " ].map(|s| mold.push_str(&s));
     }
 
     mold

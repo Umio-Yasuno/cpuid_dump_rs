@@ -51,7 +51,7 @@ impl ParseAMD for CpuidResult {
     fn pkgtype_amd_80_01h(&self) -> String {
         let pkg_type = libcpuid_dump::AmdPkgType::from(self);
 
-        format!("[PkgType: {pkg_type:?}]")
+        format!("[PkgType: {pkg_type}]")
     }
 
     fn l1_amd_80_05h(&self) -> String {

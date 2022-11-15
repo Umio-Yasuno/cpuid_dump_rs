@@ -182,10 +182,4 @@ fn test_cache_prop() {
     };
 
     assert_eq!(cache, test);
-
-    println!("CacheProp: [L{} {}, {:>3}-way, {:>4}-{}]",
-        cache.level, cache.cache_type, cache.way,
-        cache.size / cache.size_unit.to_byte(), cache.size_unit);
-    println!("CacheProp: [Shared {}T] [Inclusive: {}]",
-        cache.share_thread, cache.inclusive);
 }
