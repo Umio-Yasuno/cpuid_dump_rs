@@ -22,7 +22,8 @@ impl ParseGeneric for CpuidResult {
         let fms = libcpuid_dump::FamModStep::from(self);
         let proc_info = match libcpuid_dump::ProcInfo::from_fms(&fms, vendor) {
             Some(info) => format!(
-                "{LN_PAD}[{}, {}]{LN_PAD}[{}]", info.codename, info.process, info.archname,
+                "{LN_PAD}[{}, {}]{LN_PAD}[{}]",
+                info.codename, info.process, info.archname,
             ),
             None => "".to_string(),
         };
@@ -37,9 +38,8 @@ impl ParseGeneric for CpuidResult {
                 fms.step
             ),
             proc_info,
-            lnpad!(),
             format!(
-                "[APIC ID: {}, Max: {}] [CLFlush: {}B]",
+                "{LN_PAD}[APIC ID: {:>3}, Max: {:>3}]{LN_PAD}[CLFlush: {:3}B]",
                 info01h.local_apic_id,
                 info01h.max_apic_id,
                 info01h.clflush_size,

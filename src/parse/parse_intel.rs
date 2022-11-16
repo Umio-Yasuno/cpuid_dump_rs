@@ -8,7 +8,8 @@ pub trait ParseIntel {
 
 impl ParseIntel for CpuidResult {
     fn clock_speed_intel_00_16h(&self) -> String {
-        format!("[{}/{}/{} MHz]",
+        format!(
+            "[{}/{}/{} MHz]",
             self.eax & 0xFFFF,
             self.ebx & 0xFFFF,
             self.ecx & 0xFFFF
