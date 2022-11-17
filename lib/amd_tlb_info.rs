@@ -9,12 +9,12 @@ pub enum TlbType {
 }
 
 impl TlbType {
-    pub fn get_offset(&self) -> u16 {
+    pub fn get_offset(&self) -> (u16, u16) {
         match self {
             Self::L1d |
-            Self::L1i => 0xFF,
+            Self::L1i => (0xFF, 8),
             Self::L2d |
-            Self::L2i => 0xFFF,
+            Self::L2i => (0xFFF, 12),
         }
     }
 }
@@ -27,14 +27,20 @@ impl fmt::Display for TlbType {
 
 #[derive(Debug, Clone)]
 pub enum TlbAssoc {
+    Disabled,
     Way(u8),
+    WayRange(std::ops::Range<u8>),
     Full,
+    Invalid,
 }
 
 impl fmt::Display for TlbAssoc {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
+            Self::Disabled |
+            Self::Invalid => f.pad("0"),
             Self::Way(way) => f.pad(&way.to_string()),
+            Self::WayRange(range) => f.pad(&format!("{:>2}-{}", range.start, range.end)),
             Self::Full => f.pad("full"),
         }
     }
@@ -54,33 +60,36 @@ impl TlbInfo {
         }
     }
 
-    pub fn from_reg(reg: u16, offset: u16) -> Self {
-        let shift = offset.trailing_ones();
-        let assoc = reg >> shift;
+    pub fn from_reg(reg: u16, offset: u16, shift: u16) -> Self {
+        let tmp = reg >> shift;
 
-        let assoc = if assoc == (u16::MAX >> shift) {
+        let assoc = if tmp == (u16::MAX >> shift) {
             TlbAssoc::Full
         } else if offset == 0xFF {
-            TlbAssoc::Way(assoc as u8)
-        } else {
-            match assoc {
-                0x0 => TlbAssoc::Way(0), // Disabled
+            /* L1d, L1i */
+            TlbAssoc::Way(tmp as u8)
+        } else if offset == 0xFFF {
+            /* L2d, L2i */
+            match tmp {
+                0x0 => TlbAssoc::Disabled,
                 0x1 => TlbAssoc::Way(1), // Direct Mapped
                 0x2 => TlbAssoc::Way(2),
-                // 0x3 => Reserved,
-                0x4 => TlbAssoc::Way(4),
-                // 0x5 => Reserved,
-                0x6 => TlbAssoc::Way(8),
-                // 0x7 => Reserved,
-                0x8 => TlbAssoc::Way(16),
-                // 0x9 => Reserved,
-                0xA => TlbAssoc::Way(32),
-                0xB => TlbAssoc::Way(48),
-                0xC => TlbAssoc::Way(64),
-                0xD => TlbAssoc::Way(96),
-                0xE => TlbAssoc::Way(128),
-                _ => TlbAssoc::Way(assoc as u8),
+                0x3 => TlbAssoc::Way(3),
+                0x4 => TlbAssoc::WayRange(4..6),
+                0x5 => TlbAssoc::WayRange(6..8),
+                0x6 => TlbAssoc::WayRange(8..16),
+                // 0x7 => Permanently reserved,
+                0x8 => TlbAssoc::WayRange(16..32),
+                0x9 => TlbAssoc::Invalid,
+                0xA => TlbAssoc::WayRange(32..48),
+                0xB => TlbAssoc::WayRange(48..64),
+                0xC => TlbAssoc::WayRange(64..96),
+                0xD => TlbAssoc::WayRange(96..128),
+                0xE => TlbAssoc::WayRange(128..255), // 128..Full
+                _ => TlbAssoc::Invalid,
             }
+        } else {
+            TlbAssoc::Invalid
         };
 
 
@@ -97,14 +106,13 @@ pub struct Tlb {
     pub page_4k: TlbInfo,
     pub page_2m: TlbInfo,
     pub page_4m: TlbInfo,
-    // page_1g
 }
 
 impl Tlb {
     pub fn reg(type_: TlbType, reg_4k: u16, reg_2m4m: u16) -> Self {
-        let offset = type_.get_offset();
-        let page_4k = TlbInfo::from_reg(reg_4k, offset);
-        let page_2m = TlbInfo::from_reg(reg_2m4m, offset);
+        let (offset, shift) = type_.get_offset();
+        let page_4k = TlbInfo::from_reg(reg_4k, offset, shift);
+        let page_2m = TlbInfo::from_reg(reg_2m4m, offset, shift);
         let page_4m = page_2m.half_size();
 
         Self {

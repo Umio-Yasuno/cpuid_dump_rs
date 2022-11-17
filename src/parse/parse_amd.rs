@@ -7,7 +7,7 @@ trait PrintEntryWay {
 
 impl PrintEntryWay for TlbInfo {
     fn print_entry_way(&self) -> String {
-        format!("{:>4}_entry, {:>4}_way", self.size, self.assoc)
+        format!("{:>4}_entry, {:>6}_way", self.size, self.assoc)
     }
 }
 
@@ -126,7 +126,7 @@ impl ParseAMD for CpuidResult {
             (ebx >> 16),
             (ebx & 0xFFFF),
         ].map(|reg|
-            TlbInfo::from_reg(reg as u16, 0xFFF).print_entry_way()
+            TlbInfo::from_reg(reg as u16, 0xFFF, 12).print_entry_way()
         );
 
         [
