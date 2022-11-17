@@ -8,17 +8,6 @@ pub enum TlbType {
     L2i,
 }
 
-impl TlbType {
-    pub fn get_offset(&self) -> (u16, u16) {
-        match self {
-            Self::L1d |
-            Self::L1i => (0xFF, 8),
-            Self::L2d |
-            Self::L2i => (0xFFF, 12),
-        }
-    }
-}
-
 impl fmt::Display for TlbType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{:?}", self)
@@ -60,17 +49,25 @@ impl TlbInfo {
         }
     }
 
-    pub fn from_reg(reg: u16, offset: u16, shift: u16) -> Self {
-        let tmp = reg >> shift;
+    pub fn from_reg_l1(reg: u16) -> Self {
+        let tmp = reg >> 8;
 
-        let assoc = if tmp == (u16::MAX >> shift) {
-            TlbAssoc::Full
-        } else if offset == 0xFF {
-            /* L1d, L1i */
-            TlbAssoc::Way(tmp as u8)
-        } else if offset == 0xFFF {
-            /* L2d, L2i */
-            match tmp {
+        Self {
+            size: reg & 0xFF,
+            assoc: match tmp {
+                0x0 => TlbAssoc::Invalid, // Reserved
+                0xFF => TlbAssoc::Full,
+                _ => TlbAssoc::Way(tmp as u8),
+            },
+        }
+    }
+
+    pub fn from_reg_l2(reg: u16) -> Self {
+        let tmp = reg >> 12;
+
+        Self {
+            size: reg & 0xFFF,
+            assoc: match tmp {
                 0x0 => TlbAssoc::Disabled,
                 0x1 => TlbAssoc::Way(1), // Direct Mapped
                 0x2 => TlbAssoc::Way(2),
@@ -86,16 +83,9 @@ impl TlbInfo {
                 0xC => TlbAssoc::WayRange(64..96),
                 0xD => TlbAssoc::WayRange(96..128),
                 0xE => TlbAssoc::WayRange(128..255), // 128..Full
+                0xF => TlbAssoc::Full,
                 _ => TlbAssoc::Invalid,
-            }
-        } else {
-            TlbAssoc::Invalid
-        };
-
-
-        Self {
-            size: reg & offset,
-            assoc,
+            },
         }
     }
 }
@@ -110,9 +100,12 @@ pub struct Tlb {
 
 impl Tlb {
     pub fn reg(type_: TlbType, reg_4k: u16, reg_2m4m: u16) -> Self {
-        let (offset, shift) = type_.get_offset();
-        let page_4k = TlbInfo::from_reg(reg_4k, offset, shift);
-        let page_2m = TlbInfo::from_reg(reg_2m4m, offset, shift);
+        let [page_4k, page_2m] = match type_ {
+            TlbType::L1d |
+            TlbType::L1i => [TlbInfo::from_reg_l1(reg_4k), TlbInfo::from_reg_l1(reg_2m4m)],
+            TlbType::L2d |
+            TlbType::L2i => [TlbInfo::from_reg_l2(reg_4k), TlbInfo::from_reg_l2(reg_2m4m)],
+        };
         let page_4m = page_2m.half_size();
 
         Self {

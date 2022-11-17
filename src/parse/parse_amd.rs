@@ -126,7 +126,7 @@ impl ParseAMD for CpuidResult {
             (ebx >> 16),
             (ebx & 0xFFFF),
         ].map(|reg|
-            TlbInfo::from_reg(reg as u16, 0xFFF, 12).print_entry_way()
+            TlbInfo::from_reg_l2(reg as u16).print_entry_way()
         );
 
         [
