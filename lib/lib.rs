@@ -5,10 +5,10 @@ use core::arch::x86_64::CpuidResult;
 #[macro_export]
 macro_rules! cpuid {
     ($leaf: expr) => {
-        unsafe { std::arch::x86_64::__cpuid_count($leaf, 0x0) }
+        unsafe { core::arch::x86_64::__cpuid_count($leaf, 0x0) }
     };
     ($leaf: expr, $sub_leaf: expr) => {
-        unsafe { std::arch::x86_64::__cpuid_count($leaf, $sub_leaf) }
+        unsafe { core::arch::x86_64::__cpuid_count($leaf, $sub_leaf) }
     };
 }
 
