@@ -371,8 +371,8 @@ impl ProcInfo {
                 uarch::Zen4,
                 ProcessNode::NM(5)
             ),
-            0x60..=0x6F => Self::info("Phoenix", uarch::Zen4, ""),
-            0x70..=0x7F => Self::info("Raphael", uarch::Zen4, ProcessNode::NM(5)),
+            0x60..=0x6F => Self::info("Raphael", uarch::Zen4, ProcessNode::NM(5)),
+            0x70..=0x7F => Self::info("Phoenix", uarch::Zen4, ProcessNode::NM(4)),
 
             _ => return None,
         })
