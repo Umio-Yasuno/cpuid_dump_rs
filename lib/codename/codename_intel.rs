@@ -104,10 +104,37 @@ impl ProcInfo {
             0x3A => Self::info("Ivy Bridge", uarch::IvyBridge, ProcessNode::NM(22)),
             0x3E => Self::info("Ivy Bridge-E", uarch::IvyBridge, ProcessNode::NM(22)),
             /* Haswell */
-            0x3C => Self::info("Haswell", uarch::Haswell, ProcessNode::NM(22)),
+            /* https://github.com/coreboot/coreboot/blob/master/src/cpu/intel/haswell/haswell.h */
+            0x3C => Self::info(
+                ["Haswell", match s {
+                    0x1 => " (A0)",
+                    0x2 => " (B0)",
+                    0x3 => " (C0)",
+                    _ => "",
+                }].concat(),
+                uarch::Haswell,
+                ProcessNode::NM(22)
+            ),
             0x3F => Self::info("Haswell-E", uarch::Haswell, ProcessNode::NM(22)),
-            0x45 => Self::info("Haswell-U", uarch::Haswell, ProcessNode::NM(22)),
-            0x46 => Self::info("Haswell-G", uarch::Haswell, ProcessNode::NM(22)),
+            0x45 => Self::info(
+                ["Haswell-U", match s {
+                    0x0 => " (B0)",
+                    0x1 => " (C0)",
+                    _ => "",
+                }].concat(),
+                uarch::Haswell,
+                ProcessNode::NM(22)
+            ),
+            /* Crystalwell */
+            0x46 => Self::info(
+                ["Haswell-G", match s {
+                    0x0 => " (B0)",
+                    0x1 => " (C0)",
+                    _ => "",
+                }].concat(),
+                uarch::Haswell,
+                ProcessNode::NM(22)
+            ),
             /* Broadwell */
             0x3D => Self::info("Broadwell", uarch::Broadwell, ProcessNode::NM(14)),
             0x47 => Self::info("Broadwell-G", uarch::Broadwell, ProcessNode::NM(14)),
@@ -272,7 +299,7 @@ impl ProcInfo {
             /* Raptor Lake */
             0xB7 => Self::info(
                 ["Raptor Lake-S", match s {
-                    0x1 => " (B0)",
+                    0x1 => " (B0, 8+16)",
                     _ => "",
                 }].concat(),
                 uarch::hybrid(uarch::GoldenCove, uarch::Gracemont),

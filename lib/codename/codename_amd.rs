@@ -7,6 +7,9 @@ use crate::{ProcInfo, ProcessNode};
 pub(self) enum AmdMicroArch {
     Puma2008,
     K10,
+    Barcelona,
+    Shanghai,
+    Istanbul,
     Bobcat,
     Bulldozer,
     Piledriver,
@@ -58,7 +61,7 @@ impl ProcInfo {
                     0xA => "DR-BA",
                     _=> "",
                 },
-                uarch::K10,
+                uarch::Barcelona,
                 ProcessNode::NM(65),
             ),
             0x04 => Self::info(
@@ -67,7 +70,7 @@ impl ProcInfo {
                     0x3 => "RB-C3",
                     _ => "",
                 },
-                uarch::K10,
+                uarch::Shanghai,
                 ProcessNode::NM(45),
             ),
             0x05 => Self::info(
@@ -94,7 +97,7 @@ impl ProcInfo {
                     0x1 => "HY-D1",
                     _ => "",
                 },
-                uarch::K10,
+                uarch::Istanbul,
                 ProcessNode::NM(45),
             ),
             0x09 => Self::info(
