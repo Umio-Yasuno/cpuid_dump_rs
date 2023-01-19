@@ -124,7 +124,7 @@ impl ProcInfo {
         use AmdMicroArch as uarch;
 
         Some(match m {
-            0x03 => Self::info("LG-B1", uarch::Puma2008, ProcessNode::NM(65)),
+            0x03 => Self::info("Griffin (LG-B1)", uarch::Puma2008, ProcessNode::NM(65)),
             _ => return None,
         })
     }
@@ -376,8 +376,8 @@ impl ProcInfo {
             ),
             0x60..=0x6F => Self::info("Raphael", uarch::Zen4, ProcessNode::NM(5)),
             0x70..=0x7F => Self::info("Phoenix", uarch::Zen4, ProcessNode::NM(4)),
-            /* https://review.coreboot.org/c/coreboot/+/71689 */
-            /* 0x78 => Morgana A0 */
+            /* https://review.coreboot.org/c/coreboot/+/71731/7/src/soc/amd/phoenix/include/soc/cpu.h */
+            /* 0x78 => Phoenix A0  */
 
             _ => return None,
         })
