@@ -20,15 +20,17 @@ pub trait ParseGeneric {
 impl ParseGeneric for CpuidResult {
     fn info_00_01h(&self, vendor: &CpuVendor) -> String {
         let fms = libcpuid_dump::FamModStep::from(self);
-        let proc_info = match libcpuid_dump::ProcInfo::from_fms(&fms, vendor) {
-            Some(info) => format!(
-                "{LN_PAD}[{}, {}]{LN_PAD}[{}]",
-                info.codename, info.process, info.archname,
-            ),
+        let info01h = libcpuid_dump::Info01h::from(self);
+
+        let proc_info = libcpuid_dump::ProcInfo::from_fms(&fms, vendor);
+        let step_info = match proc_info.step_info {
+            libcpuid_dump::CpuStepping::Unknown(_) => "".to_string(),
+            _ => format!(" ({})", proc_info.step_info),
+        };
+        let node = match proc_info.node {
+            Some(size) => format!("{LN_PAD}[ProcessNode: {size}]"),
             None => "".to_string(),
         };
-
-        let info01h = libcpuid_dump::Info01h::from(self);
 
         [
             format!(
@@ -37,7 +39,13 @@ impl ParseGeneric for CpuidResult {
                 fms.syn_mod,
                 fms.step
             ),
-            proc_info,
+            format!(
+                "{LN_PAD}[Codename: {}{}]{}{LN_PAD}[Arch: {}]",
+                proc_info.codename,
+                step_info,
+                node,
+                proc_info.archname
+            ),
             format!(
                 "{LN_PAD}[APIC ID: {:>3}, Max: {:>3}]{LN_PAD}[CLFlush: {:3}B]",
                 info01h.local_apic_id,

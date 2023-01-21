@@ -1,37 +1,20 @@
 use crate::{cpuid, CpuidResult, CpuVendor};
-
-pub(crate) enum ProcessNode {
-    _UM(u8),
-    NM(u8),
-    Intel(u8),
-}
-
+use crate::codename::{AmdCodename, IntelCodename, ZhaoxinCodename};
+use crate::codename::{AmdMicroArch, IntelMicroArch, ZhaoxinMicroArch};
 use std::fmt;
-impl fmt::Display for ProcessNode {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Self::_UM(size) => write!(f, "{size} um"),
-            Self::NM(size) => write!(f, "{size} nm"),
-            Self::Intel(size) => write!(f, "Intel {size}"),
-        }
-    }
-}
-
-impl From<ProcessNode> for String {
-    fn from(s: ProcessNode) -> Self {
-        s.to_string()
-    }
-}
-
-pub struct ProcInfo {
-    pub codename: String,
-    pub archname: String,
-    pub process: String,
-}
 
 impl ProcInfo {
-    pub fn from_fms(fms: &FamModStep, vendor: &CpuVendor) -> Option<Self> {
+    pub fn from_fms(fms: &FamModStep, vendor: &CpuVendor) -> Self {
         let [f, m, s] = [fms.syn_fam, fms.syn_mod, fms.step];
+        let unknown = |raw_eax: u32, step: u32| -> Self {
+
+            Self {
+                codename: CpuCodename::UnknownVendor(raw_eax),
+                archname: CpuMicroArch::Unknown,
+                step_info: CpuStepping::Unknown(step),
+                node: None,
+            }
+        };
 
         match *vendor {
             CpuVendor::AuthenticAMD => match f {
@@ -43,28 +26,133 @@ impl ProcInfo {
                 0x16 => Self::amd_fam16h(m, s),
                 0x17 => Self::amd_fam17h(m, s),
                 0x19 => Self::amd_fam19h(m, s),
-                _ => None, 
+                _ => unknown(fms.raw_eax, s),
             },
             CpuVendor::GenuineIntel => match f {
                 0x5 => Self::intel_fam05h(m, s),
                 0x6 => Self::intel_fam06h(m, s),
-                _ => None,
+                _ => unknown(fms.raw_eax, s),
             },
             CpuVendor::CentaurHauls |
             CpuVendor::Shanghai => match f {
                 0x6 => Self::zhaoxin_fam06h(m, s),
                 0x7 => Self::zhaoxin_fam07h(m, s),
-                _ => None,
+                _ => unknown(fms.raw_eax, s),
             },
-            _ => None,
+            _ => unknown(fms.raw_eax, s),
         }
     }
+}
 
-    pub fn info<S: Into<String>, T: Into<String>, U: Into<String>>(code: S, arch: T, process: U) -> Self {
-        Self {
-            codename: code.into(),
-            archname: arch.into(),
-            process: process.into(),
+pub struct ProcInfo {
+    pub codename: CpuCodename,
+    pub archname: CpuMicroArch,
+    pub step_info: CpuStepping,
+    pub node: Option<ProcessNode>,
+}
+
+pub enum CpuCodename {
+    Amd(AmdCodename),
+    Intel(IntelCodename),
+    Zhaoxin(ZhaoxinCodename),
+    UnknownVendor(u32),
+}
+
+impl fmt::Display for CpuCodename {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::Amd(arch) => write!(f, "AMD {arch}"),
+            Self::Intel(arch) => write!(f, "Intel {arch}"),
+            Self::Zhaoxin(arch) => write!(f, "Zhaoxin {arch}"),
+            Self::UnknownVendor(raw_eax) => write!(f, "UnknownVendor(EAX={raw_eax:X})"),
+        }
+    }
+}
+
+pub enum CpuMicroArch {
+    Amd(AmdMicroArch),
+    Intel(IntelMicroArch),
+    Zhaoxin(ZhaoxinMicroArch),
+    Unknown,
+}
+
+impl fmt::Display for CpuMicroArch {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::Amd(arch) => write!(f, "AMD {arch}"),
+            Self::Intel(arch) => write!(f, "Intel {arch}"),
+            Self::Zhaoxin(arch) => write!(f, "Zhaoxin {arch}"),
+            Self::Unknown => write!(f, "Unknown"),
+        }
+    }
+}
+
+#[derive(Debug)]
+#[allow(non_camel_case_types)]
+pub enum CpuStepping {
+    A0,
+    A1,
+    A0_A1,
+    B0,
+    B1,
+    B2,
+    B2_B3,
+    B3,
+    BA,
+    C0,
+    C2,
+    C3,
+    D0,
+    D0_J0, // Sandy Bridge
+    D1,
+    D2_J1_Q0, // Sandy Bridge
+    E0,
+    E1,
+    G0,
+    G1,
+    H0,
+    J0,
+    K0,
+    K1,
+    L0,
+    P0,
+    P1,
+    Q0,
+    R0,
+    R1,
+    U0,
+    V0,
+    V2_V3, // Broadwell-D
+    W0,
+    Y0,
+    HA0,
+    HB0,
+    HQ0,
+    HR0,
+    Unknown(u32),
+}
+
+impl fmt::Display for CpuStepping {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::Unknown(val) => write!(f, "{val:X}"),
+            _ => write!(f, "{:?}", self),
+        }
+    }
+}
+
+pub enum ProcessNode {
+    _UM(u8),
+    NM(u8),
+    Intel(u8),
+}
+
+impl fmt::Display for ProcessNode {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::_UM(size) => write!(f, "{size} um"),
+            Self::NM(size) => write!(f, "{size} nm"),
+            Self::Intel(size) => write!(f, "Intel {size}"),
         }
     }
 }

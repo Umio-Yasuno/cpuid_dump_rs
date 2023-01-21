@@ -1,10 +1,531 @@
-use crate::{ProcInfo, ProcessNode};
+use crate::{ProcInfo, CpuCodename, CpuMicroArch, CpuStepping, ProcessNode};
+use std::fmt;
 /* ref: https://github.com/illumos/illumos-gate/blob/master/usr/src/uts/intel/os/cpuid_subr.c */
 /* ref: https://en.wikipedia.org/wiki/List_of_AMD_CPU_microarchitectures */
 /* ref: https://developer.amd.com/resources/developer-guides-manuals/ */
 
+impl ProcInfo {
+    pub(super) fn amd_fam10h(m: u32, s: u32) -> Self {
+        /* https://www.amd.com/system/files/TechDocs/41322_10h_Rev_Gd.pdf */
+        /* https://www.amd.com/system/files/TechDocs/43374.pdf */
+        match m {
+            0x2 => Self {
+                codename: CpuCodename::Amd(AmdCodename::DR),
+                archname: CpuMicroArch::Amd(AmdMicroArch::Barcelona),
+                step_info: match s {
+                    0x1 => CpuStepping::B1,
+                    0x2 => CpuStepping::B2,
+                    0x3 => CpuStepping::B3,
+                    0xA => CpuStepping::BA,
+                    _ => CpuStepping::Unknown(s),
+                },
+                node: Some(ProcessNode::NM(65)),
+            },
+            0x4 => Self {
+                codename: CpuCodename::Amd(AmdCodename::RB),
+                archname: CpuMicroArch::Amd(AmdMicroArch::Shanghai),
+                step_info: match s {
+                    0x2 => CpuStepping::C2,
+                    0x3 => CpuStepping::C3,
+                    _ => CpuStepping::Unknown(s),
+                },
+                node: Some(ProcessNode::NM(45)),
+            },
+            0x5 => Self {
+                codename: CpuCodename::Amd(AmdCodename::BL),
+                archname: CpuMicroArch::Amd(AmdMicroArch::K10),
+                step_info: match s {
+                    0x2 => CpuStepping::C2,
+                    0x3 => CpuStepping::C3,
+                    _ => CpuStepping::Unknown(s),
+                },
+                node: Some(ProcessNode::NM(45)),
+            },
+            0x6 => Self {
+                codename: CpuCodename::Amd(AmdCodename::DA),
+                archname: CpuMicroArch::Amd(AmdMicroArch::K10),
+                step_info: match s {
+                    0x2 => CpuStepping::C2,
+                    0x3 => CpuStepping::C3,
+                    _ => CpuStepping::Unknown(s),
+                },
+                node: Some(ProcessNode::NM(45)),
+            },
+            0x8 => Self {
+                codename: CpuCodename::Amd(AmdCodename::HY),
+                archname: CpuMicroArch::Amd(AmdMicroArch::Istanbul),
+                step_info: match s {
+                    0x0 => CpuStepping::D0,
+                    0x1 => CpuStepping::D1,
+                    _ => CpuStepping::Unknown(s),
+                },
+                node: Some(ProcessNode::NM(45)),
+            },
+            0x9 => Self {
+                codename: CpuCodename::Amd(AmdCodename::HY),
+                archname: CpuMicroArch::Amd(AmdMicroArch::K10),
+                step_info: match s {
+                    0x1 => CpuStepping::D1,
+                    _ => CpuStepping::Unknown(s),
+                },
+                node: Some(ProcessNode::NM(45)),
+            },
+            0xA => Self {
+                codename: CpuCodename::Amd(AmdCodename::PH),
+                archname: CpuMicroArch::Amd(AmdMicroArch::K10),
+                step_info: match s {
+                    0x0 => CpuStepping::E0,
+                    _ => CpuStepping::Unknown(s),
+                },
+                node: Some(ProcessNode::NM(45)),
+            },
+            _ => Self {
+                codename: CpuCodename::Amd(AmdCodename::Unknown(0x10, m)),
+                archname: CpuMicroArch::Unknown,
+                step_info: CpuStepping::Unknown(s),
+                node: None,
+            },
+        }
+    }
+    pub(super) fn amd_fam11h(m: u32, s: u32) -> Self {
+        match m {
+            0x3 => Self {
+                codename: CpuCodename::Amd(AmdCodename::Griffin),
+                archname: CpuMicroArch::Amd(AmdMicroArch::Puma2008),
+                step_info: CpuStepping::B1, // LG-B1
+                node: Some(ProcessNode::NM(65)),
+            },
+            _ => Self {
+                codename: CpuCodename::Amd(AmdCodename::Unknown(0x11, m)),
+                archname: CpuMicroArch::Unknown,
+                step_info: CpuStepping::Unknown(s),
+                node: None,
+            },
+        }
+    }
+    pub(super) fn amd_fam12h(m: u32, s: u32) -> Self {
+        match m {
+            0x1 => Self {
+                codename: CpuCodename::Amd(AmdCodename::Llano),
+                archname: CpuMicroArch::Amd(AmdMicroArch::K10),
+                step_info: CpuStepping::Unknown(s),
+                node: Some(ProcessNode::NM(32)),
+            },
+            _ => Self {
+                codename: CpuCodename::Amd(AmdCodename::Unknown(0x12, m)),
+                archname: CpuMicroArch::Unknown,
+                step_info: CpuStepping::Unknown(s),
+                node: None,
+            },
+        }
+    }
+    pub(super) fn amd_fam14h(m: u32, s: u32) -> Self {
+        /* https://www.amd.com/system/files/TechDocs/47534_14h_Mod_00h-0Fh_Rev_Guide.pdf */
+        match m {
+            0x1 | 0x2 => Self {
+                codename: CpuCodename::Amd(AmdCodename::Ontario_Zacate),
+                archname: CpuMicroArch::Amd(AmdMicroArch::Bobcat),
+                step_info: match m {
+                    0x1 => CpuStepping::B0,
+                    0x2 => CpuStepping::C0,
+                    _ => unreachable!(),
+                },
+                node: Some(ProcessNode::NM(40)),
+            },
+            _ => Self {
+                codename: CpuCodename::Amd(AmdCodename::Unknown(0x14, m)),
+                archname: CpuMicroArch::Unknown,
+                step_info: CpuStepping::Unknown(s),
+                node: None,
+            },
+        }
+    }
+    pub(super) fn amd_fam15h(m: u32, s: u32) -> Self {
+        match m {
+            0x1 | 0x2 => Self {
+                codename: CpuCodename::Amd(AmdCodename::Orochi),
+                archname: CpuMicroArch::Amd(AmdMicroArch::Bulldozer),
+                step_info: match (m, s) {
+                    (0x1, 0x2) => CpuStepping::B2,
+                    (0x2, 0x0) => CpuStepping::C0,
+                    _ => CpuStepping::Unknown(s),
+                },
+                node: Some(ProcessNode::NM(32)),
+            },
+            0x10 => Self {
+                codename: CpuCodename::Amd(AmdCodename::Trinity),
+                archname: CpuMicroArch::Amd(AmdMicroArch::Piledriver),
+                step_info: match s {
+                    0x0 => CpuStepping::A0,
+                    0x1 => CpuStepping::A1,
+                    _ => CpuStepping::Unknown(s),
+                },
+                node: Some(ProcessNode::NM(32)),
+            },
+            0x13 => Self {
+                codename: CpuCodename::Amd(AmdCodename::Richland),
+                archname: CpuMicroArch::Amd(AmdMicroArch::Piledriver),
+                step_info: match s {
+                    0x1 => CpuStepping::A1,
+                    _ => CpuStepping::Unknown(s),
+                },
+                node: Some(ProcessNode::NM(32)),
+            },
+            0x30 => Self {
+                codename: CpuCodename::Amd(AmdCodename::Kaveri),
+                archname: CpuMicroArch::Amd(AmdMicroArch::Steamroller),
+                step_info: match s {
+                    0x1 => CpuStepping::A1,
+                    _ => CpuStepping::Unknown(s),
+                },
+                node: Some(ProcessNode::NM(28)),
+            },
+            0x38 => Self {
+                codename: CpuCodename::Amd(AmdCodename::Godavari),
+                archname: CpuMicroArch::Amd(AmdMicroArch::Steamroller),
+                step_info: CpuStepping::Unknown(s),
+                node: Some(ProcessNode::NM(28)),
+            },
+            0x60 => Self {
+                codename: CpuCodename::Amd(AmdCodename::Carrizo),
+                archname: CpuMicroArch::Amd(AmdMicroArch::Excavator),
+                step_info: match s {
+                    0x0 => CpuStepping::A0,
+                    0x1 => CpuStepping::A1,
+                    _ => CpuStepping::Unknown(s),
+                },
+                node: Some(ProcessNode::NM(28)),
+            },
+            0x65 => Self {
+                codename: CpuCodename::Amd(AmdCodename::BristolRidge),
+                archname: CpuMicroArch::Amd(AmdMicroArch::Excavator),
+                step_info: CpuStepping::Unknown(s),
+                node: Some(ProcessNode::NM(28)),
+            },
+            0x70 => Self {
+                codename: CpuCodename::Amd(AmdCodename::StoneyRidge),
+                archname: CpuMicroArch::Amd(AmdMicroArch::Excavator),
+                step_info: match s {
+                    0x0 => CpuStepping::A0,
+                    _ => CpuStepping::Unknown(s),
+                },
+                node: Some(ProcessNode::NM(28)),
+            },
+            _ => Self {
+                codename: CpuCodename::Amd(AmdCodename::Unknown(0x15, m)),
+                archname: CpuMicroArch::Unknown,
+                step_info: CpuStepping::Unknown(s),
+                node: None,
+            },
+        }
+    }
+    pub(super) fn amd_fam16h(m: u32, s: u32) -> Self {
+        match m {
+            0x00 => Self {
+                codename: CpuCodename::Amd(AmdCodename::Kabini_Temash),
+                archname: CpuMicroArch::Amd(AmdMicroArch::Jaguar),
+                step_info: match s {
+                    0x1 => CpuStepping::A1,
+                    _ => CpuStepping::Unknown(s),
+                },
+                node: Some(ProcessNode::NM(28)),
+            },
+            /* A9-9820: https://linux-hardware.org/?probe=1053adf355 */
+            0x26 => Self {
+                codename: CpuCodename::Amd(AmdCodename::Cato),
+                archname: CpuMicroArch::Amd(AmdMicroArch::Jaguar),
+                step_info: CpuStepping::Unknown(s),
+                node: Some(ProcessNode::NM(28)),
+            },
+            0x30 => Self {
+                codename: CpuCodename::Amd(AmdCodename::Beema_Mullins),
+                archname: CpuMicroArch::Amd(AmdMicroArch::Puma2014),
+                step_info: match s {
+                    0x1 => CpuStepping::A1,
+                    _ => CpuStepping::Unknown(s),
+                },
+                node: Some(ProcessNode::NM(28)),
+            },
+            _ => Self {
+                codename: CpuCodename::Amd(AmdCodename::Unknown(0x11, m)),
+                archname: CpuMicroArch::Unknown,
+                step_info: CpuStepping::Unknown(s),
+                node: None,
+            },
+        }
+    }
+    pub(super) fn amd_fam17h(m: u32, s: u32) -> Self {
+        match m {
+            /* Zen */
+            /* Naples, Zeppelin/ZP */
+            0x00 | 0x01 => Self {
+                codename: CpuCodename::Amd(AmdCodename::Naples),
+                archname: CpuMicroArch::Amd(AmdMicroArch::Zen),
+                step_info: match (m, s) {
+                    (0x00, _) => CpuStepping::A0,
+                    (0x01, 0x1) => CpuStepping::B1, // Ryzen, Summit Ridge
+                    (0x01, 0x2) => CpuStepping::B2,
+                    _ => CpuStepping::Unknown(s),
+                },
+                node: Some(ProcessNode::NM(14)),
+            },
+            0x11 => Self {
+                codename: CpuCodename::Amd(AmdCodename::RavenRidge),
+                archname: CpuMicroArch::Amd(AmdMicroArch::Zen),
+                step_info: CpuStepping::Unknown(s),
+                node: Some(ProcessNode::NM(14)),
+            },
+            0x20 => Self {
+                codename: CpuCodename::Amd(AmdCodename::Raven2),
+                archname: CpuMicroArch::Amd(AmdMicroArch::Zen),
+                step_info: match m {
+                    0x1 => CpuStepping::A1,
+                    _ => CpuStepping::Unknown(s),
+                },
+                node: Some(ProcessNode::NM(14)),
+            },
+
+            /* Zen+ */
+            0x08 => Self {
+                codename: CpuCodename::Amd(AmdCodename::PinnacleRidge),
+                archname: CpuMicroArch::Amd(AmdMicroArch::ZenPlus),
+                step_info: match s {
+                    0x2 => CpuStepping::B2,
+                    _ => CpuStepping::Unknown(s),
+                },
+                node: Some(ProcessNode::NM(12)),
+            },
+            0x18 => Self {
+                codename: CpuCodename::Amd(AmdCodename::Picasso),
+                archname: CpuMicroArch::Amd(AmdMicroArch::ZenPlus),
+                step_info: CpuStepping::Unknown(s),
+                node: Some(ProcessNode::NM(12)),
+            },
+
+            /* Zen 2 */
+            /* Rome, Starship/SSP */
+            0x30 | 0x31 => Self {
+                codename: CpuCodename::Amd(AmdCodename::Rome),
+                archname: CpuMicroArch::Amd(AmdMicroArch::Zen2),
+                step_info: match (m, s) {
+                    (0x30, 0x0) => CpuStepping::A0,
+                    (0x31, 0x0) => CpuStepping::B0,
+                    _ => CpuStepping::Unknown(s),
+                },
+                node: Some(ProcessNode::NM(7)),
+            },
+            0x60 => Self {
+                codename: CpuCodename::Amd(AmdCodename::Renoir),
+                archname: CpuMicroArch::Amd(AmdMicroArch::Zen2),
+                step_info: match s {
+                    0x1 => CpuStepping::A1,
+                    _ => CpuStepping::Unknown(s),
+                },
+                node: Some(ProcessNode::NM(7)),
+            },
+            0x68 => Self {
+                codename: CpuCodename::Amd(AmdCodename::Lucienne),
+                archname: CpuMicroArch::Amd(AmdMicroArch::Zen2),
+                step_info: CpuStepping::Unknown(s),
+                node: Some(ProcessNode::NM(7)),
+            },
+            0x71 => Self {
+                codename: CpuCodename::Amd(AmdCodename::Matisse),
+                archname: CpuMicroArch::Amd(AmdMicroArch::Zen2),
+                step_info: CpuStepping::Unknown(s),
+                node: Some(ProcessNode::NM(7)),
+            },
+            0x90 => Self {
+                codename: CpuCodename::Amd(AmdCodename::VanGogh),
+                archname: CpuMicroArch::Amd(AmdMicroArch::Zen2),
+                step_info: CpuStepping::Unknown(s),
+                node: Some(ProcessNode::NM(7)),
+            },
+            0xA0..=0xAF => Self {
+                codename: CpuCodename::Amd(AmdCodename::Mendocino),
+                archname: CpuMicroArch::Amd(AmdMicroArch::Zen2),
+                step_info: CpuStepping::Unknown(s),
+                node: Some(ProcessNode::NM(6)),
+            },
+            _ => Self {
+                codename: CpuCodename::Amd(AmdCodename::Unknown(0x17, m)),
+                archname: CpuMicroArch::Unknown,
+                step_info: CpuStepping::Unknown(s),
+                node: None,
+            },
+        }
+    }
+
+    pub(crate) fn amd_fam19h(m: u32, s: u32) -> Self {
+        match m {
+            /* Milan, Genesis/GN */
+            /* Revision Guide for AMD Family 19h Models 00h-0Fh Processors: https://www.amd.com/system/files/TechDocs/56683-PUB-1.07.pdf */
+            0x00 | 0x01 => Self {
+                codename: CpuCodename::Amd(AmdCodename::Milan),
+                archname: CpuMicroArch::Amd(AmdMicroArch::Zen3),
+                step_info: match (m, s) {
+                    (0x00, _) => CpuStepping::A0,
+                    (0x01, 0x0) => CpuStepping::B0,
+                    (0x01, 0x1) => CpuStepping::B1, // EPYC 7003
+                    (0x01, 0x2) => CpuStepping::B2, // EPYC 7003 with 3D V-Cache
+                    _ => CpuStepping::Unknown(s),
+                },
+                node: Some(ProcessNode::NM(7)),
+            },
+            0x08 => Self {
+                codename: CpuCodename::Amd(AmdCodename::Chagall),
+                archname: CpuMicroArch::Amd(AmdMicroArch::Zen3),
+                step_info: CpuStepping::Unknown(s),
+                node: Some(ProcessNode::NM(7)),
+            },
+            0x20 | 0x21 => Self {
+                codename: CpuCodename::Amd(AmdCodename::Vermeer),
+                archname: CpuMicroArch::Amd(AmdMicroArch::Zen3),
+                step_info: match (m, s) {
+                    (0x20, _) => CpuStepping::A0,
+                    (0x21, 0x0) => CpuStepping::B0,
+                    (0x21, 0x2) => CpuStepping::B2,
+                    _ => CpuStepping::Unknown(s),
+                },
+                node: Some(ProcessNode::NM(7)),
+            },
+            /* https://www.openmp.org/wp-content/uploads/ecp_sollve_openmp_monthly.offload_perf_ana_craypat.marcus.hpe_.26aug2022.v2.pdf */
+            0x30 => Self {
+                codename: CpuCodename::Amd(AmdCodename::Trento),
+                archname: CpuMicroArch::Amd(AmdMicroArch::Zen3),
+                step_info: CpuStepping::Unknown(s),
+                node: Some(ProcessNode::NM(7)),
+            },
+            0x40..=0x4F => Self {
+                codename: CpuCodename::Amd(AmdCodename::Rembrandt),
+                archname: CpuMicroArch::Amd(AmdMicroArch::Zen3Plus),
+                step_info: match (m, s) {
+                    (0x40, _) => CpuStepping::A0,
+                    (0x44, 0x0) => CpuStepping::B0,
+                    (0x44, 0x1) => CpuStepping::B1, // product
+                    _ => CpuStepping::Unknown(s),
+                },
+                node: Some(ProcessNode::NM(6)),
+            },
+            0x50..=0x5F => Self {
+                codename: CpuCodename::Amd(AmdCodename::Cezanne_Barcelo),
+                archname: CpuMicroArch::Amd(AmdMicroArch::Zen3),
+                step_info: match (m, s) {
+                    (0x50, 0x0) => CpuStepping::A0,
+                    _ => CpuStepping::Unknown(s),
+                },
+                node: Some(ProcessNode::NM(7)),
+            },
+            /* Zen 4 */
+            /* Genoa, Stones, RS */
+            0x10..=0x1F => Self {
+                codename: CpuCodename::Amd(AmdCodename::Genoa),
+                archname: CpuMicroArch::Amd(AmdMicroArch::Zen4),
+                step_info: match (m, s) {
+                    (0x10, _) => CpuStepping::A0,
+                    (0x11, 0x0) => CpuStepping::B0,
+                    (0x11, 0x1) => CpuStepping::B1,
+                    _ => CpuStepping::Unknown(s),
+                },
+                node: Some(ProcessNode::NM(5)),
+            },
+            0x60..=0x6F => Self {
+                codename: CpuCodename::Amd(AmdCodename::Raphael),
+                archname: CpuMicroArch::Amd(AmdMicroArch::Zen4),
+                step_info: CpuStepping::Unknown(s),
+                node: Some(ProcessNode::NM(5)),
+            },
+            0x70..=0x7F => Self {
+                codename: CpuCodename::Amd(AmdCodename::Phoenix),
+                archname: CpuMicroArch::Amd(AmdMicroArch::Zen4),
+                step_info: CpuStepping::Unknown(s),
+                node: Some(ProcessNode::NM(4)),
+            },
+            /* https://review.coreboot.org/c/coreboot/+/71731/7/src/soc/amd/phoenix/include/soc/cpu.h */
+            /* 0x78 => Phoenix A0  */
+            _ => Self {
+                codename: CpuCodename::Amd(AmdCodename::Unknown(0x19, m)),
+                archname: CpuMicroArch::Unknown,
+                step_info: CpuStepping::Unknown(s),
+                node: None,
+            },
+        }
+    }
+}
+
 #[derive(Debug)]
-pub(self) enum AmdMicroArch {
+#[allow(non_camel_case_types)]
+pub enum AmdCodename {
+    /* Fam10h */
+    Fam10h,
+    DR,
+    RB,
+    BL,
+    DA,
+    HY,
+    PH,
+    // Barcelona,
+    // Shanghai,
+    // Istanbul,
+    /* Fam11h */
+    Griffin,
+    /* Fam12h */
+    Llano,
+    /* Fam14h */
+    Ontario_Zacate,
+    /* Fam15h */
+    Orochi,
+    Trinity,
+    Richland,
+    Kaveri,
+    Carrizo,
+    Godavari,
+    BristolRidge,
+    StoneyRidge,
+    /* Fam16h */
+    Kabini_Temash,
+    Cato,
+    Beema_Mullins,
+    /* Fam17h */
+    Naples,
+    RavenRidge,
+    Raven2, /* Dali, Pollock */
+    PinnacleRidge,
+    Picasso,
+    Rome,
+    Renoir,
+    Lucienne,
+    Matisse,
+    VanGogh,
+    Mendocino,
+    /* Fam19h */
+    Milan,
+    Chagall,
+    Trento,
+    Vermeer,
+    Rembrandt,
+    Cezanne_Barcelo,
+    Genoa,
+    Raphael,
+    Phoenix,
+    Unknown(u32, u32),
+}
+
+impl fmt::Display for AmdCodename {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::Ontario_Zacate => write!(f, "Ontario/Zacate"),
+            Self::Kabini_Temash => write!(f, "Kabini/Temash"),
+            Self::Beema_Mullins => write!(f, "Beema/Mullins"),
+            Self::Cezanne_Barcelo => write!(f, "Cezanne/Barcelo"),
+            Self::Unknown(fam, model) => write!(f, "Family{fam:X}h Model{model:X}h"),
+            _ => write!(f, "{:?}", self),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub enum AmdMicroArch {
     Puma2008,
     K10,
     Barcelona,
@@ -26,7 +547,6 @@ pub(self) enum AmdMicroArch {
     _Reserved,
 }
 
-use std::fmt;
 impl fmt::Display for AmdMicroArch {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
@@ -37,349 +557,5 @@ impl fmt::Display for AmdMicroArch {
             Self::Zen4 => write!(f, "Zen 4"),
             _ => write!(f, "{:?}", self),
         }
-    }
-}
-
-impl From<AmdMicroArch> for String {
-    fn from(s: AmdMicroArch) -> Self {
-        s.to_string()
-    }
-}
-
-impl ProcInfo {
-    pub(super) fn amd_fam10h(m: u32, s: u32) -> Option<Self> {
-        use AmdMicroArch as uarch;
-
-        /* https://www.amd.com/system/files/TechDocs/41322_10h_Rev_Gd.pdf */
-        /* https://www.amd.com/system/files/TechDocs/43374.pdf */
-        Some(match m {
-            0x02 => Self::info(
-                match s {
-                    0x1 => "DR-B1",
-                    0x2 => "DR-B2",
-                    0x3 => "DR-B3",
-                    0xA => "DR-BA",
-                    _=> "",
-                },
-                uarch::Barcelona,
-                ProcessNode::NM(65),
-            ),
-            0x04 => Self::info(
-                match s {
-                    0x2 => "RB-C2",
-                    0x3 => "RB-C3",
-                    _ => "",
-                },
-                uarch::Shanghai,
-                ProcessNode::NM(45),
-            ),
-            0x05 => Self::info(
-                match s {
-                    0x2 => "BL-C2",
-                    0x3 => "BL-C3",
-                    _ => "",
-                },
-                uarch::K10,
-                ProcessNode::NM(45),
-            ),
-            0x06 => Self::info(
-                match s {
-                    0x2 => "DA-C2",
-                    0x3 => "DA-C3",
-                    _ => "",
-                },
-                uarch::K10,
-                ProcessNode::NM(45),
-            ),
-            0x08 => Self::info(
-                match s {
-                    0x0 => "HY-D0",
-                    0x1 => "HY-D1",
-                    _ => "",
-                },
-                uarch::Istanbul,
-                ProcessNode::NM(45),
-            ),
-            0x09 => Self::info(
-                match s {
-                    0x1 => "HY-D1",
-                    _ => "",
-                },
-                uarch::K10,
-                ProcessNode::NM(45),
-            ),
-            0x0A => Self::info(
-                match s {
-                    0x0 => "PH-E0",
-                    _ => "",
-                },
-                uarch::K10,
-                ProcessNode::NM(45),
-            ),
-            _ => return None,
-        })
-    }
-
-    pub(super) fn amd_fam11h(m: u32, _s: u32) -> Option<Self> {
-        use AmdMicroArch as uarch;
-
-        Some(match m {
-            0x03 => Self::info("Griffin (LG-B1)", uarch::Puma2008, ProcessNode::NM(65)),
-            _ => return None,
-        })
-    }
-
-    pub(super) fn amd_fam12h(m: u32, _s: u32) -> Option<Self> {
-        use AmdMicroArch as uarch;
-
-        Some(match m {
-            0x01 => Self::info("Llano (B0)", uarch::K10, ProcessNode::NM(32)),
-            _ => return None,
-        })
-    }
-
-    pub(super) fn amd_fam14h(m: u32, _s: u32) -> Option<Self> {
-        use AmdMicroArch as uarch;
-
-        Some(match m {
-            /* https://www.amd.com/system/files/TechDocs/47534_14h_Mod_00h-0Fh_Rev_Guide.pdf */
-            0x01 => Self::info("Ontario/Zacate (B0)", uarch::Bobcat, ProcessNode::NM(40)),
-            0x02 => Self::info("Ontario/Zacate (C0)", uarch::Bobcat, ProcessNode::NM(40)),
-            _ => return None,
-        })
-    }
-
-    pub(super) fn amd_fam15h(m: u32, s: u32) -> Option<Self> {
-        use AmdMicroArch as uarch;
-
-        Some(match m {
-            0x01 => Self::info(
-                ["Orochi", match s {
-                    0x2 => " (B2)",
-                    _ => "",
-                }].concat(),
-                uarch::Bulldozer,
-                ProcessNode::NM(32)
-            ),
-            0x02 => Self::info("Orochi (C0)", uarch::Bulldozer, ProcessNode::NM(32)),
-            0x10 => Self::info(
-                ["Trinity", match s {
-                    0x0 => " (A0)",
-                    0x1 => " (A1)",
-                    _ => "",
-                }].concat(),
-                uarch::Piledriver,
-                ProcessNode::NM(32),
-            ),
-            0x13 => Self::info(
-                ["Richland", match s {
-                    0x1 => " (A1)",
-                    _ => "",
-                }].concat(),
-                uarch::Piledriver,
-                ProcessNode::NM(32)
-            ),
-            0x30 => Self::info(
-                ["Kaveri", match s {
-                    0x1 => " (A1)",
-                    _ => "",
-                }].concat(),
-                uarch::Steamroller,
-                ProcessNode::NM(28),
-            ),
-            0x38 => Self::info("Godavari", uarch::Steamroller, ProcessNode::NM(28)),
-            0x60 => Self::info(
-                ["Carrizo", match s {
-                    0x0 => " (A0)",
-                    0x1 => " (A1)",
-                    _ => "",
-                }].concat(),
-                uarch::Excavator,
-                ProcessNode::NM(28)
-            ),
-            0x65 => Self::info("Bristol Ridge", uarch::Excavator, ProcessNode::NM(28)),
-            0x70 => Self::info(
-                ["Stoney Ridge", match s {
-                    0x0 => " (A0)",
-                    _ => "",
-                }].concat(),
-                uarch::Excavator,
-                ProcessNode::NM(28),
-            ),
-            _ => return None,
-        })
-    }
-
-    pub(super) fn amd_fam16h(m: u32, s: u32) -> Option<Self> {
-        use AmdMicroArch as uarch;
-
-        Some(match m {
-            0x00 => Self::info(
-                ["Kabini/Temash", match s {
-                    0x1 => " (A1)",
-                    _ => "",
-                }].concat(),
-                uarch::Jaguar,
-                ProcessNode::NM(28)
-            ),
-            /* A9-9820: https://linux-hardware.org/?probe=1053adf355 */
-            0x26 => Self::info("Cato", uarch::Jaguar, ProcessNode::NM(28)),
-            0x30 => Self::info(
-                ["Beema/Mullins",  match s {
-                    0x1 => " (A1)",
-                    _ => "",
-                }].concat(),
-                uarch::Puma2014,
-                ProcessNode::NM(28),
-            ),
-            _ => return None,
-        })
-    }
-
-    pub(super) fn amd_fam17h(m: u32, s: u32) -> Option<Self> {
-        use AmdMicroArch as uarch;
-
-        Some(match m {
-            /* Zen */
-            /* Naples, Zeppelin/ZP */
-            0x00 |
-            0x01 => Self::info(
-                ["Naples/Zeppelin", match (m, s) {
-                    (0x00, _) => " (A0)",
-                    (0x01, 0x1) => " (B1)", // Ryzen, Summit Ridge
-                    (0x01, 0x2) => " (B2)",
-                    _ => "",
-                }].concat(),
-                uarch::Zen,
-                ProcessNode::NM(14),
-            ),
-            0x11 => Self::info("Raven Ridge", uarch::Zen, ProcessNode::NM(14)),
-            0x20 => Self::info(
-                ["Raven2 (Dali/Pollock)", match s {
-                    0x1 => " (A1)",
-                    _ => "",
-                }].concat(),
-                uarch::Zen,
-                ProcessNode::NM(14)
-            ),
-
-            /* Zen+ */
-            0x08 => Self::info(
-                ["Pinnacle Ridge", match s {
-                    0x2 => " (B2)",
-                    _ => "",
-                }].concat(),
-                uarch::ZenPlus,
-                ProcessNode::NM(12)
-            ),
-            0x18 => Self::info(
-                ["Picasso", match s {
-                    0x1 => " (B1)",
-                    _ => "",
-                }].concat(),
-                uarch::ZenPlus,
-                ProcessNode::NM(12)
-            ),
-
-            /* Zen 2 */
-            /* Rome, Starship/SSP */
-            0x30 |
-            0x31 => Self::info(
-                ["Rome/Starship", match (m, s) {
-                    (0x30, 0x0) => " (A0)",
-                    (0x31, 0x0) => " (B0)",
-                    _ => "",
-                }].concat(),
-                uarch::Zen2,
-                ProcessNode::NM(7)
-            ),
-            0x60 => Self::info(
-                ["Renoir", match s {
-                    0x1 => " (A1)",
-                    _ => "",
-                }].concat(),
-                uarch::Zen2,
-                ProcessNode::NM(7)
-            ),
-            0x68 => Self::info("Lucienne", uarch::Zen2, ProcessNode::NM(7)),
-            0x71 => Self::info("Matisse", uarch::Zen2, ProcessNode::NM(7)),
-            0x90 => Self::info("VanGogh", uarch::Zen2, ProcessNode::NM(7)),
-            0xA0..=0xAF => Self::info("Mendocino", uarch::Zen2, ProcessNode::NM(6)),
-
-            _ => return None,
-        })
-    }
-
-    pub(super) fn amd_fam19h(m: u32, s: u32) -> Option<Self> {
-        use AmdMicroArch as uarch;
-
-        Some(match m {
-            /* Zen 3 */
-            /* Milan, Genesis/GN */
-            /* Revision Guide for AMD Family 19h Models 00h-0Fh Processors: https://www.amd.com/system/files/TechDocs/56683-PUB-1.07.pdf */
-            0x00 |
-            0x01 => Self::info(
-                ["Milan/Genesis", match (m, s) {
-                    (0x00, _) => " (A0)",
-                    (0x01, 0x0) => " (B0)",
-                    (0x01, 0x1) => " (B1)", // EPYC 7003
-                    (0x01, 0x2) => " (B2)", // EPYC 7003 3D V-Cache
-                    _ => "",
-                }].concat(),
-                uarch::Zen3,
-                ProcessNode::NM(7)
-            ),
-            0x08 => Self::info("Chagall", uarch::Zen3, ProcessNode::NM(7)),
-            0x20 |
-            0x21 => Self::info(
-                ["Vermeer", match (m, s) {
-                    (0x20, _) => " (A0)",
-                    (0x21, 0x0) => " (B0)",
-                    (0x21, 0x2) => " (B2)",
-                    _ => "",
-                }].concat(),
-                uarch::Zen3,
-                ProcessNode::NM(7)
-            ),
-            /* https://www.openmp.org/wp-content/uploads/ecp_sollve_openmp_monthly.offload_perf_ana_craypat.marcus.hpe_.26aug2022.v2.pdf */
-            0x30 => Self::info("Trento", uarch::Zen3, ProcessNode::NM(7)),
-            0x40..=0x4F => Self::info(
-                ["Rembrandt", match (m, s) {
-                    (0x40, _) => " (A0)",
-                    (0x44, 0x0) => " (B0)",
-                    (0x44, 0x1) => " (B1)", // product
-                    _ => "",
-                }].concat(),
-                uarch::Zen3Plus,
-                ProcessNode::NM(6)
-            ),
-            0x50..=0x5F => Self::info(
-                ["Cezanne/Barcelo", match (m, s) {
-                    (0x50, 0x0) => " (A0)",
-                    _ => "",
-                }].concat(),
-                uarch::Zen3,
-                ProcessNode::NM(7)
-            ),
-
-            /* Zen 4 */
-            /* Genoa, Stones, RS */
-            0x10..=0x1F => Self::info(
-                ["Genoa/Stones", match (m, s) {
-                    (0x10, _) => " (A0)",
-                    (0x11, 0x0) => " (B0)",
-                    (0x11, 0x1) => " (B1)",
-                    _ => "",
-                }].concat(),
-                uarch::Zen4,
-                ProcessNode::NM(5)
-            ),
-            0x60..=0x6F => Self::info("Raphael", uarch::Zen4, ProcessNode::NM(5)),
-            0x70..=0x7F => Self::info("Phoenix", uarch::Zen4, ProcessNode::NM(4)),
-            /* https://review.coreboot.org/c/coreboot/+/71731/7/src/soc/amd/phoenix/include/soc/cpu.h */
-            /* 0x78 => Phoenix A0  */
-
-            _ => return None,
-        })
     }
 }

@@ -1,15 +1,85 @@
-use crate::{ProcInfo, ProcessNode};
-/* https://github.com/google/cpu_features/pull/218/ */
+use crate::{ProcInfo, CpuCodename, CpuMicroArch, CpuStepping, ProcessNode};
+use std::fmt;
+/* ref: https://github.com/google/cpu_features/pull/218/ */
+
+impl ProcInfo {
+    pub(super) fn zhaoxin_fam06h(m: u32, s: u32) -> Self {
+        match m {
+            0x0F | 0x19 => Self {
+                codename: CpuCodename::Zhaoxin(ZhaoxinCodename::ZX_C_4000),
+                archname: CpuMicroArch::Zhaoxin(ZhaoxinMicroArch::Zhangjiang),
+                step_info: CpuStepping::Unknown(s),
+                node: Some(ProcessNode::NM(28)),
+            },
+            _ => Self {
+                codename: CpuCodename::Zhaoxin(ZhaoxinCodename::Unknown(0x6, m)),
+                archname: CpuMicroArch::Unknown,
+                step_info: CpuStepping::Unknown(s),
+                node: None,
+            },
+        }
+    }
+    pub(super) fn zhaoxin_fam07h(m: u32, s: u32) -> Self {
+        match m {
+            0x1B => Self {
+                codename: CpuCodename::Zhaoxin(ZhaoxinCodename::KX5000_KH20000),
+                archname: CpuMicroArch::Zhaoxin(ZhaoxinMicroArch::Wudaokou),
+                step_info: CpuStepping::Unknown(s),
+                node: Some(ProcessNode::NM(28)),
+            },
+            0x3B => Self {
+                codename: CpuCodename::Zhaoxin(ZhaoxinCodename::KX6000_KH30000),
+                archname: CpuMicroArch::Zhaoxin(ZhaoxinMicroArch::Lujiazui),
+                step_info: CpuStepping::Unknown(s),
+                node: Some(ProcessNode::NM(16)),
+            },
+            0x5B => Self {
+                codename: CpuCodename::Zhaoxin(ZhaoxinCodename::KH40000),
+                archname: CpuMicroArch::Zhaoxin(ZhaoxinMicroArch::Yongfeng),
+                step_info: CpuStepping::Unknown(s),
+                node: Some(ProcessNode::NM(16)),
+            },
+            _ => Self {
+                codename: CpuCodename::Zhaoxin(ZhaoxinCodename::Unknown(0x7, m)),
+                archname: CpuMicroArch::Unknown,
+                step_info: CpuStepping::Unknown(s),
+                node: None,
+            },
+        }
+    }
+}
 
 #[derive(Debug)]
-pub(self) enum ZhaoxinMicroArch {
+#[allow(non_camel_case_types)]
+pub enum ZhaoxinCodename {
+    ZX_C_4000,
+    // ZX_C_Plus_4000,
+    KX5000_KH20000,
+    KX6000_KH30000,
+    KH40000,
+    Unknown(u32, u32),
+}
+
+impl fmt::Display for ZhaoxinCodename {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::ZX_C_4000 => write!(f, "ZX-C 4000"),
+            Self::KX5000_KH20000 => write!(f, "KX5000/KH20000"),
+            Self::KX6000_KH30000 => write!(f, "KX6000/KH30000"),
+            Self::KH40000 => write!(f, "KH40000"),
+            Self::Unknown(fam, model) => write!(f, "Family{fam:X}h Model{model:X}h"),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub enum ZhaoxinMicroArch {
     Zhangjiang, // 张江
     Wudaokou, // 五道口
     Lujiazui, // 陆家嘴
     Yongfeng, // 永丰
 }
 
-use std::fmt;
 impl fmt::Display for ZhaoxinMicroArch {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{:?}", self)
@@ -19,34 +89,5 @@ impl fmt::Display for ZhaoxinMicroArch {
 impl From<ZhaoxinMicroArch> for String {
     fn from(s: ZhaoxinMicroArch) -> Self {
         s.to_string()
-    }
-}
-
-impl ProcInfo {
-    pub(super) fn zhaoxin_fam06h(m: u32, _s: u32) -> Option<Self> {
-        use ZhaoxinMicroArch as uarch;
-
-        Some(match m {
-            0x0F => Self::info("", uarch::Zhangjiang, ProcessNode::NM(28)),
-            0x19 => Self::info("", uarch::Zhangjiang, ProcessNode::NM(28)),
-            _ => return None,
-        })
-    }
-    pub(super) fn zhaoxin_fam07h(m: u32, _s: u32) -> Option<Self> {
-        use ZhaoxinMicroArch as uarch;
-
-        Some(match m {
-            /* KX-5000, KH-20000 */
-            0x1B => Self::info("", uarch::Wudaokou, ProcessNode::NM(28)),
-            /* KX-6000, KH-30000 */
-            0x3B => Self::info("", uarch::Lujiazui, ProcessNode::NM(16)),
-                /*  Stepping 0: KX-U66xx ?
-                    https://linux-hardware.org/?probe=a68e653aa9&log=lscpu */
-                /*  Stepping 1: KX-U6780A
-                    https://linux-hardware.org/?probe=a68e653aa9&log=lscpu */
-            /* KH-40000 */
-            0x5B => Self::info("", uarch::Yongfeng, ProcessNode::NM(16)),
-            _ => return None,
-        })
     }
 }
