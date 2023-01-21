@@ -397,6 +397,7 @@ impl ProcInfo {
             },
 
             /* https://github.com/qizhangz/tdx-module/blob/main/src/common/x86_defs/x86_defs.h */
+            /* https://review.coreboot.org/c/coreboot/+/71967 */
             0x8F => Self {
                 codename: CpuCodename::Intel(IntelCodename::SapphireRapids_X),
                 archname: CpuMicroArch::Intel(IntelMicroArch::GoldenCove),
@@ -405,6 +406,11 @@ impl ProcInfo {
                     0x1 => CpuStepping::B0,
                     0x2 => CpuStepping::C0,
                     0x3 => CpuStepping::D0,
+                    0x4 => CpuStepping::E0,
+                    0x5 => CpuStepping::E2,
+                    0x6 => CpuStepping::E3,
+                    0x7 => CpuStepping::E4,
+                    // 0x8 => CpuStepping::Ex,
                     _ => CpuStepping::Unknown(s),
                 },
                 node: Some(ProcessNode::Intel(7)),
