@@ -1,4 +1,4 @@
-use crate::{ProcInfo, CpuCodename, CpuMicroArch, CpuStepping, ProcessNode};
+use crate::{CpuVendor, ProcInfo, CpuCodename, CpuMicroArch, CpuStepping, ProcessNode};
 use std::fmt;
 /* ref: https://github.com/illumos/illumos-gate/blob/master/usr/src/uts/intel/os/cpuid_subr.c */
 /* ref: https://en.wikipedia.org/wiki/List_of_AMD_CPU_microarchitectures */
@@ -80,7 +80,7 @@ impl ProcInfo {
                 node: Some(ProcessNode::NM(45)),
             },
             _ => Self {
-                codename: CpuCodename::Amd(AmdCodename::Unknown(0x10, m)),
+                codename: CpuCodename::Unknown(CpuVendor::AuthenticAMD, 0x10, m),
                 archname: CpuMicroArch::Unknown,
                 step_info: CpuStepping::Unknown(s),
                 node: None,
@@ -96,7 +96,7 @@ impl ProcInfo {
                 node: Some(ProcessNode::NM(65)),
             },
             _ => Self {
-                codename: CpuCodename::Amd(AmdCodename::Unknown(0x11, m)),
+                codename: CpuCodename::Unknown(CpuVendor::AuthenticAMD, 0x11, m),
                 archname: CpuMicroArch::Unknown,
                 step_info: CpuStepping::Unknown(s),
                 node: None,
@@ -112,7 +112,7 @@ impl ProcInfo {
                 node: Some(ProcessNode::NM(32)),
             },
             _ => Self {
-                codename: CpuCodename::Amd(AmdCodename::Unknown(0x12, m)),
+                codename: CpuCodename::Unknown(CpuVendor::AuthenticAMD, 0x12, m),
                 archname: CpuMicroArch::Unknown,
                 step_info: CpuStepping::Unknown(s),
                 node: None,
@@ -133,7 +133,7 @@ impl ProcInfo {
                 node: Some(ProcessNode::NM(40)),
             },
             _ => Self {
-                codename: CpuCodename::Amd(AmdCodename::Unknown(0x14, m)),
+                codename: CpuCodename::Unknown(CpuVendor::AuthenticAMD, 0x14, m),
                 archname: CpuMicroArch::Unknown,
                 step_info: CpuStepping::Unknown(s),
                 node: None,
@@ -212,7 +212,7 @@ impl ProcInfo {
                 node: Some(ProcessNode::NM(28)),
             },
             _ => Self {
-                codename: CpuCodename::Amd(AmdCodename::Unknown(0x15, m)),
+                codename: CpuCodename::Unknown(CpuVendor::AuthenticAMD, 0x15, m),
                 archname: CpuMicroArch::Unknown,
                 step_info: CpuStepping::Unknown(s),
                 node: None,
@@ -247,7 +247,7 @@ impl ProcInfo {
                 node: Some(ProcessNode::NM(28)),
             },
             _ => Self {
-                codename: CpuCodename::Amd(AmdCodename::Unknown(0x11, m)),
+                codename: CpuCodename::Unknown(CpuVendor::AuthenticAMD, 0x16, m),
                 archname: CpuMicroArch::Unknown,
                 step_info: CpuStepping::Unknown(s),
                 node: None,
@@ -348,7 +348,7 @@ impl ProcInfo {
                 node: Some(ProcessNode::NM(6)),
             },
             _ => Self {
-                codename: CpuCodename::Amd(AmdCodename::Unknown(0x17, m)),
+                codename: CpuCodename::Unknown(CpuVendor::AuthenticAMD, 0x17, m),
                 archname: CpuMicroArch::Unknown,
                 step_info: CpuStepping::Unknown(s),
                 node: None,
@@ -444,7 +444,7 @@ impl ProcInfo {
             /* https://review.coreboot.org/c/coreboot/+/71731/7/src/soc/amd/phoenix/include/soc/cpu.h */
             /* 0x78 => Phoenix A0  */
             _ => Self {
-                codename: CpuCodename::Amd(AmdCodename::Unknown(0x19, m)),
+                codename: CpuCodename::Unknown(CpuVendor::AuthenticAMD, 0x19, m),
                 archname: CpuMicroArch::Unknown,
                 step_info: CpuStepping::Unknown(s),
                 node: None,
@@ -508,7 +508,6 @@ pub enum AmdCodename {
     Genoa,
     Raphael,
     Phoenix,
-    Unknown(u32, u32),
 }
 
 impl fmt::Display for AmdCodename {
@@ -518,7 +517,6 @@ impl fmt::Display for AmdCodename {
             Self::Kabini_Temash => write!(f, "Kabini/Temash"),
             Self::Beema_Mullins => write!(f, "Beema/Mullins"),
             Self::Cezanne_Barcelo => write!(f, "Cezanne/Barcelo"),
-            Self::Unknown(fam, model) => write!(f, "Family{fam:X}h Model{model:X}h"),
             _ => write!(f, "{:?}", self),
         }
     }

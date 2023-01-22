@@ -1,4 +1,4 @@
-use crate::{ProcInfo, CpuCodename, CpuMicroArch, CpuStepping, ProcessNode};
+use crate::{CpuVendor, ProcInfo, CpuCodename, CpuMicroArch, CpuStepping, ProcessNode};
 use std::fmt;
 /* ref: https://github.com/google/cpu_features/pull/218/ */
 
@@ -12,7 +12,7 @@ impl ProcInfo {
                 node: Some(ProcessNode::NM(28)),
             },
             _ => Self {
-                codename: CpuCodename::Zhaoxin(ZhaoxinCodename::Unknown(0x6, m)),
+                codename: CpuCodename::Unknown(CpuVendor::Shanghai, 0x6, m),
                 archname: CpuMicroArch::Unknown,
                 step_info: CpuStepping::Unknown(s),
                 node: None,
@@ -40,7 +40,7 @@ impl ProcInfo {
                 node: Some(ProcessNode::NM(16)),
             },
             _ => Self {
-                codename: CpuCodename::Zhaoxin(ZhaoxinCodename::Unknown(0x7, m)),
+                codename: CpuCodename::Unknown(CpuVendor::Shanghai, 0x7, m),
                 archname: CpuMicroArch::Unknown,
                 step_info: CpuStepping::Unknown(s),
                 node: None,
@@ -57,7 +57,6 @@ pub enum ZhaoxinCodename {
     KX5000_KH20000,
     KX6000_KH30000,
     KH40000,
-    Unknown(u32, u32),
 }
 
 impl fmt::Display for ZhaoxinCodename {
@@ -67,7 +66,6 @@ impl fmt::Display for ZhaoxinCodename {
             Self::KX5000_KH20000 => write!(f, "KX5000/KH20000"),
             Self::KX6000_KH30000 => write!(f, "KX6000/KH30000"),
             Self::KH40000 => write!(f, "KH40000"),
-            Self::Unknown(fam, model) => write!(f, "Family{fam:X}h Model{model:X}h"),
         }
     }
 }

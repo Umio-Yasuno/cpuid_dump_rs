@@ -23,13 +23,25 @@ impl ParseGeneric for CpuidResult {
         let info01h = libcpuid_dump::Info01h::from(self);
 
         let proc_info = libcpuid_dump::ProcInfo::from_fms(&fms, vendor);
-        let step_info = match proc_info.step_info {
-            libcpuid_dump::CpuStepping::Unknown(_) => "".to_string(),
-            _ => format!(" ({})", proc_info.step_info),
+        let codename = match proc_info.codename {
+            libcpuid_dump::CpuCodename::Unknown(_, _, _) => "".to_string(),
+            libcpuid_dump::CpuCodename::UnknownVendor => "".to_string(),
+            _ => {
+                let step_info = match proc_info.step_info {
+                    libcpuid_dump::CpuStepping::Unknown(_) => "".to_string(),
+                    _ => format!(" ({})", proc_info.step_info),
+                };
+
+                format!("{LN_PAD}[Codename: {}{}]", proc_info.codename, step_info)
+            },
         };
         let node = match proc_info.node {
             Some(size) => format!("{LN_PAD}[ProcessNode: {size}]"),
             None => "".to_string(),
+        };
+        let archname = match proc_info.archname {
+            libcpuid_dump::CpuMicroArch::Unknown => "".to_string(),
+            _ => format!("{LN_PAD}[Arch: {}]", proc_info.archname),
         };
 
         [
@@ -39,13 +51,9 @@ impl ParseGeneric for CpuidResult {
                 fms.syn_mod,
                 fms.step
             ),
-            format!(
-                "{LN_PAD}[Codename: {}{}]{}{LN_PAD}[Arch: {}]",
-                proc_info.codename,
-                step_info,
-                node,
-                proc_info.archname
-            ),
+            codename,
+            node,
+            archname,
             format!(
                 "{LN_PAD}[APIC ID: {:>3}, Max: {:>3}]{LN_PAD}[CLFlush: {:3}B]",
                 info01h.local_apic_id,

@@ -1,4 +1,4 @@
-use crate::{ProcInfo, CpuCodename, CpuMicroArch, CpuStepping, ProcessNode};
+use crate::{CpuVendor, ProcInfo, CpuCodename, CpuMicroArch, CpuStepping, ProcessNode};
 use std::fmt;
 
 /* ref:
@@ -19,7 +19,7 @@ impl ProcInfo {
                 node: Some(ProcessNode::NM(32)),
             },
             _ => Self {
-                codename: CpuCodename::Intel(IntelCodename::Unknown(0x5, m)),
+                codename: CpuCodename::Unknown(CpuVendor::GenuineIntel, 0x5, m),
                 archname: CpuMicroArch::Unknown,
                 step_info: CpuStepping::Unknown(s),
                 node: None,
@@ -719,7 +719,7 @@ impl ProcInfo {
                 node: None,
             },
             _ => Self {
-                codename: CpuCodename::Intel(IntelCodename::Unknown(0x6, m)),
+                codename: CpuCodename::Unknown(CpuVendor::GenuineIntel, 0x6, m),
                 archname: CpuMicroArch::Unknown,
                 step_info: CpuStepping::Unknown(s),
                 node: None,
@@ -828,16 +828,11 @@ pub enum IntelCodename {
     /* Xeon Phi */
     KnightsLanding,
     KnightsMill,
-
-    Unknown(u32, u32),
 }
 
 impl fmt::Display for IntelCodename {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Self::Unknown(fam, model) => write!(f, "Family{fam:X}h Model{model:X}h"),
-            _ => write!(f, "{:?}", self),
-        }
+        write!(f, "{:?}", self)
     }
 }
 
