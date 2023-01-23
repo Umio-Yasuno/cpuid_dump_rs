@@ -6,16 +6,20 @@ use std::fmt;
 impl ProcInfo {
     pub fn from_fms(fms: &FamModStep, vendor: &CpuVendor) -> Self {
         let [f, m, s] = [fms.syn_fam, fms.syn_mod, fms.step];
-        let unknown = |step: u32| -> Self {
-            Self {
-                codename: CpuCodename::UnknownVendor,
-                archname: CpuMicroArch::Unknown,
-                step_info: CpuStepping::Unknown(step),
-                node: None,
-            }
-        };
+        let vendor = vendor.clone();
 
-        match *vendor {
+        macro_rules! unknown {
+            ($vendor: expr, $family: expr, $model: expr, $step: expr) => {
+                Self {
+                    codename: CpuCodename::Unknown($vendor, $family, $model),
+                    archname: CpuMicroArch::Unknown,
+                    step_info: CpuStepping::Unknown($step),
+                    node: None,
+                }
+            };
+        }
+
+        match vendor {
             CpuVendor::AuthenticAMD => match f {
                 0x10 => Self::amd_fam10h(m, s),
                 0x11 => Self::amd_fam11h(m, s),
@@ -25,20 +29,25 @@ impl ProcInfo {
                 0x16 => Self::amd_fam16h(m, s),
                 0x17 => Self::amd_fam17h(m, s),
                 0x19 => Self::amd_fam19h(m, s),
-                _ => unknown(s),
+                _ => unknown!(vendor, f, m, s),
             },
             CpuVendor::GenuineIntel => match f {
                 0x5 => Self::intel_fam05h(m, s),
                 0x6 => Self::intel_fam06h(m, s),
-                _ => unknown(s),
+                _ => unknown!(vendor, f, m, s),
             },
             CpuVendor::CentaurHauls |
             CpuVendor::Shanghai => match f {
                 0x6 => Self::zhaoxin_fam06h(m, s),
                 0x7 => Self::zhaoxin_fam07h(m, s),
-                _ => unknown(s),
+                _ => unknown!(vendor, f, m, s),
             },
-            _ => unknown(s),
+            CpuVendor::Unknown(_) => Self {
+                codename: CpuCodename::Unknown(vendor, f, m),
+                archname: CpuMicroArch::Unknown,
+                step_info: CpuStepping::Unknown(s),
+                node: None,
+            },
         }
     }
 }
@@ -55,7 +64,6 @@ pub enum CpuCodename {
     Intel(IntelCodename),
     Zhaoxin(ZhaoxinCodename),
     Unknown(CpuVendor, u32, u32),
-    UnknownVendor,
 }
 
 impl fmt::Display for CpuCodename {
@@ -64,7 +72,6 @@ impl fmt::Display for CpuCodename {
             Self::Amd(arch) => write!(f, "AMD {arch}"),
             Self::Intel(arch) => write!(f, "Intel {arch}"),
             Self::Zhaoxin(arch) => write!(f, "Zhaoxin {arch}"),
-            Self::UnknownVendor => write!(f, "UnknownVendor"),
             Self::Unknown(vendor, fam, model) => write!(f, "{vendor} Fam{fam}h Model{model}h"),
         }
     }

@@ -1,7 +1,7 @@
 use crate::{cpuid, CpuidResult};
 use std::fmt;
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Vendor {
     pub ebx: u32,
     pub ecx: u32,
@@ -38,6 +38,7 @@ impl Vendor {
     }
 }
 
+/*
 impl fmt::Display for Vendor {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let check = |reg: u32| -> Vec<u8> {
@@ -57,6 +58,7 @@ impl fmt::Display for Vendor {
         write!(f, "{}", String::from_utf8(bytes).unwrap())
     }
 }
+*/
 
 impl From<&CpuidResult> for Vendor {
     fn from(cpuid: &CpuidResult) -> Self {
@@ -68,13 +70,13 @@ impl From<&CpuidResult> for Vendor {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum CpuVendor {
     AuthenticAMD,
     GenuineIntel,
     CentaurHauls,
     Shanghai,
-    Unknown,
+    Unknown(Vendor),
 }
 
 impl From<&Vendor> for CpuVendor {
@@ -84,7 +86,7 @@ impl From<&Vendor> for CpuVendor {
             Vendor::REG_INTEL => Self::GenuineIntel,
             Vendor::REG_CENTAUR => Self::CentaurHauls,
             Vendor::REG_SHANGHAI => Self::Shanghai,
-            _ => Self::Unknown,
+            _ => Self::Unknown(vendor.clone()),
         }
     }
 }

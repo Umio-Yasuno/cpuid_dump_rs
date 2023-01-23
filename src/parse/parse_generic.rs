@@ -25,7 +25,6 @@ impl ParseGeneric for CpuidResult {
         let proc_info = libcpuid_dump::ProcInfo::from_fms(&fms, vendor);
         let codename = match proc_info.codename {
             libcpuid_dump::CpuCodename::Unknown(_, _, _) => "".to_string(),
-            libcpuid_dump::CpuCodename::UnknownVendor => "".to_string(),
             _ => {
                 let step_info = match proc_info.step_info {
                     libcpuid_dump::CpuStepping::Unknown(_) => "".to_string(),
