@@ -44,7 +44,7 @@ pub enum AmdPkgType {
     // FP7r7, // ?, AMD Ryzen 9 6900HS, Ryzen 7 6800HS
     AM5,
     FT6,
-    Unknown,
+    Unknown(u32),
 }
 
 use std::fmt;
@@ -68,69 +68,69 @@ impl From<&CpuidResult> for AmdPkgType {
                 0x3 => Self::G34,
                 0x4 => Self::ASB2,
                 0x5 => Self::C32,
-                _ => Self::Unknown,
+                _ => Self::Unknown(pkg_type),
             },
             /* Griffin, Turion */
             FamModStep { syn_fam: 0x11, .. } => match pkg_type {
                 0x2 => Self::S1g2,
-                _ => Self::Unknown,
+                _ => Self::Unknown(pkg_type),
             },
             /* Llano */
             FamModStep { syn_fam: 0x12, .. } => match pkg_type {
                 0x1 => Self::FS1,
                 0x2 => Self::FM1,
-                _ => Self::Unknown,
+                _ => Self::Unknown(pkg_type),
             },
             /* Bobcat */
             FamModStep { syn_fam: 0x14, .. } => match pkg_type {
                 0x0 => Self::FT1,
-                _ => Self::Unknown,
+                _ => Self::Unknown(pkg_type),
             },
             /* Bulldozer, Interlagos, Valencia, Zambezi */
             FamModStep { syn_fam: 0x15, syn_mod: 0x00..=0x0F, .. } => match pkg_type {
                 0x1 => Self::AM3r2,
                 0x3 => Self::G34,
                 0x5 => Self::C32,
-                _ => Self::Unknown,
+                _ => Self::Unknown(pkg_type),
             },
             /* Piledrive, Richland */
             FamModStep { syn_fam: 0x15, syn_mod: 0x10..=0x1F, .. } => match pkg_type {
                 0x0 => Self::FP2,
                 0x1 => Self::FS1r2,
                 0x2 => Self::FM2,
-                _ => Self::Unknown,
+                _ => Self::Unknown(pkg_type),
             },
             /* Kaveri, Godavari */
             FamModStep { syn_fam: 0x15, syn_mod: 0x30..=0x3F, .. } => match pkg_type {
                 0x0 => Self::FP3,
                 0x1 => Self::FM2r2,
-                _ => Self::Unknown,
+                _ => Self::Unknown(pkg_type),
             },
             /* Carrizo, Bristol Ridge */
             FamModStep { syn_fam: 0x15, syn_mod: 0x60..=0x6F, .. } => match pkg_type {
                 0x0 => Self::FP4,
                 0x2 => Self::AM4,
                 0x3 => Self::FM2r2,
-                _ => Self::Unknown,
+                _ => Self::Unknown(pkg_type),
             },
             /* Stoney Ridge */
             FamModStep { syn_fam: 0x15, syn_mod: 0x70..=0x7F, .. } => match pkg_type {
                 0x0 => Self::FP4,
                 0x2 => Self::AM4,
                 0x4 => Self::FT4,
-                _ => Self::Unknown,
+                _ => Self::Unknown(pkg_type),
             },
             /* Jaguar, Kabini, Termash */
             FamModStep { syn_fam: 0x16, syn_mod: 0x00..=0x0F, .. } => match pkg_type {
                 0x0 => Self::FT3,
                 0x1 => Self::FS1b,
-                _ => Self::Unknown,
+                _ => Self::Unknown(pkg_type),
             },
             /* Puma, Beema, Mullins */
             FamModStep { syn_fam: 0x16, syn_mod: 0x30..=0x3F, .. } => match pkg_type {
                 0x0 => Self::FT3b,
                 0x3 => Self::FP4,
-                _ => Self::Unknown,
+                _ => Self::Unknown(pkg_type),
             },
             /* Summit Ridge, Naples */
             FamModStep { syn_fam: 0x17, syn_mod: 0x00..=0x0F, .. } |
@@ -147,7 +147,7 @@ impl From<&CpuidResult> for AmdPkgType {
                 0x3 => Self::FT5,
                 0x4 => Self::SP3,
                 0x7 => Self::SP3r2,
-                _ => Self::Unknown,
+                _ => Self::Unknown(pkg_type),
             },
             /* Renoir, Lucienne */
             FamModStep { syn_fam: 0x17, syn_mod: 0x60..=0x6F, .. } |
@@ -155,13 +155,13 @@ impl From<&CpuidResult> for AmdPkgType {
             FamModStep { syn_fam: 0x19, syn_mod: 0x50..=0x5F, .. } => match pkg_type {
                 0x0 => Self::FP6,
                 0x2 => Self::AM4,
-                _ => Self::Unknown,
+                _ => Self::Unknown(pkg_type),
             },
             /* Milan, Chagall */
             FamModStep { syn_fam: 0x19, syn_mod: 0x00..=0x0F, .. } => match pkg_type {
                 0x4 => Self::SP3,
                 0x7 => Self::STRX4,
-                _ => Self::Unknown,
+                _ => Self::Unknown(pkg_type),
             },
             /* Rembrandt */
             FamModStep { syn_fam: 0x19, syn_mod: 0x40..=0x4F, .. } => match pkg_type {
@@ -172,29 +172,29 @@ impl From<&CpuidResult> for AmdPkgType {
                 0x4 => Self::FP7r2,
                 /* AMD Ryzen 5 9 PRO 6950HS: https://linux-hardware.org/?probe=b4a34edd03&log=cpuid */
                 0x5 => Self::FP7r2,
-                _ => Self::Unknown,
+                _ => Self::Unknown(pkg_type),
             },
             /* Mendocino */
             FamModStep { syn_fam: 0x17, syn_mod: 0xA0..=0xAF, .. } => match pkg_type {
                 0x1 => Self::FT6,
-                _ => Self::Unknown,
+                _ => Self::Unknown(pkg_type),
             },
             /* VanGogh */
             FamModStep { syn_fam: 0x17, syn_mod: 0x90, .. } => match pkg_type {
                 0x3 => Self::FF3,
-                _ => Self::Unknown,
+                _ => Self::Unknown(pkg_type),
             },
             /* Genoa */
             FamModStep { syn_fam: 0x19, syn_mod: 0x10..=0x1F, .. } => match pkg_type {
                 0x4 => Self::SP5,
-                _ => Self::Unknown,
+                _ => Self::Unknown(pkg_type),
             },
             /* Raphael */
             FamModStep { syn_fam: 0x19, syn_mod: 0x60..=0x6F, .. } => match pkg_type {
                 0x0 => Self::AM5,
-                _ => Self::Unknown,
+                _ => Self::Unknown(pkg_type),
             },
-            _ => Self::Unknown,
+            _ => Self::Unknown(pkg_type),
         }
     }
 }
