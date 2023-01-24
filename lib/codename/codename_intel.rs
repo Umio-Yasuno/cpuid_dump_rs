@@ -1,5 +1,11 @@
 use crate::{CpuVendor, ProcInfo, CpuCodename, CpuMicroArch, CpuStepping, ProcessNode};
+#[cfg(feature = "std")]
 use std::fmt;
+
+#[cfg(not(feature = "std"))]
+extern crate alloc;
+#[cfg(not(feature = "std"))]
+use alloc::boxed::Box;
 
 /* ref:
     https://www.intel.com/content/www/us/en/developer/topic-technology/software-security-guidance/processors-affected-consolidated-product-cpu-model.html
@@ -830,6 +836,7 @@ pub enum IntelCodename {
     KnightsMill,
 }
 
+#[cfg(feature = "std")]
 impl fmt::Display for IntelCodename {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{:?}", self)
@@ -884,6 +891,7 @@ impl IntelMicroArch {
     }
 }
 
+#[cfg(feature = "std")]
 impl fmt::Display for IntelMicroArch {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {

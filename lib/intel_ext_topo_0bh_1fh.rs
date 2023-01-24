@@ -1,5 +1,4 @@
 use crate::CpuidResult;
-use std::fmt;
 
 #[derive(Debug, PartialEq, Eq)]
 #[repr(u8)]
@@ -26,8 +25,9 @@ impl From<u8> for TopoLevelType {
     }
 }
 
-impl fmt::Display for TopoLevelType {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+#[cfg(feature = "std")]
+impl std::fmt::Display for TopoLevelType {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "{:?}", self)
     }
 }

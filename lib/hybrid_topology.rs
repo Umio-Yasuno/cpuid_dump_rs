@@ -1,3 +1,4 @@
+#[cfg(feature = "std")]
 use crate::{cpuid, CacheType, CacheProp, HybridCoreType, HybridInfo};
 use crate::util::*;
 

@@ -1,5 +1,4 @@
 use crate::{cpuid, CpuidResult, CpuVendor};
-use std::fmt;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum Unit {
@@ -35,8 +34,9 @@ impl From<u32> for Unit {
     }
 }
 
-impl fmt::Display for Unit {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+#[cfg(feature = "std")]
+impl std::fmt::Display for Unit {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "{:?}", self)
     }
 }
@@ -61,8 +61,9 @@ impl CacheType {
     }
 }
 
-impl fmt::Display for CacheType {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+#[cfg(feature = "std")]
+impl std::fmt::Display for CacheType {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "{:?}", self)
     }
 }

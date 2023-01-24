@@ -1,4 +1,5 @@
 use crate::{CpuVendor, ProcInfo, CpuCodename, CpuMicroArch, CpuStepping, ProcessNode};
+#[cfg(feature = "std")]
 use std::fmt;
 /* ref: https://github.com/illumos/illumos-gate/blob/master/usr/src/uts/intel/os/cpuid_subr.c */
 /* ref: https://en.wikipedia.org/wiki/List_of_AMD_CPU_microarchitectures */
@@ -510,6 +511,7 @@ pub enum AmdCodename {
     Phoenix,
 }
 
+#[cfg(feature = "std")]
 impl fmt::Display for AmdCodename {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
@@ -545,6 +547,7 @@ pub enum AmdMicroArch {
     _Reserved,
 }
 
+#[cfg(feature = "std")]
 impl fmt::Display for AmdMicroArch {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {

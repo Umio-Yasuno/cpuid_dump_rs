@@ -1,6 +1,7 @@
 use crate::{cpuid, CpuidResult, CpuVendor};
 use crate::codename::{AmdCodename, IntelCodename, ZhaoxinCodename};
 use crate::codename::{AmdMicroArch, IntelMicroArch, ZhaoxinMicroArch};
+#[cfg(feature = "std")]
 use std::fmt;
 
 impl ProcInfo {
@@ -66,6 +67,7 @@ pub enum CpuCodename {
     Unknown(CpuVendor, u32, u32),
 }
 
+#[cfg(feature = "std")]
 impl fmt::Display for CpuCodename {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
@@ -84,6 +86,7 @@ pub enum CpuMicroArch {
     Unknown,
 }
 
+#[cfg(feature = "std")]
 impl fmt::Display for CpuMicroArch {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
@@ -143,6 +146,7 @@ pub enum CpuStepping {
     Unknown(u32),
 }
 
+#[cfg(feature = "std")]
 impl fmt::Display for CpuStepping {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
@@ -158,6 +162,7 @@ pub enum ProcessNode {
     Intel(u8),
 }
 
+#[cfg(feature = "std")]
 impl fmt::Display for ProcessNode {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {

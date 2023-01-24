@@ -1,3 +1,4 @@
+#[cfg(feature = "std")]
 use std::fmt;
 
 #[derive(Debug, Clone)]
@@ -8,6 +9,7 @@ pub enum TlbType {
     L2i,
 }
 
+#[cfg(feature = "std")]
 impl fmt::Display for TlbType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{:?}", self)
@@ -18,11 +20,12 @@ impl fmt::Display for TlbType {
 pub enum TlbAssoc {
     Disabled,
     Way(u8),
-    WayRange(std::ops::Range<u8>),
+    WayRange(core::ops::Range<u8>),
     Full,
     Invalid,
 }
 
+#[cfg(feature = "std")]
 impl fmt::Display for TlbAssoc {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {

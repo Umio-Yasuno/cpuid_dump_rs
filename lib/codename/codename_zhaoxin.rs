@@ -1,4 +1,5 @@
 use crate::{CpuVendor, ProcInfo, CpuCodename, CpuMicroArch, CpuStepping, ProcessNode};
+#[cfg(feature = "std")]
 use std::fmt;
 /* ref: https://github.com/google/cpu_features/pull/218/ */
 
@@ -59,6 +60,7 @@ pub enum ZhaoxinCodename {
     KH40000,
 }
 
+#[cfg(feature = "std")]
 impl fmt::Display for ZhaoxinCodename {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
@@ -78,14 +80,9 @@ pub enum ZhaoxinMicroArch {
     Yongfeng, // 永丰
 }
 
+#[cfg(feature = "std")]
 impl fmt::Display for ZhaoxinMicroArch {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{:?}", self)
-    }
-}
-
-impl From<ZhaoxinMicroArch> for String {
-    fn from(s: ZhaoxinMicroArch) -> Self {
-        s.to_string()
     }
 }

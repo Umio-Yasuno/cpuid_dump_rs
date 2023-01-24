@@ -1,5 +1,6 @@
 use crate::{cpuid, CacheProp, TopoId, TopoLevelType};
 
+#[cfg(feature = "std")]
 pub fn pin_thread(cpu: usize) -> Result<(), i32> {
     #[cfg(unix)]
     unsafe {
@@ -35,6 +36,7 @@ pub fn pin_thread(cpu: usize) -> Result<(), i32> {
     Ok(())
 }
 
+#[cfg(feature = "std")]
 pub fn cpu_set_list() -> Result<Vec<usize>, i32> {
     let mut cpus: Vec<usize> = Vec::with_capacity(256);
 

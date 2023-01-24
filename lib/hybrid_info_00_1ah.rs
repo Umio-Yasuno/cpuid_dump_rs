@@ -1,5 +1,4 @@
 use crate::{cpuid, CpuidResult};
-use std::fmt;
 
 /* https://github.com/slimbootloader/slimbootloader/blob/master/Platform/AlderlakeBoardPkg/Library/Stage2BoardInitLib/CpuInfoLib.c */
 
@@ -13,8 +12,9 @@ pub enum HybridCoreType {
     Invalid,
 }
 
-impl fmt::Display for HybridCoreType {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+#[cfg(feature = "std")]
+impl std::fmt::Display for HybridCoreType {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "{:?}", self)
     }
 }

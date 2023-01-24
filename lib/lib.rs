@@ -1,3 +1,5 @@
+#![cfg_attr(not(feature = "std"), no_std)]
+
 use core::arch::x86_64::CpuidResult;
 
 // pub const _AX: u32 = 0x8000_0000;
@@ -25,7 +27,9 @@ pub use vendor::*;
 mod micro_arch_level;
 pub use micro_arch_level::*;
 
+#[cfg(feature = "std")]
 mod proc_name;
+#[cfg(feature = "std")]
 pub use proc_name::*;
 
 mod cache_prop;
@@ -46,7 +50,9 @@ pub use hybrid_info_00_1ah::*;
 mod topo_info;
 pub use topo_info::*;
 
+#[cfg(feature = "std")]
 mod hybrid_topology;
+#[cfg(feature = "std")]
 pub use hybrid_topology::*;
 
 mod addr_size_80_08h_eax;

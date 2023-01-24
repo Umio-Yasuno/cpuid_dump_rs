@@ -1,5 +1,4 @@
 use crate::{cpuid, CpuidResult};
-use std::fmt;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Vendor {
@@ -97,14 +96,15 @@ impl From<&CpuidResult> for CpuVendor {
     }
 }
 
-impl fmt::Display for CpuVendor {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:?}", self)
-    }
-}
-
 impl CpuVendor {
     pub fn get() -> Self {
         Self::from(&cpuid!(0x0, 0x0))
+    }
+}
+
+#[cfg(feature = "std")]
+impl std::fmt::Display for CpuVendor {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{:?}", self)
     }
 }
