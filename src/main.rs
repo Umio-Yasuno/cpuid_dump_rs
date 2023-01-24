@@ -240,6 +240,7 @@ enum DumpFormat {
     Binary,
     Parse,
     CompatCpuid,
+    Debug,
 }
 
 #[derive(Debug, Clone)]
@@ -352,6 +353,9 @@ impl MainOpt {
                     opt.skip_zero = false;
                     opt.diff = false;
                 },
+                "debug" => {
+                    opt.fmt = DumpFormat::Debug
+                },
                 "h" | "help" => {
                     help_msg();
                     std::process::exit(0);
@@ -399,6 +403,7 @@ impl MainOpt {
     fn head_fmt(&self) -> String {
         match self.fmt {
             DumpFormat::Binary => bin_head(),
+            DumpFormat::Debug |
             DumpFormat::CompatCpuid => "".to_string(),
             _ => hex_head(),
         }
@@ -422,6 +427,10 @@ impl MainOpt {
             DumpFormat::CompatCpuid => (
                 len * TOTAL_WIDTH,
                 RawCpuid::compat_fmt,
+            ),
+            DumpFormat::Debug => (
+                len * TOTAL_WIDTH * 2,
+                RawCpuid::debug_fmt,
             ),
         };
 
@@ -529,6 +538,7 @@ impl MainOpt {
             DumpFormat::Binary => RawCpuid::bin_fmt,
             DumpFormat::Parse => RawCpuid::parse_fmt,
             DumpFormat::CompatCpuid => RawCpuid::compat_fmt,
+            DumpFormat::Debug => RawCpuid::debug_fmt,
         };
 
         let tmp = [

@@ -150,4 +150,8 @@ impl RawCpuid {
 
         format!("   {leaf:#010x} {sub_leaf:#04x}: eax={eax:#010x} ebx={ebx:#010x} ecx={ecx:#010x} edx={edx:#010x}\n")
     }
+
+    pub fn debug_fmt(&self, _: &CpuVendor) -> String {
+        format!("{:#X?}\n", self)
+    }
 }
