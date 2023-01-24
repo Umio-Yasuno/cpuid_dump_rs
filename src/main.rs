@@ -199,39 +199,41 @@ fn default_name() -> String {
 }
 
 fn help_msg() {
-    print!("\n\
-        {VERSION_HEAD}\
-        https://github.com/Umio-Yasuno/cpuid_dump_rs\n\
-        \n\
-        USAGE:\n\
-        \x20    cargo run -- [options ..] or <cpuid_dump> [options ..]\n\
-        \n\
-        FLAGS:\n\
-        \x20    -a, -all\n\
-        \x20        Display result for all threads.\n\
-        \x20    -r, -raw\n\
-        \x20        Display raw/hex result.\n\
-        \x20    -bin\n\
-        \x20        Display binary result.\n\
-        \x20    -c, -compat\n\
-        \x20        Display the same format as `cpuid -r` (cpuid by Todd Allen)\n\
-        \x20    -full\n\
-        \x20        Combine \"-disp-zero\" and \"-no-diff\"\n\
-        \x20    -disp-zero\n\
-        \x20        Display result even if E[ABCD]X are zero.\n\
-        \x20    -no-diff\n\
-        \x20        Do not omit diff when all threads execution\n\
-        \n\
-        OPTIONS:\n\
-        \x20    --l <u32>, --leaf <u32>\n\
-        \x20        Display result only for the specified value, the value is Leaf/InputEAX <u32>.\n\
-        \x20        e.g. --leaf 1, --leaf 0x8000_0008,\n\
-        \x20    --sub_leaf <u32>, --subleaf <u32>\n\
-        \x20        Display result only for the specified value, the value is Sub_Leaf/InputECX <u32>.\n\
-        \x20    --s <path/filename>, --save <path/filename>\n\
-        \x20        Save dump result to text file.\n\
-        \x20        If there is no path/filename argument, will be used \"./<processor_name>\".
-    \n")
+    const MSG: &str = concat!(
+        "CPUID Dump ", env!("CARGO_PKG_VERSION"), "\n",
+        "https://github.com/Umio-Yasuno/cpuid_dump_rs\n",
+        "\n",
+        "USAGE:\n",
+        "    cargo run -- [options ..] or <cpuid_dump> [options ..]\n",
+        "\n",
+        "FLAGS:\n",
+        "    -a, -all\n",
+        "        Display result for all threads.\n",
+        "    -r, -raw\n",
+        "        Display raw/hex result.\n",
+        "    -bin\n",
+        "        Display binary result.\n",
+        "    -c, -compat\n",
+        "        Display the same format as `cpuid -r` (cpuid by Todd Allen)\n",
+        "    -full\n",
+        "        Combine \"-disp-zero\" and \"-no-diff\"\n",
+        "    -disp-zero\n",
+        "        Display result even if E[ABCD]X are zero.\n",
+        "    -no-diff\n",
+        "        Do not omit diff when all threads execution\n",
+        "\n",
+        "OPTIONS:\n",
+        "    --l <u32>, --leaf <u32>\n",
+        "        Display result only for the specified value, the value is Leaf/InputEAX <u32>.\n",
+        "        e.g. --leaf 1, --leaf 0x8000_0008,\n",
+        "    --sub_leaf <u32>, --subleaf <u32>\n",
+        "        Display result only for the specified value, the value is Sub_Leaf/InputECX <u32>.\n",
+        "    --s <path/filename>, --save <path/filename>\n",
+        "        Save dump result to text file.\n",
+        "        If there is no path/filename argument, will be used \"./<processor_name>\".",
+    );
+
+    println!("{MSG}")
 }
 
 #[derive(Debug, Clone)]
