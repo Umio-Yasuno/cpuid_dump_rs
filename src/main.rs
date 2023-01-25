@@ -10,7 +10,7 @@ pub const INPUT_WIDTH: usize = "  0x00000000 0x0:  ".len();
 pub const OUTPUT_WIDTH: usize = "0x00000000 ".len() * 4;
 pub const TOTAL_WIDTH: usize = 100;
 pub const PARSE_WIDTH: usize = TOTAL_WIDTH - INPUT_WIDTH - OUTPUT_WIDTH - 1; // " ".len()
-pub const VERSION_HEAD: &str = concat!("CPUID Dump ", env!("CARGO_PKG_VERSION"), "\n");
+// pub const VERSION_HEAD: &str = concat!("CPUID Dump ", env!("CARGO_PKG_VERSION"), "\n");
 
 mod raw_cpuid;
 pub use raw_cpuid::*;
@@ -335,15 +335,11 @@ impl MainOpt {
                     };
                 },
                 "subleaf" | "sub_leaf" | "sub-leaf" => {
-                    if let Some((leaf, _)) = opt.leaf {
-                        if let Some(sub_leaf) = args.get(idx+1) {
-                            let sub_leaf = Self::parse_value(sub_leaf);
-                            opt.leaf = Some((leaf, sub_leaf));
-                        } else {
-                            eprintln!("missing argument <u32> to \"--sub_leaf <u32>\"");
-                        }
+                    if let (Some((leaf, _)), Some(sub_leaf)) = (opt.leaf, args.get(idx+1)) {
+                        let sub_leaf = Self::parse_value(sub_leaf);
+                        opt.leaf = Some((leaf, sub_leaf));
                     } else {
-                        eprintln!("missing argument \"--leaf <u32>\"");
+                        eprintln!("missing argument \"--sub_leaf <u32>\"");
                     };
                 }
                 "bin" => {

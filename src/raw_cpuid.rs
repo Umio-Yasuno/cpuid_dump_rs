@@ -60,37 +60,33 @@ impl RawCpuid {
                 },
             ].concat(),
             _ => match vendor {
-                CpuVendor::AuthenticAMD => {
-                    match self.leaf {
-                        0x8000_0005 => cpuid.l1_amd_80_05h(),
-                        0x8000_0006 => cpuid.l2_amd_80_06h(),
-                        0x8000_0007 => cpuid.apmi_amd_80_07h(),
-                        0x8000_000A => [
-                            cpuid.svm_rev_amd_80_0ah_eax_ebx(),
-                            lnpad!(),
-                            cpuid.svm_ftr_amd_80_0ah_edx()
-                        ].concat(),
-                        0x8000_0019 => cpuid.l1l2tlb_1g_amd_80_19h(),
-                        0x8000_001A => cpuid.fpu_width_amd_80_1ah(),
-                        0x8000_001B => cpuid.ibs_amd_80_1bh(),
-                        0x8000_001D => cpuid.cache_prop(),
-                        0x8000_001E => cpuid.cpu_topo_amd_80_1eh(),
-                        0x8000_001F => [
-                            cpuid.encrypt_ftr_amd_80_1fh(),
-                            cpuid.reduction_phys_addr_amd_80_1fh(),
-                        ].concat(),
-                        0x8000_0021 => cpuid.ext_amd_80_21h(),
-                        _ => "".to_string(),
-                    }
+                CpuVendor::AuthenticAMD => match self.leaf {
+                    0x8000_0005 => cpuid.l1_amd_80_05h(),
+                    0x8000_0006 => cpuid.l2_amd_80_06h(),
+                    0x8000_0007 => cpuid.apmi_amd_80_07h(),
+                    0x8000_000A => [
+                        cpuid.svm_rev_amd_80_0ah_eax_ebx(),
+                        lnpad!(),
+                        cpuid.svm_ftr_amd_80_0ah_edx()
+                    ].concat(),
+                    0x8000_0019 => cpuid.l1l2tlb_1g_amd_80_19h(),
+                    0x8000_001A => cpuid.fpu_width_amd_80_1ah(),
+                    0x8000_001B => cpuid.ibs_amd_80_1bh(),
+                    0x8000_001D => cpuid.cache_prop(),
+                    0x8000_001E => cpuid.cpu_topo_amd_80_1eh(),
+                    0x8000_001F => [
+                        cpuid.encrypt_ftr_amd_80_1fh(),
+                        cpuid.reduction_phys_addr_amd_80_1fh(),
+                    ].concat(),
+                    0x8000_0021 => cpuid.ext_amd_80_21h(),
+                    _ => "".to_string(),
                 },
-                CpuVendor::GenuineIntel => {
-                    match self.leaf {
-                        0x4 => cpuid.cache_prop(),
-                        0x16 => cpuid.clock_speed_intel_00_16h(),
-                        0x1A => cpuid.intel_hybrid_1ah(),
-                        0x1F => cpuid.v2_ext_topo_intel_1fh(),
-                        _ => "".to_string(),
-                    }
+                CpuVendor::GenuineIntel => match self.leaf {
+                    0x4 => cpuid.cache_prop(),
+                    0x16 => cpuid.clock_speed_intel_00_16h(),
+                    0x1A => cpuid.intel_hybrid_1ah(),
+                    0x1F => cpuid.v2_ext_topo_intel_1fh(),
+                    _ => "".to_string(),
                 },
                 _ => "".to_string(),
             }
