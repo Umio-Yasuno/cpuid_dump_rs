@@ -199,7 +199,7 @@ impl ParseGeneric for CpuidResult {
     }
 
     fn cpu_name(&self) -> String {
-        let name = libcpuid_dump::ProcName::dec_cpuid(self);
+        let name = libcpuid_dump::ProcName::dec_cpuid(self).to_vec();
 
         String::from_utf8(name).unwrap()
     }

@@ -16,18 +16,16 @@ impl ProcName {
         bytes
     }
 
-    pub fn dec_cpuid(cpuid: &CpuidResult) -> Vec<u8> {
-        [
-            cpuid.eax,
-            cpuid.ebx,
-            cpuid.ecx,
-            cpuid.edx,
-        ]
-        .iter()
-        .flat_map(|&reg| Self::check_reg(reg))
-        .collect()
+    pub fn dec_cpuid(cpuid: &CpuidResult) -> [u8; 16] {
+        let mut total = [0u8; 16];
+
+        for (i, reg) in [cpuid.eax, cpuid.ebx, cpuid.ecx, cpuid.edx].iter().enumerate() {
+            total[(i*4)..(i*4+4)].copy_from_slice(&Self::check_reg(*reg))
+        }
+
+        total
     }
-    
+
     fn set_cpuid() -> [CpuidResult; 3] {
         [
             cpuid!(0x8000_0002, 0x0),
