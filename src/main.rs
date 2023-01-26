@@ -245,6 +245,34 @@ enum DumpFormat {
     Debug,
 }
 
+impl DumpFormat {
+    fn thread_id_head(&self, thread_id: usize) -> String {
+        match self {
+            Self::CompatCpuid => format!("CPU {thread_id}:\n"),
+            _ => topo_info_thread_id_head(thread_id),
+        }
+    }
+
+    fn head_fmt(&self) -> String {
+        match self {
+            Self::Binary => bin_head(),
+            Self::Debug |
+            Self::CompatCpuid => "".to_string(),
+            _ => hex_head(),
+        }
+    }
+
+    fn rawcpuid_fmt_func(&self) -> fn(&RawCpuid, &CpuVendor) -> String {
+        match self {
+            Self::Raw => RawCpuid::raw_fmt,
+            Self::Binary => RawCpuid::bin_fmt,
+            Self::Parse => RawCpuid::parse_fmt,
+            Self::CompatCpuid => RawCpuid::compat_fmt,
+            Self::Debug => RawCpuid::debug_fmt,
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 struct MainOpt {
     fmt: DumpFormat,
@@ -391,55 +419,15 @@ impl MainOpt {
         cpuid_pool
     }
 
-    fn thread_id_head(&self, thread_id: usize) -> String {
-        match self.fmt {
-            DumpFormat::CompatCpuid => format!("CPU {thread_id}:\n"),
-            _ => topo_info_thread_id_head(thread_id),
-        }
-    }
-
-    fn head_fmt(&self) -> String {
-        match self.fmt {
-            DumpFormat::Binary => bin_head(),
-            DumpFormat::Debug |
-            DumpFormat::CompatCpuid => "".to_string(),
-            _ => hex_head(),
-        }
-    }
-
     fn select_pool(&self, rawcpuid_pool: &[RawCpuid]) -> Vec<u8> {
-        let len = rawcpuid_pool.len();
-        let (cap, fmt_func): (usize, fn(&RawCpuid, &CpuVendor) -> String) = match self.fmt {
-            DumpFormat::Raw => (
-                len * TOTAL_WIDTH,
-                RawCpuid::raw_fmt
-            ),
-            DumpFormat::Binary => (
-                len * TOTAL_WIDTH * 2,
-                RawCpuid::bin_fmt
-            ),
-            DumpFormat::Parse => (
-                len * TOTAL_WIDTH * 3,
-                RawCpuid::parse_fmt
-            ),
-            DumpFormat::CompatCpuid => (
-                len * TOTAL_WIDTH,
-                RawCpuid::compat_fmt,
-            ),
-            DumpFormat::Debug => (
-                len * TOTAL_WIDTH * 2,
-                RawCpuid::debug_fmt,
-            ),
-        };
+        let fmt_func = self.fmt.rawcpuid_fmt_func();
 
-        let mut parse_pool: Vec<u8> = Vec::with_capacity(cap);
         let vendor = CpuVendor::get();
 
-        for rawcpuid in rawcpuid_pool {
-            parse_pool.extend(fmt_func(rawcpuid, &vendor).into_bytes())
-        }
-
-        parse_pool
+        rawcpuid_pool
+            .iter()
+            .flat_map(|rawcpuid| fmt_func(rawcpuid, &vendor).into_bytes())
+            .collect()
     }
 
     fn pool_all_thread(&self) -> Vec<u8> {
@@ -464,7 +452,7 @@ impl MainOpt {
                 let cpu = cpu_list[0];
                 util::pin_thread(cpu).unwrap();
 
-                let topo_head = opt.thread_id_head(cpu);
+                let topo_head = opt.fmt.thread_id_head(cpu);
 
                 (
                     Arc::new(opt.rawcpuid_pool(&leaf_pool)),
@@ -474,7 +462,7 @@ impl MainOpt {
         };
 
         main_pool.extend(topo_head);
-        main_pool.extend(opt.head_fmt().into_bytes());
+        main_pool.extend(opt.fmt.head_fmt().into_bytes());
         main_pool.extend(opt.select_pool(&first_pool));
 
         for cpu in &cpu_list[1..] {
@@ -497,7 +485,7 @@ impl MainOpt {
                     sub_pool
                 };
 
-                let topo_head = opt.thread_id_head(cpu);
+                let topo_head = opt.fmt.thread_id_head(cpu);
 
                 [
                     topo_head.into_bytes(),
@@ -523,7 +511,7 @@ impl MainOpt {
 
         [
             topo_info_head().into_bytes(),
-            self.head_fmt().into_bytes(),
+            self.fmt.head_fmt().into_bytes(),
             self.select_pool(&rawcpuid_pool),
         ].concat()
     }
@@ -531,17 +519,11 @@ impl MainOpt {
     fn only_leaf(&self, leaf: u32, sub_leaf: u32) -> io::Result<()> {
         let raw_result = RawCpuid::exe(leaf, sub_leaf);
         let vendor = CpuVendor::get();
-        let dump_fmt = match self.fmt {
-            DumpFormat::Raw => RawCpuid::raw_fmt,
-            DumpFormat::Binary => RawCpuid::bin_fmt,
-            DumpFormat::Parse => RawCpuid::parse_fmt,
-            DumpFormat::CompatCpuid => RawCpuid::compat_fmt,
-            DumpFormat::Debug => RawCpuid::debug_fmt,
-        };
+        let dump_fmt = self.fmt.rawcpuid_fmt_func();
 
         let tmp = [
             topo_info_head(),
-            self.head_fmt(),
+            self.fmt.head_fmt(),
             dump_fmt(&raw_result, &vendor),
         ]
         .concat()
