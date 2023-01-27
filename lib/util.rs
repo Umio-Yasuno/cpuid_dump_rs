@@ -83,21 +83,18 @@ pub fn cpu_set_list() -> Result<Vec<usize>, i32> {
 }
 
 pub fn get_total_logical_processor() -> Option<u32> {
-    let topo_leaf = match TopoId::get_topology_leaf() {
-        Some(v) => v,
-        None => {
-            let leaf_01h = cpuid!(0x1, 0x0);
-            let proc_count = ((leaf_01h.ebx >> 16) & 0xFF) + 1;
+    if let Some(topo_leaf) = TopoId::get_topology_leaf() {
+        let thread_count = (cpuid!(topo_leaf, 0x1).ebx >> 16) & 0xFF;
 
-            if proc_count == 0 { return None; }
+        return Some(thread_count);
+    } else {
+        let leaf_01h = cpuid!(0x1, 0x0);
+        let proc_count = ((leaf_01h.ebx >> 16) & 0xFF) + 1;
 
-            return Some(proc_count);
-        },
-    };
+        if proc_count == 0 { return None; }
 
-    let thread_count = (cpuid!(topo_leaf, 0x1).ebx >> 16) & 0xFF;
-
-    Some(thread_count)
+        return Some(proc_count);
+    }
 }
 
 pub fn get_threads_per_core() -> Option<u32> {

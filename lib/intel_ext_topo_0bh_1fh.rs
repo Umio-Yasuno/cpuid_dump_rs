@@ -25,6 +25,14 @@ impl From<u8> for TopoLevelType {
     }
 }
 
+impl From<u32> for TopoLevelType {
+    fn from(ecx: u32) -> Self {
+        let reg = (ecx >> 8) & 0xFF;
+
+        TopoLevelType::from(reg as u8)
+    }
+}
+
 #[cfg(feature = "std")]
 impl std::fmt::Display for TopoLevelType {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -44,11 +52,7 @@ impl From<&CpuidResult> for IntelExtTopo {
         let next_level = cpuid.eax & 0xF;
         let num_proc = cpuid.ebx & 0xFFFF;
         let x2apic_id = cpuid.edx;
-        let level_type = {
-            let reg = (cpuid.ecx >> 8) & 0xFF;
-
-            TopoLevelType::from(reg as u8)
-        };
+        let level_type = TopoLevelType::from(cpuid.ecx);
 
         Self {
             next_level,

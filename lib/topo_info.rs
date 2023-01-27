@@ -9,15 +9,11 @@ pub struct TopoId {
 
 impl TopoId {
     fn check_topology_leaf(leaf: u32) -> bool {
-        let sub_leaf = 0x1;
-        let cpuid = cpuid!(leaf, sub_leaf);
+        const SUB_LEAF: u32 = 0x1;
+        let cpuid = cpuid!(leaf, SUB_LEAF);
 
         /* ECX[07-00]: Level number. Same value in ECX input (Sub_Leaf) */
-        if (cpuid.ecx & 0xFF) != sub_leaf {
-            return false;
-        }
-
-        true
+        (cpuid.ecx & 0xFF) == SUB_LEAF
     }
 
     pub(crate) fn get_topology_leaf() -> Option<u32> {
@@ -38,11 +34,7 @@ impl TopoId {
     ) -> Option<CpuidResult> {
         for sub_leaf in 0..(TopoLevelType::Die as u32) {
             let cpuid = cpuid!(topo_leaf, sub_leaf);
-            let level_type = {
-                let reg = (cpuid.ecx >> 8) & 0xFF;
-
-                TopoLevelType::from(reg as u8)
-            };
+            let level_type = TopoLevelType::from(cpuid.ecx);
             
             if level_type == target_level_type {
                 return Some(cpuid);

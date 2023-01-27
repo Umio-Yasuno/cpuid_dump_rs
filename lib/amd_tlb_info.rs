@@ -53,24 +53,24 @@ impl TlbInfo {
     }
 
     pub fn from_reg_l1(reg: u16) -> Self {
-        let tmp = reg >> 8;
+        let (size, assoc) = (reg & 0xFF, (reg >> 8) as u8);
 
         Self {
-            size: reg & 0xFF,
-            assoc: match tmp {
+            size,
+            assoc: match assoc {
                 0x0 => TlbAssoc::Invalid, // Reserved
                 0xFF => TlbAssoc::Full,
-                _ => TlbAssoc::Way(tmp as u8),
+                _ => TlbAssoc::Way(assoc),
             },
         }
     }
 
     pub fn from_reg_l2(reg: u16) -> Self {
-        let tmp = reg >> 12;
+        let (size, assoc) = (reg & 0xFFF, reg >> 12);
 
         Self {
-            size: reg & 0xFFF,
-            assoc: match tmp {
+            size,
+            assoc: match assoc {
                 0x0 => TlbAssoc::Disabled,
                 0x1 => TlbAssoc::Way(1), // Direct Mapped
                 0x2 => TlbAssoc::Way(2),
