@@ -33,6 +33,12 @@ impl From<u32> for TopoLevelType {
     }
 }
 
+impl From<CpuidResult> for TopoLevelType {
+    fn from(cpuid: CpuidResult) -> Self {
+        TopoLevelType::from(cpuid.ecx)
+    }
+}
+
 #[cfg(feature = "std")]
 impl std::fmt::Display for TopoLevelType {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {

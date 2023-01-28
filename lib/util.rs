@@ -1,6 +1,5 @@
 use crate::{cpuid, CacheProp, TopoId, TopoLevelType};
 
-#[cfg(feature = "std")]
 pub fn pin_thread(cpu: usize) -> Result<(), i32> {
     #[cfg(unix)]
     unsafe {
@@ -13,13 +12,12 @@ pub fn pin_thread(cpu: usize) -> Result<(), i32> {
             CPU_ZERO
         };
 
-        let mut set = std::mem::zeroed::<cpu_set_t>();
+        let mut set = core::mem::zeroed::<cpu_set_t>();
         CPU_ZERO(&mut set);
         CPU_SET(cpu, &mut set);
 
-        let status = sched_setaffinity(0, std::mem::size_of::<cpu_set_t>(), &set);
+        let status = sched_setaffinity(0, core::mem::size_of::<cpu_set_t>(), &set);
         if status == -1 {
-            eprintln!("sched_setaffinity failed.");
             return Err(status);
         }
     }
@@ -42,7 +40,6 @@ pub fn cpu_set_list() -> Result<Vec<usize>, i32> {
 
     #[cfg(unix)]
     unsafe {
-        use std::mem;
         use libc::{
             cpu_set_t,
             CPU_ISSET,
@@ -51,10 +48,10 @@ pub fn cpu_set_list() -> Result<Vec<usize>, i32> {
             sched_getaffinity,
         };
 
-        let mut set = mem::zeroed::<cpu_set_t>();
+        let mut set = core::mem::zeroed::<cpu_set_t>();
         CPU_ZERO(&mut set);
 
-        let status = sched_getaffinity(0, mem::size_of::<cpu_set_t>(), &mut set);
+        let status = sched_getaffinity(0, core::mem::size_of::<cpu_set_t>(), &mut set);
         if status == -1 {
             eprintln!("sched_getaffinity failed");
             return Err(status);
