@@ -3,7 +3,7 @@ use crate::{cpuid, CpuidResult};
 pub struct ProcName;
 
 impl ProcName {
-    fn check_reg(reg: u32) -> [u8; 4] {
+    pub(crate) fn check_reg(reg: u32) -> [u8; 4] {
         let mut bytes = reg.to_le_bytes();
 
         for byte in bytes.iter_mut() {

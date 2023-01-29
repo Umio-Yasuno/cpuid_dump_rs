@@ -1,4 +1,4 @@
-use crate::{cpuid, CpuidResult};
+use crate::{cpuid, CpuidResult, ProcName};
 
 /* ref: https://github.com/llvm/llvm-project/blob/main/clang/lib/Headers/cpuid.h */
 /* ref: https://github.com/gcc-mirror/gcc/blob/master/gcc/config/i386/cpuid.h */
@@ -10,29 +10,42 @@ pub struct Vendor {
     pub edx: u32,
 }
 
+#[allow(dead_code)]
 impl Vendor {
+    const AMD_EBX: u32 = 0x6874_7541;
+    const AMD_ECX: u32 = 0x444D_4163;
+    const AMD_EDX: u32 = 0x6974_6E65;
     const REG_AMD: Self = Self {
-        ebx: 0x6874_7541,
-        ecx: 0x444D_4163,
-        edx: 0x6974_6E65,
+        ebx: Self::AMD_EBX,
+        ecx: Self::AMD_ECX,
+        edx: Self::AMD_EDX,
     };
 
+    const INTEL_EBX: u32 = 0x756E_6547;
+    const INTEL_ECX: u32 = 0x6C65_746E;
+    const INTEL_EDX: u32 = 0x4965_6E69;
     const REG_INTEL: Self = Self {
-        ebx: 0x756E_6547,
-        ecx: 0x6C65_746E,
-        edx: 0x4965_6E69,
+        ebx: Self::INTEL_EBX,
+        ecx: Self::INTEL_ECX,
+        edx: Self::INTEL_EDX,
     };
 
+    const CENTAUR_EBX: u32 = 0x746E_6543;
+    const CENTAUR_ECX: u32 = 0x736C_7561;
+    const CENTAUR_EDX: u32 = 0x4872_7561;
     const REG_CENTAUR: Self = Self {
-        ebx: 0x746E_6543,
-        ecx: 0x736C_7561,
-        edx: 0x4872_7561,
+        ebx: Self::CENTAUR_EBX,
+        ecx: Self::CENTAUR_ECX,
+        edx: Self::CENTAUR_EDX,
     };
 
+    const SHANGHAI_EBX: u32 = 0x6853_2020;
+    const SHANGHAI_ECX: u32 = 0x2020_6961;
+    const SHANGHAI_EDX: u32 = 0x6867_6E61;
     const REG_SHANGHAI: Self = Self {
-        ebx: 0x6853_2020,
-        ecx: 0x2020_6961,
-        edx: 0x6867_6E61,
+        ebx: Self::SHANGHAI_EBX,
+        ecx: Self::SHANGHAI_ECX,
+        edx: Self::SHANGHAI_EDX,
     };
 
     pub fn get() -> Self {
@@ -40,27 +53,21 @@ impl Vendor {
     }
 }
 
-/*
+#[cfg(feature = "std")]
+use std::fmt;
+#[cfg(feature = "std")]
 impl fmt::Display for Vendor {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let check = |reg: u32| -> Vec<u8> {
-            reg.to_le_bytes().iter().map(|&byte|
-                if char::from(byte).is_control() { 0x20 } else { byte }
-            ).collect()
-        };
+        let mut total = [0u8; 12];
 
-        let bytes = [
-            self.ebx,
-            self.edx,
-            self.ecx,
-        ]
-        .map(check)
-        .concat();
+        /* ebx, edx, ecx */
+        for (i, reg) in [self.ebx, self.edx, self.ecx].iter().enumerate() {
+            total[(i*4)..(i*4+4)].copy_from_slice(&ProcName::check_reg(*reg))
+        }
 
-        write!(f, "{}", String::from_utf8(bytes).unwrap())
+        write!(f, "{}", String::from_utf8(total.to_vec()).unwrap())
     }
 }
-*/
 
 impl From<&CpuidResult> for Vendor {
     fn from(cpuid: &CpuidResult) -> Self {
@@ -83,11 +90,11 @@ pub enum CpuVendor {
 
 impl From<&Vendor> for CpuVendor {
     fn from(vendor: &Vendor) -> Self {
-        match *vendor {
-            Vendor::REG_AMD => Self::AuthenticAMD,
-            Vendor::REG_INTEL => Self::GenuineIntel,
-            Vendor::REG_CENTAUR => Self::CentaurHauls,
-            Vendor::REG_SHANGHAI => Self::Shanghai,
+        match vendor.ebx {
+            Vendor::AMD_EBX => Self::AuthenticAMD,
+            Vendor::INTEL_EBX => Self::GenuineIntel,
+            Vendor::CENTAUR_EBX => Self::CentaurHauls,
+            Vendor::SHANGHAI_EBX => Self::Shanghai,
             _ => Self::Unknown(vendor.clone()),
         }
     }
