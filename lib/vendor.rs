@@ -1,5 +1,8 @@
 use crate::{cpuid, CpuidResult};
 
+/* ref: https://github.com/llvm/llvm-project/blob/main/clang/lib/Headers/cpuid.h */
+/* ref: https://github.com/gcc-mirror/gcc/blob/master/gcc/config/i386/cpuid.h */
+
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Vendor {
     pub ebx: u32,
