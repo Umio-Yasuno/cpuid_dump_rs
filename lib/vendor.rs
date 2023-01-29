@@ -16,8 +16,8 @@ impl Vendor {
 
     const REG_INTEL: Self = Self {
         ebx: 0x756E_6547,
-        ecx: 0x4965_6E69,
-        edx: 0x6C65_746E,
+        ecx: 0x6C65_746E,
+        edx: 0x4965_6E69,
     };
 
     const REG_CENTAUR: Self = Self {
