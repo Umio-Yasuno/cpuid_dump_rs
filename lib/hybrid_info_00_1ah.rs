@@ -31,37 +31,6 @@ impl From<&CpuidResult> for HybridCoreType {
     }
 }
 
-pub struct HybridInfo;
-
-impl HybridInfo {
-    pub fn get_hybrid_info_from_cpuid(cpuid: &CpuidResult) -> (Option<HybridCoreType>, u32) {
-        (
-            Self::get_core_type(cpuid),
-            Self::get_native_model_id(cpuid),
-        )
-    }
-    
-    pub fn get_hybrid_info() -> (Option<HybridCoreType>, u32) {
-        let cpuid = cpuid!(0x1A, 0x0);
-        
-        Self::get_hybrid_info_from_cpuid(&cpuid)
-    }
-
-    pub fn get_core_type(cpuid: &CpuidResult) -> Option<HybridCoreType> {
-        let core_type = HybridCoreType::from(cpuid);
-
-        if core_type == HybridCoreType::Invalid {
-            return None;
-        }
-
-        Some(core_type)
-    }
-
-    pub fn get_native_model_id(cpuid: &CpuidResult) -> u32 {
-        cpuid.eax & 0x00FFFFFF
-    }
-}
-
 /* https://github.com/intel/perfmon/blob/main/mapfile.csv */
 impl IntelNativeModelId {
     const fn gen_eax(core_type: HybridCoreType, nid: u32) -> u32 {
@@ -79,7 +48,7 @@ impl IntelNativeModelId {
 
 #[derive(Debug)]
 #[repr(u32)]
-enum IntelNativeModelId {
+pub enum IntelNativeModelId {
     /* Atom */
     Tremont = Self::TNT,
     Gracemont = Self::GRT,
@@ -89,19 +58,58 @@ enum IntelNativeModelId {
     GoldenCove = Self::GLC,
     RedwoodCove = Self::RWC,
     /* */
-    _Reserved,
+    Unknown(u32),
 }
 
-impl From<u32> for IntelNativeModelId {
-    fn from(eax: u32) -> Self {
-        match eax {
+impl From<&CpuidResult> for IntelNativeModelId {
+    fn from(cpuid: &CpuidResult) -> Self {
+        match cpuid.eax & 0x00FFFFFF {
             Self::TNT => Self::Tremont,
             Self::GRT => Self::Gracemont,
             Self::CMT => Self::Crestmont,
             Self::SNC => Self::SunnyCove,
             Self::GLC => Self::GoldenCove,
             Self::RWC => Self::RedwoodCove,
-            _ => Self::_Reserved,
+            _ => Self::Unknown(cpuid.eax),
         }
+    }
+}
+
+#[cfg(feature = "std")]
+impl std::fmt::Display for IntelNativeModelId {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+pub struct HybridInfo;
+
+impl HybridInfo {
+    pub fn get_hybrid_info() -> (Option<HybridCoreType>, IntelNativeModelId) {
+        Self::get_hybrid_info_from_cpuid(&cpuid!(0x1A, 0x0))
+    }
+
+    pub fn get_hybrid_info_from_cpuid(cpuid: &CpuidResult) -> (
+        Option<HybridCoreType>,
+        IntelNativeModelId
+    ) {
+        (
+            Self::get_core_type(cpuid),
+            Self::get_native_model_id(cpuid),
+        )
+    }
+
+    pub fn get_core_type(cpuid: &CpuidResult) -> Option<HybridCoreType> {
+        let core_type = HybridCoreType::from(cpuid);
+
+        if core_type == HybridCoreType::Invalid {
+            None
+        } else {
+            Some(core_type)
+        }
+    }
+
+    pub fn get_native_model_id(cpuid: &CpuidResult) -> IntelNativeModelId {
+        IntelNativeModelId::from(cpuid)
     }
 }

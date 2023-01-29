@@ -26,7 +26,7 @@ impl ParseIntel for CpuidResult {
 
         let native_model_id = HybridInfo::get_native_model_id(self);
 
-        format!("[{core_type} ({native_model_id:#x})]")
+        format!("[Type: {core_type}, Model: {native_model_id}]")
     }
 
     fn v2_ext_topo_intel_1fh(&self) -> String {
