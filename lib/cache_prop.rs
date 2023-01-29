@@ -46,18 +46,24 @@ pub enum CacheType {
     Data,
     Instruction,
     Unified,
-    Unknown,
+    Null,
 }
 
-impl CacheType {
-    pub fn from_reg(reg: u32) -> Self {
-        match reg {
+impl From<u8> for CacheType {
+    fn from(byte: u8) -> Self {
+        match byte {
             0x1 => Self::Data,
             0x2 => Self::Instruction,
             0x3 => Self::Unified,
             // 0x0 |
-            _ => Self::Unknown,
+            _ => Self::Null,
         }
+    }
+}
+
+impl From<CpuidResult> for CacheType {
+    fn from(cpuid: CpuidResult) -> Self {
+        Self::from((cpuid.eax & 0x1F) as u8)
     }
 }
 
@@ -85,7 +91,7 @@ impl From<&CpuidResult> for CacheProp {
     fn from(cpuid: &CpuidResult) -> Self {
         let CpuidResult { eax, ebx, ecx, edx } = cpuid;
 
-        let cache_type = CacheType::from_reg(eax & 0x1F);
+        let cache_type = CacheType::from(*cpuid);
 
         let level = (eax >> 5) & 0b111;
         let line_size = (ebx & 0xFFF) + 1;
