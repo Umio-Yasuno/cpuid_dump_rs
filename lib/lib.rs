@@ -38,6 +38,9 @@ pub use cache_prop::*;
 mod info_01h_ebx;
 pub use info_01h_ebx::*;
 
+mod monitor_mwait_00_05h;
+pub use monitor_mwait_00_05h::*;
+
 mod intel_ext_topo_0bh_1fh;
 pub use intel_ext_topo_0bh_1fh::*;
 

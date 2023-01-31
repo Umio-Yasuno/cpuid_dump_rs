@@ -19,10 +19,15 @@ pub trait ParseGeneric {
 
 impl ParseGeneric for CpuidResult {
     fn info_00_01h(&self, vendor: &CpuVendor) -> String {
-        use libcpuid_dump::FamModStep;
+        use libcpuid_dump::{FamModStep, Info01h};
 
         let fms = FamModStep::from(self);
-        let info01h = libcpuid_dump::Info01h::from(self);
+        let Info01h {
+            local_apic_id,
+            max_apic_id,
+            clflush_size,
+            brand_id: _,
+        } =  Info01h::from(self);
 
         let proc_info = libcpuid_dump::ProcInfo::from_fms(&fms, vendor);
         let codename = match proc_info.codename {
@@ -46,44 +51,46 @@ impl ParseGeneric for CpuidResult {
         };
         let FamModStep { syn_fam, syn_mod, step, raw_eax: _ } = fms;
 
-        [
-            format!(
-                "[F: {syn_fam:#X}, M: {syn_mod:#X}, S: {step:#X}]{codename}{node}{archname}",
-            ),
-            format!(
-                "{LN_PAD}[APIC ID: {:>3}, Max: {:>3}]{LN_PAD}[CLFlush: {:3}B]",
-                info01h.local_apic_id,
-                info01h.max_apic_id,
-                info01h.clflush_size,
-            ),
-        ].concat()
+        format!("\
+            [F: {syn_fam:#X}, M: {syn_mod:#X}, S: {step:#X}]\
+            {codename}\
+            {node}\
+            {archname}\
+            {LN_PAD}[APIC ID: {local_apic_id:>3}, Max: {max_apic_id:>3}]\
+            {LN_PAD}[CLFlush: {clflush_size:3}B]\
+        ")
     }
 
     fn monitor_mwait_00_05h(&self) -> String {
-        let min_mon_line_size = self.eax & 0xFFFF;
-        let max_mon_line_size = self.ebx & 0xFFFF;
-        let ftr = [
-            if (self.ecx & 0b01) == 0b01 { "[EMX] " } else { "" },
-            if (self.ecx & 0b10) == 0b10 { "[IBE] " } else { "" },
-        ].concat();
+        use libcpuid_dump::MonitorMwait;
+
+        let MonitorMwait {
+            min_monitor_line_size: min,
+            max_monitor_line_size: max,
+            emx_supported: emx,
+            ibe_supported: ibe,
+            mwait_sub_states,
+        } = MonitorMwait::from(self);
+
+        let mut ftr = String::with_capacity(TOTAL_WIDTH);
+
+        if emx { ftr.push_str("[EMX] ") }
+        if ibe { ftr.push_str("[IBE] ") }
 
         let mut sub_state = String::with_capacity(TOTAL_WIDTH * 8);
 
-        for (i, byte) in self.edx.to_le_bytes().iter().enumerate() {
-            for (j, val) in [byte & 0xF, (byte >> 4) & 0xF].iter().enumerate() {
-                let num = i * 2 + j;
-                if *val != 0 {
-                    sub_state.push_str(
-                        &format!("{LN_PAD}[C{num} sub-state using MWAIT: {val}]")
-                    )
-                }
+        for (i, val) in mwait_sub_states.iter().enumerate() {
+            if *val != 0 {
+                sub_state.push_str(
+                    &format!("{LN_PAD}[C{i} sub-state using MWAIT: {val}]")
+                )
             }
         }
 
-        [
-            format!("[MonitorLineSize: {min_mon_line_size}(Min), {max_mon_line_size}(Max)]"),
-            format!("{LN_PAD}{ftr}{sub_state}"),
-        ].concat()
+        format!("\
+            [MonitorLineSize: Min {min}, Max {max}]\
+            {LN_PAD}{ftr}{sub_state}\
+        ")
     }
 
     fn feature_00_01h(&self) -> String {
@@ -174,7 +181,10 @@ impl ParseGeneric for CpuidResult {
         let phy = addr_size.physical;
         let virt = addr_size.virtual_;
 
-        format!("[Address size: {phy:2}-bits physical {LN_PAD}{PAD} {virt:2}-bits virtual]")
+        format!("\
+            [Address size: {phy:2}-bits physical\
+            {LN_PAD}{PAD} {virt:2}-bits virtual]\
+        ")
     }
 
     fn ftr_ext_id_80_08h_ebx(&self) -> String {
@@ -194,21 +204,17 @@ impl ParseGeneric for CpuidResult {
         };
         
         let inclusive = if cache.inclusive {
-            " [Inclusive]"
+            "[Inclusive]"
         } else {
             ""
         }.to_string();
 
-        [
-            format!("[L{}{},{:>3}_way,{:>4}_{}]",
-                cache.level,
-                &cache.cache_type.to_string()[..1],
-                cache.way,
-                cache.size_in_the_unit(),
-                &cache.size_unit.to_string()[..1],
-            ),
-            // format!("[Shared {}T]", cache.share_thread),
-            inclusive,
-        ].concat()
+        format!("[L{}{},{:>3}_way,{:>4}_{}] {inclusive}",
+            cache.level,
+            &cache.cache_type.to_string()[..1],
+            cache.way,
+            cache.size_in_the_unit(),
+            &cache.size_unit.to_string()[..1],
+        )
     }
 }
