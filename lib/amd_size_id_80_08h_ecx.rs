@@ -4,27 +4,32 @@ pub struct AmdSizeId {
     pub perf_tsc_size: u8,
     pub apic_id_size: u8,
     pub num_thread: u8,
+    pub rdpru_max_input: u16,
+    pub invlpgb_max_page: u16,
 }
 
-impl From<u32> for AmdSizeId {
-    fn from(ecx: u32) -> Self {
-        Self {
-            perf_tsc_size: match (ecx >> 16) & 0b11 {
-                0b00 => 40,
-                0b01 => 48,
-                0b10 => 56,
-                0b11 => 64,
-                _ => unreachable!(),
-            },
-            apic_id_size: ((ecx >> 12) & 0xF) as u8,
-            num_thread: ((ecx & 0xFF) as u8).saturating_add(1),
-        }
-    }
-}
 
 impl From<&CpuidResult> for AmdSizeId {
     fn from(cpuid: &CpuidResult) -> Self {
-        Self::from(cpuid.ecx)
+        let perf_tsc_size = match (cpuid.ecx >> 16) & 0b11 {
+            0b00 => 40,
+            0b01 => 48,
+            0b10 => 56,
+            0b11 => 64,
+            _ => unreachable!(),
+        };
+        let apic_id_size = ((cpuid.ecx >> 12) & 0xF) as u8;
+        let num_thread = ((cpuid.ecx & 0xFF) as u8).saturating_add(1);
+        let rdpru_max_input = (cpuid.edx >> 16) as u16;
+        let invlpgb_max_page = (cpuid.edx & 0xFFFF) as u16;
+
+        Self {
+            perf_tsc_size,
+            apic_id_size,
+            num_thread,
+            rdpru_max_input,
+            invlpgb_max_page,
+        }
     }
 }
 

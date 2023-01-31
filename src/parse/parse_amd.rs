@@ -91,17 +91,22 @@ impl ParseAMD for CpuidResult {
     }
 
     fn size_id_amd_80_08h(&self) -> String {
-        let size_id = libcpuid_dump::AmdSizeId::from(self);
-        
-        [
-            format!(
-                "[Num Threads: {}] [APIC ID: {}-bits]",
-                size_id.num_thread,
-                size_id.apic_id_size,
-            ),
-            lnpad!(),
-            format!("[Perf TSC size: {}-bits]", size_id.perf_tsc_size),
-        ].concat()
+        use libcpuid_dump::AmdSizeId;
+
+        let AmdSizeId {
+            perf_tsc_size,
+            apic_id_size,
+            num_thread,
+            rdpru_max_input,
+            invlpgb_max_page,
+        } = AmdSizeId::from(self);
+
+        format!("\
+            [Num Threads: {num_thread}] [APIC ID: {apic_id_size}-bits]\
+            {LN_PAD}[Perf TSC size: {perf_tsc_size}-bits]\
+            {LN_PAD}[RDPRU max input: {rdpru_max_input}]\
+            {LN_PAD}[INVLPGB max page: {invlpgb_max_page}]\
+        ")
     }
 
     fn svm_rev_amd_80_0ah_eax_ebx(&self) -> String {
