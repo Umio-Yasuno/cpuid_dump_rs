@@ -1,4 +1,4 @@
-use crate::{CpuidResult, CpuVendor};
+use crate::{CpuidResult, CpuVendor, TOTAL_WIDTH};
 use super::*;
 
 pub trait ParseGeneric {
@@ -19,7 +19,9 @@ pub trait ParseGeneric {
 
 impl ParseGeneric for CpuidResult {
     fn info_00_01h(&self, vendor: &CpuVendor) -> String {
-        let fms = libcpuid_dump::FamModStep::from(self);
+        use libcpuid_dump::FamModStep;
+
+        let fms = FamModStep::from(self);
         let info01h = libcpuid_dump::Info01h::from(self);
 
         let proc_info = libcpuid_dump::ProcInfo::from_fms(&fms, vendor);
@@ -42,17 +44,12 @@ impl ParseGeneric for CpuidResult {
             libcpuid_dump::CpuMicroArch::Unknown => "".to_string(),
             _ => format!("{LN_PAD}[Arch: {}]", proc_info.archname),
         };
+        let FamModStep { syn_fam, syn_mod, step, raw_eax: _ } = fms;
 
         [
             format!(
-                "[F: {:#X}, M: {:#X}, S: {:#X}]",
-                fms.syn_fam,
-                fms.syn_mod,
-                fms.step
+                "[F: {syn_fam:#X}, M: {syn_mod:#X}, S: {step:#X}]{codename}{node}{archname}",
             ),
-            codename,
-            node,
-            archname,
             format!(
                 "{LN_PAD}[APIC ID: {:>3}, Max: {:>3}]{LN_PAD}[CLFlush: {:3}B]",
                 info01h.local_apic_id,
@@ -70,36 +67,22 @@ impl ParseGeneric for CpuidResult {
             if (self.ecx & 0b10) == 0b10 { "[IBE] " } else { "" },
         ].concat();
 
-        let c_state: String = {
-            let mut c = 0;
+        let mut sub_state = String::with_capacity(TOTAL_WIDTH * 8);
 
-            [
-                (self.edx) & 0xF,
-                (self.edx >>  4) & 0xF,
-                (self.edx >>  8) & 0xF,
-                (self.edx >> 12) & 0xF,
-                (self.edx >> 16) & 0xF,
-                (self.edx >> 20) & 0xF,
-                (self.edx >> 24) & 0xF,
-                (self.edx >> 28) & 0xF,
-            ].map(|v| {
-                let parsed = if v != 0 {
-                    format!("{LN_PAD}[C{c} sub-state using MWAIT: {v}]")
-                } else {
-                    "".to_string()
-                };
+        for (i, byte) in self.edx.to_le_bytes().iter().enumerate() {
+            for (j, val) in [byte & 0xF, (byte >> 4) & 0xF].iter().enumerate() {
+                let num = i * 2 + j;
+                if *val != 0 {
+                    sub_state.push_str(
+                        &format!("{LN_PAD}[C{num} sub-state using MWAIT: {val}]")
+                    )
+                }
+            }
+        }
 
-                c += 1;
-
-                parsed
-            }).concat()
-        };
-        
         [
             format!("[MonitorLineSize: {min_mon_line_size}(Min), {max_mon_line_size}(Max)]"),
-            lnpad!(),
-            ftr,
-            c_state,
+            format!("{LN_PAD}{ftr}{sub_state}"),
         ].concat()
     }
 
