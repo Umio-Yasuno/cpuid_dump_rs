@@ -34,7 +34,7 @@ impl TopoId {
     ) -> Option<CpuidResult> {
         for sub_leaf in 0..(TopoLevelType::Die as u32) {
             let cpuid = cpuid!(topo_leaf, sub_leaf);
-            let level_type = TopoLevelType::from(cpuid.ecx);
+            let level_type = TopoLevelType::from(&cpuid);
             
             if level_type == target_level_type {
                 return Some(cpuid);

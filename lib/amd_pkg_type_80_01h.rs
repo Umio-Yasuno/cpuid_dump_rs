@@ -58,7 +58,7 @@ impl fmt::Display for AmdPkgType {
 
 impl From<&CpuidResult> for AmdPkgType {
     fn from(cpuid: &CpuidResult) -> Self {
-        let fms = FamModStep::from(cpuid.eax);
+        let fms = FamModStep::from(cpuid);
         let pkg_type = cpuid.ebx >> 28;
 
         match fms {

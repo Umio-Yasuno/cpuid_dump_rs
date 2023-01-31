@@ -231,6 +231,10 @@ impl ProcInfo {
                 },
                 node: Some(ProcessNode::NM(28)),
             },
+            /*
+            0x13: DG1101SKF84HV
+            https://linux-hardware.org/?probe=87f754ac29
+            */
             /* A9-9820: https://linux-hardware.org/?probe=1053adf355 */
             0x26 => Self {
                 codename: CpuCodename::Amd(AmdCodename::Cato),
@@ -247,6 +251,10 @@ impl ProcInfo {
                 },
                 node: Some(ProcessNode::NM(28)),
             },
+            /*
+            0x43: DG1501SML87LB
+            https://linux-hardware.org/?probe=2fb1797d3d
+            */
             _ => Self {
                 codename: CpuCodename::Unknown(CpuVendor::AuthenticAMD, 0x16, m),
                 archname: CpuMicroArch::Unknown,

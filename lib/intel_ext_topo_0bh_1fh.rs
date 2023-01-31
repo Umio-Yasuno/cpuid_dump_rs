@@ -33,8 +33,8 @@ impl From<u32> for TopoLevelType {
     }
 }
 
-impl From<CpuidResult> for TopoLevelType {
-    fn from(cpuid: CpuidResult) -> Self {
+impl From<&CpuidResult> for TopoLevelType {
+    fn from(cpuid: &CpuidResult) -> Self {
         TopoLevelType::from(cpuid.ecx)
     }
 }
@@ -58,7 +58,7 @@ impl From<&CpuidResult> for IntelExtTopo {
         let next_level = cpuid.eax & 0xF;
         let num_proc = cpuid.ebx & 0xFFFF;
         let x2apic_id = cpuid.edx;
-        let level_type = TopoLevelType::from(cpuid.ecx);
+        let level_type = TopoLevelType::from(cpuid);
 
         Self {
             next_level,

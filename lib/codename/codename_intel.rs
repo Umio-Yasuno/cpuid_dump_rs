@@ -669,7 +669,7 @@ impl ProcInfo {
                     IntelMicroArch::Gracemont,
                 )),
                 step_info: match s {
-                    0x1 => CpuStepping::B0,
+                    0x1 => CpuStepping::B0, // 8P+16E
                     _ => CpuStepping::Unknown(s),
                 },
                 node: Some(ProcessNode::Intel(7)),
@@ -681,8 +681,8 @@ impl ProcInfo {
                     IntelMicroArch::Gracemont,
                 )),
                 step_info: match s {
-                    0x2 => CpuStepping::J0,
-                    0x3 => CpuStepping::Q0,
+                    0x2 => CpuStepping::J0, // 6P+8E
+                    0x3 => CpuStepping::Q0, // 2P+8E
                     _ => CpuStepping::Unknown(s),
                 },
                 node: Some(ProcessNode::Intel(7)),
@@ -694,7 +694,7 @@ impl ProcInfo {
                     IntelMicroArch::Gracemont,
                 )),
                 step_info: match s {
-                    0x2 | 0x5 => CpuStepping::C0,
+                    0x2 | 0x5 => CpuStepping::C0, // 0x2: 8P+8E, 0x5: 6P+0E
                     _ => CpuStepping::Unknown(s),
                 },
                 node: Some(ProcessNode::Intel(7)),
