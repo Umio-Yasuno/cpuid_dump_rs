@@ -1,16 +1,6 @@
 use super::*;
 use libcpuid_dump::{TlbType, TlbInfo, Tlb};
 
-trait PrintEntryWay {
-    fn print_entry_way(&self) -> String;
-}
-
-impl PrintEntryWay for TlbInfo {
-    fn print_entry_way(&self) -> String {
-        format!("{:>4}_entry, {:>6}_way", self.size, self.assoc)
-    }
-}
-
 trait PrintTlb {
     fn print_tlb(&self) -> String;
 }
@@ -19,14 +9,11 @@ impl PrintTlb for Tlb {
     fn print_tlb(&self) -> String {
         const PAD: &str = unsafe { std::str::from_utf8_unchecked(&[b' '; 7]) };
 
-        [
-            lnpad!(),
-            format!("[{}TLB 4K: {}", self.type_, self.page_4k.print_entry_way()),
-            lnpad!(),
-            format!("{PAD} 2M: {}", self.page_2m.print_entry_way()),
-            lnpad!(),
-            format!("{PAD} 4M: {}]", self.page_4m.print_entry_way()),
-        ].concat()
+        format!("\
+            {LN_PAD}[{}TLB 4K: {}\
+            {LN_PAD}{PAD} 2M: {}\
+            {LN_PAD}{PAD} 4M: {}]\
+        ", self.type_, self.page_4k, self.page_2m, self.page_4m)
     }
 }
 
@@ -55,35 +42,47 @@ impl ParseAMD for CpuidResult {
     }
 
     fn l1_amd_80_05h(&self) -> String {
-        let CpuidResult { eax, ebx, ecx, edx } = self;
+        let l1d_size = self.ecx >> 24; // KiB
+        let l1i_size = self.edx >> 24; // KiB
 
-        let l1d_size = ecx >> 24; // KiB
-        let l1i_size = edx >> 24; // KiB
+        let l1itlb = Tlb::reg(
+            TlbType::L1i,
+            (self.ebx & 0xFFFF) as u16,
+            (self.eax & 0xFFFF) as u16
+        ).print_tlb();
+        let l1dtlb = Tlb::reg(
+            TlbType::L1d,
+            (self.ebx >> 16) as u16,
+            (self.eax >> 16) as u16
+        ).print_tlb();
 
-        let l1dtlb = Tlb::reg(TlbType::L1d, (ebx >> 16) as u16, (eax >> 16) as u16);
-        let l1itlb = Tlb::reg(TlbType::L1i, (ebx & 0xFFFF) as u16, (eax & 0xFFFF) as u16);
-
-        [
-            format!("[L1D {l1d_size}K/L1I {l1i_size}K]"),
-            l1itlb.print_tlb(),
-            l1dtlb.print_tlb(),
-        ].concat()
+        format!("\
+            [L1D {l1d_size}K/L1I {l1i_size}K]\
+            {l1itlb}\
+            {l1dtlb}\
+        ")
     }
 
     fn l2_amd_80_06h(&self) -> String {
-        let CpuidResult { eax, ebx, ecx, edx } = self;
+        let l2_size = self.ecx >> 16; // KiB
+        let l3_size = (self.edx >> 18) / 2; // 512 KiB
 
-        let l2_size = ecx >> 16; // KiB
-        let l3_size = (edx >> 18) / 2; // 512 KiB
+        let l2itlb = Tlb::reg(
+            TlbType::L2i,
+            (self.ebx & 0xFFFF) as u16,
+            (self.eax & 0xFFFF) as u16
+        ).print_tlb();
+        let l2dtlb = Tlb::reg(
+            TlbType::L2d,
+            (self.ebx >> 16) as u16,
+            (self.eax >> 16) as u16
+        ).print_tlb();
 
-        let l2dtlb = Tlb::reg(TlbType::L2d, (ebx >> 16) as u16, (eax >> 16) as u16);
-        let l2itlb = Tlb::reg(TlbType::L2i, (ebx & 0xFFFF) as u16, (eax & 0xFFFF) as u16);
-
-        [
-            format!("[L2 {l2_size}K/L3 {l3_size}M]"),
-            l2itlb.print_tlb(),
-            l2dtlb.print_tlb(),
-        ].concat()
+        format!("\
+            [L2 {l2_size}K/L3 {l3_size}M]\
+            {l2itlb}\
+            {l2dtlb}\
+        ")
     }
 
     fn apmi_amd_80_07h(&self) -> String {
@@ -131,18 +130,18 @@ impl ParseAMD for CpuidResult {
             (ebx >> 16),
             (ebx & 0xFFFF),
         ].map(|reg|
-            TlbInfo::from_reg_l2(reg as u16).print_entry_way()
+            TlbInfo::from_reg_l2(reg as u16)
         );
 
-        [
-            format!("[L1iTLB 1G: {l1itlb}]"),
-            lnpad!(),
-            format!("[L1dTLB 1G: {l1dtlb}]"),
-            lnpad!(),
-            format!("[L2iTLB 1G: {l2itlb}]"),
-            lnpad!(),
-            format!("[L2dTLB 1G: {l2dtlb}]"),
-        ].concat()
+        format!("\
+            [L1iTLB 1G: {l1itlb}]\
+            {LN_PAD}\
+            [L1dTLB 1G: {l1dtlb}]\
+            {LN_PAD}\
+            [L2iTLB 1G: {l2itlb}]\
+            {LN_PAD}\
+            [L2dTLB 1G: {l2dtlb}]\
+        ")
     }
 
     fn fpu_width_amd_80_1ah(&self) -> String {
@@ -154,13 +153,20 @@ impl ParseAMD for CpuidResult {
     }
 
     fn cpu_topo_amd_80_1eh(&self) -> String {
-        let topo = libcpuid_dump::AmdProcTopo::from(self);
+        use libcpuid_dump::AmdProcTopo;
+        let AmdProcTopo {
+            ext_apic_id: _,
+            threads_per_core,
+            core_id,
+            nodes_per_processor: _,
+            node_id,
+        } = AmdProcTopo::from(self);
 
-        [
-            format!("[NodeID: {}, CoreID: {}]", topo.node_id, topo.core_id),
-            lnpad!(),
-            format!("[Thread(s) per core: {}]", topo.threads_per_core),
-        ].concat()
+        format!("\
+            [NodeId: {node_id}, CoreId: {core_id}]\
+            {LN_PAD}\
+            [threads per core: {threads_per_core}]\
+        ")
     }
 
     fn encrypt_ftr_amd_80_1fh(&self) -> String {
@@ -188,11 +194,10 @@ impl ParseAMD for CpuidResult {
         let ucode_patch_size = self.ebx & 0xFFF;
 
         if 0 < ucode_patch_size {
-            [
-                ftr,
-                lnpad!(),
-                format!("[uCodePatchSize: {ucode_patch_size}]"),
-            ].concat()
+            format!("\
+                {ftr}\
+                {LN_PAD}[uCodePatchSize: {ucode_patch_size}]\
+            ")
         } else {
             ftr
         }

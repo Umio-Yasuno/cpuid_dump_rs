@@ -89,21 +89,19 @@ pub struct CacheProp {
 
 impl From<&CpuidResult> for CacheProp {
     fn from(cpuid: &CpuidResult) -> Self {
-        let CpuidResult { eax, ebx, ecx, edx } = cpuid;
-
         let cache_type = CacheType::from(*cpuid);
 
-        let level = (eax >> 5) & 0b111;
-        let line_size = (ebx & 0xFFF) + 1;
-        let way = (ebx >> 22) + 1;
-        let set = ecx + 1;
-        let size = line_size * way * set;
+        let level = (cpuid.eax >> 5) & 0b111;
+        let line_size = (cpuid.ebx & 0xFFF) + 1;
+        let way = (cpuid.ebx >> 22) + 1;
+        let set = cpuid.ecx.saturating_add(1);
+        let size = line_size.saturating_mul(way).saturating_mul(set);
 
-        let share_thread = ((eax >> 14) & 0xFFF) + 1;
+        let share_thread = ((cpuid.eax >> 14) & 0xFFF) + 1;
 
         let size_unit = Unit::from(size);
 
-        let inclusive = (edx & 0b10) != 0;
+        let inclusive = (cpuid.edx & 0b10) != 0;
 
         Self {
             cache_type,

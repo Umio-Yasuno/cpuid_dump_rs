@@ -44,6 +44,13 @@ pub struct TlbInfo {
     pub assoc: TlbAssoc,
 }
 
+#[cfg(feature = "std")]
+impl fmt::Display for TlbInfo {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:>4}_entry, {:>6}_way", self.size, self.assoc)
+    }
+}
+
 impl TlbInfo {
     pub fn half_size(&self) -> Self {
         Self {
