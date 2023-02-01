@@ -116,13 +116,13 @@ fn leaf_pool() -> Vec<(u32, u32)> {
 
 const LEAF_HEAD: &str = "       [Leaf.Sub]";
 const LEAF_LINE: &str = unsafe { std::str::from_utf8_unchecked(&[b'='; LEAF_HEAD.len()]) };
+const LINE: &str = unsafe { std::str::from_utf8_unchecked(&[b'='; TOTAL_WIDTH]) };
 
 fn hex_head() -> String {
     const EAX: &str = "  [EAX]   ";
     const EBX: &str = "  [EBX]   ";
     const ECX: &str = "  [ECX]   ";
     const EDX: &str = "  [EDX]   ";
-    const LINE: &str = unsafe { std::str::from_utf8_unchecked(&[b'='; TOTAL_WIDTH]) };
 
     format!("\
         {LEAF_HEAD}  {EAX} {EBX} {ECX} {EDX}\n\
@@ -154,7 +154,7 @@ fn topo_info_head() -> String {
 
     let TopoId { pkg_id, core_id, smt_id, x2apic_id } = topo_info;
 
-    format!("[\
+    format!("\n[\
         Pkg: {pkg_id:03}, \
         Core: {core_id:03}, \
         SMT: {smt_id:03}, \
@@ -172,7 +172,7 @@ fn topo_info_thread_id_head(thread_id: usize) -> String {
 
     let TopoId { pkg_id, core_id, smt_id, x2apic_id } = topo_info;
 
-    format!("[\
+    format!("\n[\
         Pkg: {pkg_id:03}, \
         Core: {core_id:03}, \
         SMT: {smt_id:03}, \
@@ -355,6 +355,9 @@ impl MainOpt {
                     opt.save_path = Some(path);
                 },
                 "leaf" => {
+                    opt.skip_zero = false;
+                    opt.diff = false;
+
                     if let Some(v) = args.get(idx+1) {
                         let leaf = Self::parse_value(v);
                         opt.leaf = Some((leaf, 0x0));
@@ -419,30 +422,30 @@ impl MainOpt {
         cpuid_pool
     }
 
-    fn select_pool(&self, rawcpuid_pool: &[RawCpuid]) -> Vec<u8> {
+    fn select_pool(&self, rawcpuid_pool: &[RawCpuid], vendor: &CpuVendor) -> Vec<u8> {
         let fmt_func = self.fmt.rawcpuid_fmt_func();
-
-        let vendor = CpuVendor::get();
 
         rawcpuid_pool
             .iter()
-            .flat_map(|rawcpuid| fmt_func(rawcpuid, &vendor).into_bytes())
+            .flat_map(|rawcpuid| fmt_func(rawcpuid, vendor).into_bytes())
             .collect()
     }
 
-    fn pool_all_thread(&self) -> Vec<u8> {
+    fn pool_all_thread(&self, leaf_pool: &[(u32, u32)], cpu_vendor: CpuVendor) -> Vec<u8> {
         use std::thread;
         use std::sync::Arc;
         use libcpuid_dump::util;
 
         let opt = Arc::new(self.clone());
-        let leaf_pool = Arc::new(leaf_pool());
+        let len = leaf_pool.len();
+        let leaf_pool = Arc::from(leaf_pool);
         let cpu_list = util::cpu_set_list().unwrap();
+        let cpu_vendor = Arc::new(cpu_vendor);
         /* this with_capacity is experiental */
         let mut main_pool = Vec::<u8>::with_capacity( if opt.diff {
-            TOTAL_WIDTH * leaf_pool.len() * cpu_list.len() / 2
+            TOTAL_WIDTH * len * cpu_list.len() / 2
         } else {
-            TOTAL_WIDTH * leaf_pool.len() * cpu_list.len() * 2
+            TOTAL_WIDTH * len * cpu_list.len() * 2
         });
         let mut handles: Vec<thread::JoinHandle<_>> = Vec::with_capacity(cpu_list.len());
 
@@ -463,13 +466,14 @@ impl MainOpt {
 
         main_pool.extend(topo_head);
         main_pool.extend(opt.fmt.head_fmt().into_bytes());
-        main_pool.extend(opt.select_pool(&first_pool));
+        main_pool.extend(opt.select_pool(&first_pool, &cpu_vendor));
 
         for cpu in &cpu_list[1..] {
             let cpu = *cpu;
             let opt = Arc::clone(&opt);
             let leaf_pool = Arc::clone(&leaf_pool);
             let first_pool = Arc::clone(&first_pool);
+            let cpu_vendor = Arc::clone(&cpu_vendor);
 
             handles.push(thread::spawn(move || {
                 util::pin_thread(cpu).unwrap();
@@ -489,7 +493,8 @@ impl MainOpt {
 
                 [
                     topo_head.into_bytes(),
-                    opt.select_pool(&diff),
+                    LINE.as_bytes().to_vec(),
+                    opt.select_pool(&diff, &cpu_vendor),
                 ].concat()
             }));
         }
@@ -503,31 +508,39 @@ impl MainOpt {
     }
 
     fn dump_pool(&self) -> Vec<u8> {
+        let leaf_pool = leaf_pool();
+        let cpu_vendor = CpuVendor::get();
+
         if self.dump_all {
-            return self.pool_all_thread();
+            return self.pool_all_thread(&leaf_pool, cpu_vendor);
         }
 
-        let rawcpuid_pool = self.rawcpuid_pool(&leaf_pool());
+        let rawcpuid_pool = self.rawcpuid_pool(&leaf_pool);
 
         [
             topo_info_head().into_bytes(),
             self.fmt.head_fmt().into_bytes(),
-            self.select_pool(&rawcpuid_pool),
+            self.select_pool(&rawcpuid_pool, &cpu_vendor),
         ].concat()
     }
 
     fn only_leaf(&self, leaf: u32, sub_leaf: u32) -> io::Result<()> {
-        let raw_result = RawCpuid::exe(leaf, sub_leaf);
-        let vendor = CpuVendor::get();
-        let dump_fmt = self.fmt.rawcpuid_fmt_func();
+        let cpu_vendor = CpuVendor::get();
 
-        let tmp = [
-            topo_info_head(),
-            self.fmt.head_fmt(),
-            dump_fmt(&raw_result, &vendor),
-        ]
-        .concat()
-        .into_bytes();
+        let tmp = if self.dump_all {
+            self.pool_all_thread(&[(leaf, sub_leaf)], cpu_vendor)
+        } else {
+            let raw_result = RawCpuid::exe(leaf, sub_leaf);
+            let dump_fmt = self.fmt.rawcpuid_fmt_func();
+
+            [
+                topo_info_head(),
+                self.fmt.head_fmt(),
+                dump_fmt(&raw_result, &cpu_vendor),
+            ]
+            .concat()
+            .into_bytes()
+        };
 
         dump_write(&tmp)?;
 

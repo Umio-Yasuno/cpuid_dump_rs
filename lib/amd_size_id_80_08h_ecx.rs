@@ -11,13 +11,7 @@ pub struct AmdSizeId {
 
 impl From<&CpuidResult> for AmdSizeId {
     fn from(cpuid: &CpuidResult) -> Self {
-        let perf_tsc_size = match (cpuid.ecx >> 16) & 0b11 {
-            0b00 => 40,
-            0b01 => 48,
-            0b10 => 56,
-            0b11 => 64,
-            _ => unreachable!(),
-        };
+        let perf_tsc_size = 40 + ((cpuid.ecx >> 16) & 0b11) as u8 * 8;
         let apic_id_size = ((cpuid.ecx >> 12) & 0xF) as u8;
         let num_thread = ((cpuid.ecx & 0xFF) as u8).saturating_add(1);
         let rdpru_max_input = (cpuid.edx >> 16) as u16;
