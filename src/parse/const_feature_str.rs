@@ -230,6 +230,7 @@ pub(crate) const fn ftr_00_07_eax_x1() -> [&'static str; 32] {
     ftr[3] = "RAO-INT";
     ftr[4] = "AVX-VNNI";
     ftr[5] = "AVX512_BF16";
+    ftr[6] = "LASS"; // Linear Address Space Separation.
     ftr[7] = "CMPCCXADD";
     ftr[8] = "ArchPerfmonExt";
     ftr[10] = "FZRM"; // fast zero-length MOVSB
@@ -253,6 +254,20 @@ pub(crate) const fn ftr_00_07_edx_x1() -> [&'static str; 32] {
     ftr[4] = "AVX-VNNI-INT8";
     ftr[5] = "AVX-NE-CONVERT";
     ftr[14] = "PREFETCHITI";
+    ftr[18] = "CET_SSS"; // CET Supervisor Shadow Stack
+
+    ftr
+}
+
+pub(crate) const fn ftr_00_07_edx_x2() -> [&'static str; 32] {
+    let mut ftr = [""; 32];
+
+    ftr[0] = "PSFD"; // Fast Store Forwarding Predictor without disabling Speculative Store Bypass
+    ftr[1] = "IPRED_CTRL";
+    ftr[2] = "RRSBA_CTRL";
+    ftr[3] = "DDPD_U"; // Data Dependent Prefetche
+    ftr[4] = "BHI_CTRL";
+    ftr[5] = "MCDT_NO"; // MXCSR Configuration Dependent Timing
 
     ftr
 }

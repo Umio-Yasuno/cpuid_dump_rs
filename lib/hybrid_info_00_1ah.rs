@@ -63,7 +63,7 @@ pub enum IntelNativeModelId {
 
 impl From<&CpuidResult> for IntelNativeModelId {
     fn from(cpuid: &CpuidResult) -> Self {
-        match cpuid.eax & 0x00FFFFFF {
+        match cpuid.eax {
             Self::TNT => Self::Tremont,
             Self::GRT => Self::Gracemont,
             Self::CMT => Self::Crestmont,
@@ -78,7 +78,10 @@ impl From<&CpuidResult> for IntelNativeModelId {
 #[cfg(feature = "std")]
 impl std::fmt::Display for IntelNativeModelId {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{:?}", self)
+        match self {
+            Self::Unknown(eax) => write!(f, "Unknown({eax:#010X})"),
+            _ => write!(f, "{:?}", self),
+        }
     }
 }
 

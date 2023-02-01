@@ -8,6 +8,7 @@ pub trait ParseGeneric {
     fn thermal_power_00_06h(&self) -> String;
     fn feature_00_07h_x0(&self) -> String;
     fn feature_00_07h_x1(&self) -> String;
+    fn feature_00_07h_x2(&self) -> String;
     fn topo_ext_00_0bh(&self) -> String;
     fn xstate_00_0dh(&self, sub_leaf: u32) -> String;
     fn feature_80_01h(&self) -> String;
@@ -119,6 +120,10 @@ impl ParseGeneric for CpuidResult {
         ].concat())
     }
 
+    fn feature_00_07h_x2(&self) -> String {
+        align_mold_ftr(&str_detect_ftr(self.edx, &ftr_00_07_edx_x2()))
+    }
+
     fn topo_ext_00_0bh(&self) -> String {
         let topo = libcpuid_dump::IntelExtTopo::from(self);
 
@@ -146,16 +151,17 @@ impl ParseGeneric for CpuidResult {
                 .concat()
             },
             0x1 => {
-                [
-                    align_mold_ftr(&str_detect_ftr(self.eax, &xsave_00_0d_eax_x1())),
-                    align_mold_ftr(&str_detect_ftr(self.ecx, &xsave_00_0d_ecx_x1())),
-                ]
-                .concat()
+                align_mold_ftr(&[
+                    str_detect_ftr(self.eax, &xsave_00_0d_eax_x1()),
+                    str_detect_ftr(self.ecx, &xsave_00_0d_ecx_x1()),
+                ].concat())
             },
             0x2 => size(eax, "YMMHI"),
+            0x3 | 0x4 => size(eax, "MPX"),
             0x5 => size(eax, "KREGS"),
             0x6 => size(eax, "ZMMHI"),
             0x7 => size(eax, "HIZMM"),
+            0x8 => size(eax, "IA32_XSS"),
             0x9 => size(eax, "Protection Key"),
             0xB => size(eax, "CET User"),
             0xC => size(eax, "CET SuperVisor"),

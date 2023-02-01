@@ -36,6 +36,7 @@ impl RawCpuid {
             0x7 => match self.sub_leaf {
                 0x0 => cpuid.feature_00_07h_x0(),
                 0x1 => cpuid.feature_00_07h_x1(),
+                0x2 => cpuid.feature_00_07h_x2(),
                 _ => "".to_string(),
             },
             0xB => cpuid.topo_ext_00_0bh(),

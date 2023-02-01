@@ -197,7 +197,7 @@ impl ParseAMD for CpuidResult {
         if 0 < ucode_patch_size {
             format!("\
                 {ftr}\
-                {LN_PAD}[uCodePatchSize: {ucode_patch_size}]\
+                {LN_PAD}[uCodePatchSize: {ucode_patch_size} Bytes]\
             ")
         } else {
             ftr
