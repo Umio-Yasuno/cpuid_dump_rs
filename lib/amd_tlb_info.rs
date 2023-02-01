@@ -32,7 +32,7 @@ impl fmt::Display for TlbAssoc {
             Self::Disabled |
             Self::Invalid => f.pad("0"),
             Self::Way(way) => f.pad(&way.to_string()),
-            Self::WayRange(range) => f.pad(&format!("{:>2}-{}", range.start, range.end)),
+            Self::WayRange(range) => f.pad(&format!("{:>2}-{}", range.start, range.end - 1)),
             Self::Full => f.pad("full"),
         }
     }
