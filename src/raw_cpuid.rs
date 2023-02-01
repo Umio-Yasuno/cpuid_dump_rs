@@ -79,6 +79,7 @@ impl RawCpuid {
                         cpuid.reduction_phys_addr_amd_80_1fh(),
                     ].concat(),
                     0x8000_0021 => cpuid.ext_amd_80_21h(),
+                    0x8000_0026 => cpuid.amd_ext_topo_80_26h(),
                     _ => "".to_string(),
                 },
                 CpuVendor::GenuineIntel => match self.leaf {

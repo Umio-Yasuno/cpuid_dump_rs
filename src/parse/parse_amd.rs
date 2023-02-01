@@ -32,6 +32,7 @@ pub trait ParseAMD {
     fn encrypt_ftr_amd_80_1fh(&self) -> String;
     fn reduction_phys_addr_amd_80_1fh(&self) -> String;
     fn ext_amd_80_21h(&self) -> String;
+    fn amd_ext_topo_80_26h(&self) -> String;
 }
 
 impl ParseAMD for CpuidResult {
@@ -201,5 +202,28 @@ impl ParseAMD for CpuidResult {
         } else {
             ftr
         }
+    }
+
+    fn amd_ext_topo_80_26h(&self) -> String {
+        let ext_topo = libcpuid_dump::AmdExtTopo::from(self);
+
+        let core_type = match ext_topo.core_type {
+            Some(core_type) => format!("{LN_PAD}[CoreType: {core_type}]"),
+            None => "".to_string(),
+        };
+
+        let nid = match ext_topo.native_model_id {
+            Some(nid) => format!("{LN_PAD}[Model: {nid}]"),
+            None => "".to_string(),
+        };
+
+        format!("\
+            [LevelType: {}, NumProc: {}]\
+            {nid}\
+            {core_type}\
+        ",
+            ext_topo.level_type,
+            ext_topo.num_proc,
+        )
     }
 }

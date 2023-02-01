@@ -1,8 +1,10 @@
 use crate::{cpuid, CpuidResult};
+#[cfg(feature = "std")]
+use std::fmt;
 
 const LEAF: u32 = 0x8000_0026;
 
-/* from AMD Zen 4, but I dont have it. */
+/* from AMD Zen 4 */
 /* ref: #55901, Preliminary Processor Programming Reference (PPR) for AMD Family 19h Model 11h, Revision B1 Processors Volume 1 of 6 */
 
 #[derive(Debug)]
@@ -42,6 +44,13 @@ impl From<u8> for AmdTopoLevelType {
     }
 }
 
+#[cfg(feature = "std")]
+impl fmt::Display for AmdTopoLevelType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
 impl AmdTopoLevelType {
     fn is_core(&self) -> bool {
         *self == Self::Core
@@ -65,6 +74,13 @@ impl From<u8> for AmdCoreType {
     }
 }
 
+#[cfg(feature = "std")]
+impl fmt::Display for AmdCoreType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
 #[derive(Debug, PartialEq, Eq)]
 #[allow(non_camel_case_types)]
 pub enum AmdNativeModelId {
@@ -79,6 +95,13 @@ impl From<u8> for AmdNativeModelId {
             0x0 => Self::Zen_4,
             _ => Self::Reserved,
         }
+    }
+}
+
+#[cfg(feature = "std")]
+impl fmt::Display for AmdNativeModelId {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
     }
 }
 
