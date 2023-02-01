@@ -69,3 +69,6 @@ pub use amd_pkg_type_80_01h::*;
 
 mod amd_proc_topo_80_1eh;
 pub use amd_proc_topo_80_1eh::*;
+
+mod amd_ext_topo_80_26h;
+pub use amd_ext_topo_80_26h::*;

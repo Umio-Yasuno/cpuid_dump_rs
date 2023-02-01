@@ -155,6 +155,20 @@ impl CacheProp {
 
         value / 1024f32
     }
+
+    pub fn get(level: u32, cache_type: CacheType) -> Option<Self> {
+        let leaf = Self::get_cache_prop_leaf()?;
+
+        for sub_leaf in 0..5 {
+            let prop = Self::from(&cpuid!(leaf, sub_leaf));
+
+            if prop.level == level && prop.cache_type == cache_type {
+                return Some(prop);
+            }
+        }
+
+        None
+    }
 }
 
 #[test]

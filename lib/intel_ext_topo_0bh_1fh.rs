@@ -29,13 +29,13 @@ impl From<u32> for TopoLevelType {
     fn from(ecx: u32) -> Self {
         let reg = (ecx >> 8) & 0xFF;
 
-        TopoLevelType::from(reg as u8)
+        Self::from(reg as u8)
     }
 }
 
 impl From<&CpuidResult> for TopoLevelType {
     fn from(cpuid: &CpuidResult) -> Self {
-        TopoLevelType::from(cpuid.ecx)
+        Self::from(cpuid.ecx)
     }
 }
 

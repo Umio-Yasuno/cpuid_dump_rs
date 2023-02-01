@@ -107,6 +107,10 @@ fn leaf_pool() -> Vec<(u32, u32)> {
             0x8000_0020 => for sub_leaf in 0x0..=0x1 {
                 leaf_pool.push((leaf, sub_leaf))
             },
+            /* AMD Extended CPU Topology */
+            0x8000_0026 => for sub_leaf in 0x0..=0x4 {
+                leaf_pool.push((leaf, sub_leaf))
+            },
             _ => leaf_pool.push((leaf, 0x0)),
         }
     }
