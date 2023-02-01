@@ -4,7 +4,7 @@
 use core::arch::x86_64::CpuidResult;
 use std::io;
 
-use libcpuid_dump::{cpuid, CpuVendor};
+use libcpuid_dump::{cpuid, CpuVendor, Vendor};
 
 pub const INPUT_WIDTH: usize = "  0x00000000 0x0:  ".len();
 pub const OUTPUT_WIDTH: usize = "0x00000000 ".len() * 4;
@@ -17,6 +17,9 @@ pub use raw_cpuid::*;
 
 mod parse;
 pub use parse::*;
+
+#[cfg(debug_assertions)]
+mod load_aida64_log;
 
 /*
 #[path = "./load_file.rs"]
@@ -285,6 +288,8 @@ struct MainOpt {
     leaf: Option<(u32, u32)>,
     skip_zero: bool,
     diff: bool,
+    #[cfg(debug_assertions)]
+    load_aida64: Option<String>,
 }
 
 impl Default for MainOpt {
@@ -296,6 +301,8 @@ impl Default for MainOpt {
             leaf: None,
             skip_zero: true,
             diff: true,
+            #[cfg(debug_assertions)]
+            load_aida64: None,
         }
     }
 }
@@ -357,6 +364,10 @@ impl MainOpt {
                     }
 
                     opt.save_path = Some(path);
+                },
+                #[cfg(debug_assertions)]
+                "aida64" => {
+                    opt.load_aida64 = args.get(idx+1).cloned();
                 },
                 "leaf" => {
                     opt.skip_zero = false;
@@ -565,6 +576,17 @@ impl MainOpt {
         Ok(())
     }
 
+    #[cfg(debug_assertions)]
+    fn load_aida64(&self, path: &String) -> io::Result<()> {
+        let log = std::fs::read_to_string(path)?;
+        let (rawcpuid_pool, cpu_vendor) = load_aida64_log::parse_aida64(&log);
+        let tmp = self.select_pool(&rawcpuid_pool, &cpu_vendor);
+
+        dump_write(&tmp)?;
+
+        Ok(())
+    }
+
     fn run(&self) {
         match self {
             Self { leaf: Some(leaf), .. } => {
@@ -572,6 +594,10 @@ impl MainOpt {
             },
             Self { save_path: Some(path), .. } => {
                 self.save_file(path).expect("faild save_file")
+            },
+            #[cfg(debug_assertions)]
+            Self { load_aida64: Some(path), .. } => {
+                self.load_aida64(path).expect("faild load_aida64")
             },
             _ => {
                 dump_write(&self.dump_pool()).expect("faild dump_write")
