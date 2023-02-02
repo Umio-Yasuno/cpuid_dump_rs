@@ -1,4 +1,4 @@
-use crate::{cpuid, CpuidResult, ProcName};
+use crate::{cpuid, CpuidResult};
 
 /* ref: https://github.com/llvm/llvm-project/blob/main/clang/lib/Headers/cpuid.h */
 /* ref: https://github.com/gcc-mirror/gcc/blob/master/gcc/config/i386/cpuid.h */
@@ -58,6 +58,8 @@ use std::fmt;
 #[cfg(feature = "std")]
 impl fmt::Display for Vendor {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        use crate::ProcName;
+
         let mut total = [0u8; 12];
 
         /* ebx, edx, ecx */

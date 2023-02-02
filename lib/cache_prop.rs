@@ -101,7 +101,7 @@ impl From<&CpuidResult> for CacheProp {
 
         let size_unit = Unit::from(size);
 
-        let inclusive = (cpuid.edx & 0b10) != 0;
+        let inclusive = (cpuid.edx & 0b10) == 0b10;
 
         Self {
             cache_type,
