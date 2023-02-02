@@ -86,6 +86,7 @@ impl RawCpuid {
                 CpuVendor::GenuineIntel => match self.leaf {
                     0x4 => cpuid.cache_prop(),
                     0x16 => cpuid.clock_speed_intel_00_16h(),
+                    0x18 => cpuid.intel_tlb_param_00_18h(),
                     0x1A => cpuid.intel_hybrid_1ah(),
                     0x1F => cpuid.v2_ext_topo_intel_1fh(),
                     _ => "".to_string(),

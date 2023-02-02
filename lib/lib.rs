@@ -47,6 +47,9 @@ pub use intel_ext_topo_0bh_1fh::*;
 mod amd_tlb_info;
 pub use amd_tlb_info::*;
 
+mod intel_tlb_param_00_18h;
+pub use intel_tlb_param_00_18h::*;
+
 mod hybrid_info_00_1ah;
 pub use hybrid_info_00_1ah::*;
 

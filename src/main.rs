@@ -63,8 +63,6 @@ fn leaf_pool() -> Vec<(u32, u32)> {
 
     /* LFuncStd: largest standard function */
     let max_std_leaf = RawCpuid::exe(0x0, 0x0).result.eax;
-    /* CPUID[Leaf=0x7, SubLeaf=0x0].EAX, StructExtFeatIdMax */
-    let leaf_07h_subc = RawCpuid::exe(0x7, 0x0).result.eax;
     /* LFuncExt: largest extended function */
     let max_ext_leaf = RawCpuid::exe(0x8000_0000, 0x0).result.eax;
 
@@ -76,7 +74,10 @@ fn leaf_pool() -> Vec<(u32, u32)> {
                 leaf_pool.push((leaf, sub_leaf))
             },
             0x7 => {
-                for sub_leaf in 0x0..=leaf_07h_subc {
+                /* CPUID[Leaf=0x7, SubLeaf=0x0].EAX, StructExtFeatIdMax */
+                let max_sub_leaf = RawCpuid::exe(0x7, 0x0).result.eax;
+
+                for sub_leaf in 0x0..=max_sub_leaf {
                     leaf_pool.push((leaf, sub_leaf))
                 }
             },
@@ -90,6 +91,14 @@ fn leaf_pool() -> Vec<(u32, u32)> {
             /* 0xD: Processor Extended State Enumeration */
             0xD => for sub_leaf in 0x0..0xF {
                 leaf_pool.push((leaf, sub_leaf))
+            },
+            /* 0x18: Deterministic Address Translation Parameters, Intel */
+            0x18 => {
+                let max_sub_leaf = RawCpuid::exe(0x18, 0x0).result.eax;
+
+                for sub_leaf in 0x0..max_sub_leaf {
+                    leaf_pool.push((leaf, sub_leaf))
+                }
             },
             /* 0x1F: V2 Extended Topology Enumeration Leaf, Intel */
             0x1F => for sub_leaf in 0x0..=0x4 {

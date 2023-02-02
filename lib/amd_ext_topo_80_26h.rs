@@ -101,7 +101,10 @@ impl From<u8> for AmdNativeModelId {
 #[cfg(feature = "std")]
 impl fmt::Display for AmdNativeModelId {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:?}", self)
+        match self {
+            Self::Zen_4 => write!(f, "Zen 4"),
+            _ => write!(f, "{:?}", self),
+        }
     }
 }
 
