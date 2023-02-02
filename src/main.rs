@@ -4,7 +4,7 @@
 use core::arch::x86_64::CpuidResult;
 use std::io;
 
-use libcpuid_dump::{cpuid, CpuVendor, Vendor};
+use libcpuid_dump::{cpuid, CpuVendor};
 
 pub const INPUT_WIDTH: usize = "  0x00000000 0x0:  ".len();
 pub const OUTPUT_WIDTH: usize = "0x00000000 ".len() * 4;
@@ -20,12 +20,6 @@ pub use parse::*;
 
 #[cfg(debug_assertions)]
 mod load_aida64_log;
-
-/*
-#[path = "./load_file.rs"]
-mod load_file;
-pub use crate::load_file::*;
-*/
 
 /// Main flow:
 ///    pub struct RawCpuid {

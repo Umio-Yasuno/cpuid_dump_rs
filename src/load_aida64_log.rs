@@ -1,4 +1,5 @@
-use crate::{CpuidResult, CpuVendor, RawCpuid, Vendor};
+use crate::{CpuidResult, CpuVendor, RawCpuid};
+use libcpuid_dump::Vendor;
 
 pub(crate) fn parse_aida64(log: &String) -> (Vec<RawCpuid>, CpuVendor) {
     let mut rawcpuid_pool: Vec<RawCpuid> = Vec::new();

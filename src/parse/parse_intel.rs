@@ -1,4 +1,5 @@
 use super::*;
+use crate::PARSE_WIDTH;
 
 pub trait ParseIntel {
     fn clock_speed_intel_00_16h(&self) -> String;
@@ -24,7 +25,7 @@ impl ParseIntel for CpuidResult {
             return "".to_string();
         }
 
-        let mut support_page = String::with_capacity(TOTAL_WIDTH);
+        let mut support_page = String::with_capacity(PARSE_WIDTH);
         {
             if tlb_param.support_4k { support_page.push_str("[4K]") }
             if tlb_param.support_2m { support_page.push_str("[2M]") }
