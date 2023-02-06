@@ -307,7 +307,11 @@ impl ProcInfo {
             0x18 => Self {
                 codename: CpuCodename::Amd(AmdCodename::Picasso),
                 archname: CpuMicroArch::Amd(AmdMicroArch::ZenPlus),
-                step_info: CpuStepping::Unknown(s),
+                step_info: match s {
+                    0x0 => CpuStepping::B0,
+                    0x1 => CpuStepping::B1,
+                    _ => CpuStepping::Unknown(s),
+                },
                 node: Some(ProcessNode::NM(12)),
             },
 
@@ -447,6 +451,8 @@ impl ProcInfo {
             0x70..=0x7F => Self {
                 /* https://review.coreboot.org/c/coreboot/+/72843/1 */
                 codename: match m {
+                    // 0x70 => CpuCodename::Amd(AmdCodename::Phoenix), // ES?
+                    // 0x74 => CpuCodename::Amd(AmdCodename::Phoenix),
                     0x78 => CpuCodename::Amd(AmdCodename::Phoenix2),
                     _ => CpuCodename::Amd(AmdCodename::Phoenix),
                 },
