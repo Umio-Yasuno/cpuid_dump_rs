@@ -27,9 +27,7 @@ impl From<u8> for TopoLevelType {
 
 impl From<u32> for TopoLevelType {
     fn from(ecx: u32) -> Self {
-        let reg = (ecx >> 8) & 0xFF;
-
-        Self::from(reg as u8)
+        Self::from(((ecx >> 8) & 0xFF) as u8)
     }
 }
 

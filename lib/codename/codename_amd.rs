@@ -445,13 +445,15 @@ impl ProcInfo {
                 node: Some(ProcessNode::NM(5)),
             },
             0x70..=0x7F => Self {
-                codename: CpuCodename::Amd(AmdCodename::Phoenix),
+                /* https://review.coreboot.org/c/coreboot/+/72843/1 */
+                codename: match m {
+                    0x78 => CpuCodename::Amd(AmdCodename::Phoenix2),
+                    _ => CpuCodename::Amd(AmdCodename::Phoenix),
+                },
                 archname: CpuMicroArch::Amd(AmdMicroArch::Zen4),
                 step_info: CpuStepping::Unknown(s),
                 node: Some(ProcessNode::NM(4)),
             },
-            /* https://review.coreboot.org/c/coreboot/+/71731/7/src/soc/amd/phoenix/include/soc/cpu.h */
-            /* 0x78 => Phoenix A0  */
             _ => Self {
                 codename: CpuCodename::Unknown(CpuVendor::AuthenticAMD, 0x19, m),
                 archname: CpuMicroArch::Unknown,
@@ -517,6 +519,7 @@ pub enum AmdCodename {
     Genoa,
     Raphael,
     Phoenix,
+    Phoenix2,
 }
 
 #[cfg(feature = "std")]

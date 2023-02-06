@@ -44,6 +44,12 @@ impl From<u8> for AmdTopoLevelType {
     }
 }
 
+impl From<&CpuidResult> for AmdTopoLevelType {
+    fn from(cpuid: &CpuidResult) -> Self {
+        Self::from(((cpuid.ecx >> 8) & 0xFF) as u8)
+    }
+}
+
 #[cfg(feature = "std")]
 impl fmt::Display for AmdTopoLevelType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -74,6 +80,12 @@ impl From<u8> for AmdCoreType {
     }
 }
 
+impl From<&CpuidResult> for AmdCoreType {
+    fn from(cpuid: &CpuidResult) -> Self {
+        AmdCoreType::from(((cpuid.ebx >> 28) & 0xF) as u8)
+    }
+}
+
 #[cfg(feature = "std")]
 impl fmt::Display for AmdCoreType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -98,6 +110,12 @@ impl From<u8> for AmdNativeModelId {
     }
 }
 
+impl From<&CpuidResult> for AmdNativeModelId {
+    fn from(cpuid: &CpuidResult) -> Self {
+        Self::from(((cpuid.ebx >> 24) & 0xF) as u8)
+    }
+}
+
 #[cfg(feature = "std")]
 impl fmt::Display for AmdNativeModelId {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -111,7 +129,7 @@ impl fmt::Display for AmdNativeModelId {
 impl From<&CpuidResult> for AmdExtTopo {
     fn from(cpuid: &CpuidResult) -> Self {
         // TODO: check CPU Family, Model
-        let level_type = AmdTopoLevelType::from(((cpuid.ecx >> 8) & 0xFF) as u8);
+        let level_type = AmdTopoLevelType::from(cpuid);
         let next_level = (cpuid.eax & 0xF) as u8;
 
         let asymmetric_cores = ((cpuid.eax >> 31) & 0b1) == 1;
@@ -124,13 +142,14 @@ impl From<&CpuidResult> for AmdExtTopo {
         };
 
         let core_type = if level_type.is_core() {
-            Some(AmdCoreType::from(((cpuid.ebx >> 28) & 0xF) as u8))
+            Some(AmdCoreType::from(cpuid))
         } else {
             None
         };
 
+        // TODO: need AmdCoreType?
         let native_model_id = if level_type.is_core() {
-            Some(AmdNativeModelId::from(((cpuid.ebx >> 24) & 0xF) as u8))
+            Some(AmdNativeModelId::from(cpuid))
         } else {
             None
         };
