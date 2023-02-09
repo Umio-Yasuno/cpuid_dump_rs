@@ -354,6 +354,9 @@ impl ProcInfo {
                 step_info: CpuStepping::Unknown(s),
                 node: Some(ProcessNode::NM(7)),
             },
+            /* Mero?: AMD Eng Samples: 100-000000003-11_35/24_N */
+            /* https://developer-docs.magicleap.cloud/docs/1.1.0-dev2/guides/developer-tools/lumin-aosp-tools/radeon-gpu-profiler */
+            /* https://github.com/magicleap/developer-portal-docs/blob/main/static/img/developer-tools/lumin-aosp-tools/radeon-gpu-profiler/rgp-launch.png */
             0xA0..=0xAF => Self {
                 codename: CpuCodename::Amd(AmdCodename::Mendocino),
                 archname: CpuMicroArch::Amd(AmdMicroArch::Zen2),

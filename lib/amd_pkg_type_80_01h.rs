@@ -39,9 +39,11 @@ pub enum AmdPkgType {
     FP6,
     FF3,
     SP5,
-    FP7,
-    FP7r2,
+    FP7, // LPDDR5/x
+    FP7r2, // DDR5
     // FP7r7, // ?, AMD Ryzen 9 6900HS, Ryzen 7 6800HS
+    // FP8, // LPDDR5/x
+    // FL1, // Dragon Range, Ryzen 7045HX
     AM5,
     FT6,
     Unknown(u32),

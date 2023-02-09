@@ -134,7 +134,7 @@ impl ParseGeneric for CpuidResult {
         let size = |eax: u32, txt: &str| -> String {
             /* 00_0D_X{SUB}:EAX is the state size, EAX = 0 indicates not supported it */
             if eax != 0x0 {
-                format!("[{txt:<16} save size: {eax:>3}B]")
+                format!("[{txt:<16} save size: {eax:>4}B]")
             } else {
                 "".to_string()
             }

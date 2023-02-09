@@ -53,6 +53,7 @@ impl Vendor {
     }
 }
 
+/*
 #[cfg(feature = "std")]
 use std::fmt;
 #[cfg(feature = "std")]
@@ -70,6 +71,7 @@ impl fmt::Display for Vendor {
         write!(f, "{}", String::from_utf8(total.to_vec()).unwrap())
     }
 }
+*/
 
 impl From<&CpuidResult> for Vendor {
     fn from(cpuid: &CpuidResult) -> Self {
