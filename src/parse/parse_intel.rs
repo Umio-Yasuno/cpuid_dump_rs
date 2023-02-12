@@ -46,8 +46,7 @@ impl ParseIntel for CpuidResult {
         };
 
         format!("\
-            [Type: {cache_type}]\
-            {LN_PAD}{support_page}\
+            [Type: {cache_type}] {support_page}\
             {fully_assoc}\
             {partitioning}\
             {LN_PAD}[way: {way:>3}, set: {set:>3}]\

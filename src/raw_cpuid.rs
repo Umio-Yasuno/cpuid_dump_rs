@@ -91,6 +91,13 @@ impl RawCpuid {
                     0x1F => cpuid.v2_ext_topo_intel_1fh(),
                     _ => "".to_string(),
                 },
+                CpuVendor::CentaurHauls |
+                CpuVendor::Shanghai => match self.leaf {
+                    0x4 => cpuid.cache_prop(),
+                    0x8000_0005 => cpuid.l1_amd_80_05h(),
+                    0x8000_0006 => cpuid.l2_amd_80_06h(),
+                    _ => "".to_string(),
+                },
                 _ => "".to_string(),
             }
         }
