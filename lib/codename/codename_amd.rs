@@ -441,6 +441,7 @@ impl ProcInfo {
                     (0x10, _) => CpuStepping::A0,
                     (0x11, 0x0) => CpuStepping::B0,
                     (0x11, 0x1) => CpuStepping::B1,
+                    // (0x11, 0x2) => ?:
                     _ => CpuStepping::Unknown(s),
                 },
                 node: Some(ProcessNode::NM(5)),
