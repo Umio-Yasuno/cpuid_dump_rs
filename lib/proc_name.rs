@@ -49,7 +49,7 @@ impl ProcName {
     
     pub fn get_trim_name() -> String {
         Self::get_name()
-            .trim_end()
+            .trim()
             .to_string()
     }
 }

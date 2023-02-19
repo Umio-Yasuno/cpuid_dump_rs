@@ -43,7 +43,7 @@ pub enum AmdPkgType {
     FP7r2, // DDR5
     // FP7r7, // ?, AMD Ryzen 9 6900HS, Ryzen 7 6800HS
     // FP8, // LPDDR5/x
-    // FL1, // Dragon Range, Ryzen 7045HX
+    FL1, // Dragon Range, Ryzen 7045HX
     AM5,
     FT6,
     Unknown(u32),
@@ -195,6 +195,13 @@ impl From<&CpuidResult> for AmdPkgType {
             /* Raphael */
             FamModStep { syn_fam: 0x19, syn_mod: 0x60..=0x6F, .. } => match pkg_type {
                 0x0 => Self::AM5,
+                0x1 => Self::FL1,
+                _ => Self::Unknown(pkg_type),
+            },
+            /* Phoenix */
+            FamModStep { syn_fam: 0x19, syn_mod: 0x70..=0x7F, .. } => match pkg_type {
+                0x4 => Self::FP7,
+                0x5 => Self::FP7r2,
                 _ => Self::Unknown(pkg_type),
             },
             _ => Self::Unknown(pkg_type),
