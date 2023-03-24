@@ -55,7 +55,7 @@ impl RawCpuid {
                 lnpad!(),
                 cpuid.ftr_ext_id_80_08h_ebx(),
                 if let CpuVendor::AuthenticAMD = vendor {
-                    [lnpad!(), cpuid.size_id_amd_80_08h()].concat()
+                    format!("{LN_PAD}{}", cpuid.size_id_amd_80_08h())
                 } else {
                     "".to_string()
                 },

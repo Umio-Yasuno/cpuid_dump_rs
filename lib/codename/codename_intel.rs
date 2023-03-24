@@ -607,7 +607,7 @@ impl ProcInfo {
             },
             0xB6 => Self {
                 codename: CpuCodename::Intel(IntelCodename::GrandRidge),
-                archname: CpuMicroArch::Unknown,
+                archname: CpuMicroArch::Intel(IntelMicroArch::Crestmont),
                 step_info: CpuStepping::Unknown(s),
                 node: None,
             },
@@ -886,6 +886,7 @@ pub enum IntelMicroArch {
     Crestmont,
     /* Hybrid */
     Hybrid(Box<Self>, Box<Self>),
+    // Hybrid_ { core: Box<Self>, atom: Box<Self> },
     /* Xeon Phi, Knights */
     KnightsLanding,
     KnightsMill,
