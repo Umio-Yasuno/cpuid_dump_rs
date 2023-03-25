@@ -160,6 +160,7 @@ pub enum ProcessNode {
     _UM(u8),
     NM(u8),
     Intel(u8),
+    IntelA(u8),
 }
 
 #[cfg(feature = "std")]
@@ -169,6 +170,7 @@ impl fmt::Display for ProcessNode {
             Self::_UM(size) => write!(f, "{size} um"),
             Self::NM(size) => write!(f, "{size} nm"),
             Self::Intel(size) => write!(f, "Intel {size}"),
+            Self::IntelA(size) => write!(f, "Intel{size}A"),
         }
     }
 }
