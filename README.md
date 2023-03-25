@@ -156,6 +156,12 @@ OPTIONS:
          If there is no path/filename argument, will be used "./<processor_name>".
 ```
 
+## Use as Library
+```
+[dependencies]
+libcpuid_dump = { git = "https://github.com/Umio-Yasuno/cpuid_dump_rs" }
+```
+
 ## Dump Results
  * [AMD_Ryzen_5_2600_00800F82h](./dump_result/AMD_Ryzen_5_2600_00800F82h.txt)
  * [AMD_Ryzen_5_5600G_with_Radeon_Graphics](./dump_result/AMD_Ryzen_5_5600G_with_Radeon_Graphics_00A50F00.txt)
