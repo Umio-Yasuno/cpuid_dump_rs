@@ -12,7 +12,7 @@ pub(crate) fn parse_aida64(log: &String) -> (Vec<RawCpuid>, CpuVendor) {
     }); // dummy
 
     for line in log.lines() {
-        if line.starts_with("L1") {
+        if line == "------[ All CPUs ]------" {
             break;
         }
         if !line.starts_with("CPUID") {
