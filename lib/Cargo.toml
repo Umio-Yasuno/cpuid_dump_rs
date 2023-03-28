@@ -5,6 +5,13 @@ authors = ["Umio Yasuno <53935716+Umio-Yasuno@users.noreply.github.com>"]
 edition = "2018"
 license = "MIT"
 
+description = "This library is part of https://github.com/Umio-Yasuno/cpuid_dump_rs"
+homepage = "https://github.com/Umio-Yasuno/cpuid_dump_rs"
+repository = "https://github.com/Umio-Yasuno/cpuid_dump_rs"
+
+keywords = ["cpuid", "x86", "amd64"]
+readme = "README.md"
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [lib]
