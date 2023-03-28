@@ -40,11 +40,3 @@ libcpuid_dump = { git = "https://github.com/Umio-Yasuno/cpuid_dump_rs" }
  * [AMD_Ryzen_5_2600_00800F82h](./dump_result/AMD_Ryzen_5_2600_00800F82h.txt)
  * [AMD_Ryzen_5_5600G_with_Radeon_Graphics](./dump_result/AMD_Ryzen_5_5600G_with_Radeon_Graphics_00A50F00.txt)
  * [AMD_Ryzen_5_5600G_with_Radeon_Graphics (bin fmt)](./dump_result/AMD_Ryzen_5_5600G_with_Radeon_Graphics_00A50F00_bin.txt)
-
-## Documents
-### CPUID
- * [Intel® Architecture Instruction Set Extensions Programming Reference](https://software.intel.com/content/www/us/en/develop/download/intel-architecture-instruction-set-extensions-programming-reference.html)
- * [Developer Guides, Manuals & ISA Documents - AMD](https://developer.amd.com/resources/developer-guides-manuals/)
-    * [AMD64 Architecture Programmer’s Manual, Volume 3: General-Purpose and System Instructions, 24594 - 24594.pdf](https://www.amd.com/system/files/TechDocs/24594.pdf)
- * [CPUID - Wikipedia](https://en.wikipedia.org/wiki/CPUID)
- * <https://gitlab.com/x86-psABIs/x86-64-ABI>
