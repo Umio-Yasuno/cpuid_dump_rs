@@ -1,5 +1,6 @@
 use crate::{cpuid, CpuidResult};
 
+/// Information available from `CPUID.(EAX=8000_0001h)`, AMD CPU only
 pub struct AmdSizeId {
     pub perf_tsc_size: u8,
     pub apic_id_size: u8,

@@ -474,6 +474,7 @@ impl ProcInfo {
     }
 }
 
+/// List of AMD CPU (SoC) codenmaes
 #[derive(Debug)]
 #[allow(non_camel_case_types)]
 pub enum AmdCodename {
@@ -545,6 +546,7 @@ impl fmt::Display for AmdCodename {
     }
 }
 
+/// List of AMD micro-architectures
 #[derive(Debug)]
 pub enum AmdMicroArch {
     Puma2008,

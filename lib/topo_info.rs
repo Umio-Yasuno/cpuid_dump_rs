@@ -1,5 +1,6 @@
 use crate::{cpuid, CpuidResult, TopoLevelType};
 
+/// Topology ID (SMT, Core, Pkg, X2APIC)
 pub struct TopoId {
     pub smt_id: u32,
     pub core_id: u32,

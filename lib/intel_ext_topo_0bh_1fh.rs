@@ -1,5 +1,6 @@
 use crate::CpuidResult;
 
+/// Used for [IntelExtTopo]
 #[derive(Debug, PartialEq, Eq)]
 #[repr(u8)]
 pub enum TopoLevelType {
@@ -44,6 +45,7 @@ impl std::fmt::Display for TopoLevelType {
     }
 }
 
+/// Intel Extended Topology, available from `CPUID.(EAX=0Bh, ECX=n)` or `CPUID.(EAX=1Fh, ECX=n)`
 pub struct IntelExtTopo {
     pub next_level: u32,
     pub x2apic_id: u32,

@@ -2,6 +2,7 @@ use crate::{cpuid, CpuidResult};
 
 /* https://github.com/slimbootloader/slimbootloader/blob/master/Platform/AlderlakeBoardPkg/Library/Stage2BoardInitLib/CpuInfoLib.c */
 
+/// Used for [HybridInfo]. The core-type within the Intel hybrid architecture.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd)]
 #[repr(u8)]
 pub enum HybridCoreType {
@@ -46,6 +47,8 @@ impl IntelNativeModelId {
     const RWC: u32 = Self::gen_eax(HybridCoreType::Core, 0x2);
 }
 
+/// The micro-arhitecture within the Inel hybrid architecture.
+/// It is determined from `CPUID.(EAX=1Ah):EAX`.
 #[derive(Debug)]
 #[repr(u32)]
 pub enum IntelNativeModelId {
@@ -85,6 +88,7 @@ impl std::fmt::Display for IntelNativeModelId {
     }
 }
 
+/// Information of the Intel hybrid architecture, available from `CPUID.(EAX=1Ah):EAX`
 pub struct HybridInfo;
 
 impl HybridInfo {

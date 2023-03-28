@@ -1,5 +1,6 @@
 use crate::{cpuid, CpuidResult};
 
+/// Processor name
 pub struct ProcName;
 
 impl ProcName {

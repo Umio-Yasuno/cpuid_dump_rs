@@ -1,5 +1,6 @@
 use crate::CpuidResult;
 
+/// Information available from `CPUID.(EAX=8000_001Eh)`, AMD CPU only
 pub struct AmdProcTopo {
     pub ext_apic_id: u32,
     pub threads_per_core: u8,

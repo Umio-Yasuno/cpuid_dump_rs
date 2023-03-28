@@ -1,5 +1,6 @@
 use crate::{cpuid, CpuidResult, CpuVendor};
 
+/// Used for [CacheProp]
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum Unit {
     Byte,
@@ -41,6 +42,7 @@ impl std::fmt::Display for Unit {
     }
 }
 
+/// CPU cache type
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum CacheType {
     Data,
@@ -74,6 +76,7 @@ impl std::fmt::Display for CacheType {
     }
 }
 
+/// CPU cache information
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct CacheProp {
     pub cache_type: CacheType,

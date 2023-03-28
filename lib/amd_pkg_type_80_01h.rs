@@ -7,6 +7,7 @@ use crate::{cpuid, CpuidResult, FamModStep};
 /* ref: https://github.com/illumos/illumos-gate/blob/master/usr/src/uts/intel/os/cpuid_subr.c */
 /* ref: https://github.com/coreboot/coreboot/blob/master/src/soc/amd/picasso/include/soc/soc_util.h */
 
+/// Information available from `CPUID.(EAX=8000_0001h)`, AMD CPU only
 #[derive(Debug)]
 pub enum AmdPkgType {
     F1207,

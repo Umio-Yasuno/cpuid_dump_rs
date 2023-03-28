@@ -50,6 +50,7 @@ impl ProcInfo {
     }
 }
 
+/// List of Zhaoxin CPU (SoC) codenmaes
 #[derive(Debug)]
 #[allow(non_camel_case_types)]
 pub enum ZhaoxinCodename {
@@ -72,6 +73,7 @@ impl fmt::Display for ZhaoxinCodename {
     }
 }
 
+/// List of Zhaoxin micro-architectures
 #[derive(Debug)]
 pub enum ZhaoxinMicroArch {
     Zhangjiang, // 张江

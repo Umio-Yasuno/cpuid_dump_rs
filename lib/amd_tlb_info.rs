@@ -52,14 +52,14 @@ impl fmt::Display for TlbInfo {
 }
 
 impl TlbInfo {
-    pub fn half_size(&self) -> Self {
+    pub(crate) fn half_size(&self) -> Self {
         Self {
             size: self.size / 2,
             assoc: self.assoc.clone(),
         }
     }
 
-    pub fn from_reg_l1(reg: u16) -> Self {
+    pub(crate) fn from_reg_l1(reg: u16) -> Self {
         let (size, assoc) = (reg & 0xFF, (reg >> 8) as u8);
 
         Self {
@@ -72,7 +72,7 @@ impl TlbInfo {
         }
     }
 
-    pub fn from_reg_l2(reg: u16) -> Self {
+    pub(crate) fn from_reg_l2(reg: u16) -> Self {
         let (size, assoc) = (reg & 0xFFF, reg >> 12);
 
         Self {

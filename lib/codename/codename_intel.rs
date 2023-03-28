@@ -746,6 +746,7 @@ impl ProcInfo {
     }
 }
 
+/// List of Intel CPU (SoC) codenmaes
 #[derive(Debug)]
 #[allow(non_camel_case_types)]
 pub enum IntelCodename {
@@ -857,6 +858,7 @@ impl fmt::Display for IntelCodename {
     }
 }
 
+/// List of Intel micro-architectures
 #[derive(Debug)]
 #[allow(non_camel_case_types)]
 pub enum IntelMicroArch {
@@ -901,7 +903,7 @@ pub enum IntelMicroArch {
 }
 
 impl IntelMicroArch {
-    fn hybrid(core: Self, atom: Self) -> Self {
+    pub fn hybrid(core: Self, atom: Self) -> Self {
         Self::Hybrid(Box::new(core), Box::new(atom))
     }
 }

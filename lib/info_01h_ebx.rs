@@ -1,5 +1,6 @@
 use crate::{cpuid, CpuidResult};
 
+/// Information available from `CPUID.(EAX=01h):EBX`
 pub struct Info01h {
     pub local_apic_id: u8,
     pub max_apic_id: u8,
