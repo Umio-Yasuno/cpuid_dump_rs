@@ -3,7 +3,9 @@
 This library is extracted from [Umio-Yasuno/cpuid_dump_rs](https://github.com/Umio-Yasuno/cpuid_dump_rs).  
 If you need an advanced and useful library for CPU information that can also check featureflags, I would recommend [gz/rust-cpuid](https://github.com/gz/rust-cpuid).  
 
-## Documents
+[document](https://docs.rs/libcpuid_dump/latest/libcpuid_dump/)
+
+## Reference
 ### CPUID
  * [Intel® Architecture Instruction Set Extensions Programming Reference](https://software.intel.com/content/www/us/en/develop/download/intel-architecture-instruction-set-extensions-programming-reference.html)
  * [Developer Guides, Manuals & ISA Documents - AMD](https://developer.amd.com/resources/developer-guides-manuals/)
