@@ -59,7 +59,7 @@ impl TlbInfo {
         }
     }
 
-    pub(crate) fn from_reg_l1(reg: u16) -> Self {
+    pub fn from_reg_l1(reg: u16) -> Self {
         let (size, assoc) = (reg & 0xFF, (reg >> 8) as u8);
 
         Self {
@@ -72,7 +72,7 @@ impl TlbInfo {
         }
     }
 
-    pub(crate) fn from_reg_l2(reg: u16) -> Self {
+    pub fn from_reg_l2(reg: u16) -> Self {
         let (size, assoc) = (reg & 0xFFF, reg >> 12);
 
         Self {
