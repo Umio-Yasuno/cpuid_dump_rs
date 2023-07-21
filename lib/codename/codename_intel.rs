@@ -730,8 +730,14 @@ impl ProcInfo {
                 step_info: CpuStepping::Unknown(s),
                 node: None,
             },
-            0xC6 => Self {
+            0xC5 => Self {
                 codename: CpuCodename::Intel(IntelCodename::ArrowLake),
+                archname: CpuMicroArch::Unknown,
+                step_info: CpuStepping::Unknown(s),
+                node: Some(ProcessNode::IntelA(20)),
+            },
+            0xC6 => Self {
+                codename: CpuCodename::Intel(IntelCodename::ArrowLake_S),
                 archname: CpuMicroArch::Unknown,
                 step_info: CpuStepping::Unknown(s),
                 node: Some(ProcessNode::IntelA(20)),
@@ -846,6 +852,7 @@ pub enum IntelCodename {
     MeteorLake_B5H,
     LunarLake_M,
     ArrowLake,
+    ArrowLake_S,
     /* Xeon Phi */
     KnightsLanding,
     KnightsMill,
