@@ -138,30 +138,11 @@ impl From<&CpuidResult> for AmdExtTopo {
         let asymmetric_cores = ((cpuid.eax >> 31) & 0b1) == 1;
         let hetero_cores = ((cpuid.eax >> 30) & 0b1) == 1;
 
-        let eff_rank_available = if level_type.is_core() {
-            ((cpuid.eax >> 29) & 0b1) == 1
-        } else {
-            false
-        };
-
-        let core_type = if level_type.is_core() {
-            Some(AmdCoreType::from(cpuid))
-        } else {
-            None
-        };
-
+        let eff_rank_available = level_type.is_core() && (((cpuid.eax >> 29) & 0b1) == 1);
+        let core_type = level_type.is_core().then_some(AmdCoreType::from(cpuid));
         // TODO: need AmdCoreType?
-        let native_model_id = if level_type.is_core() {
-            Some(AmdNativeModelId::from(cpuid))
-        } else {
-            None
-        };
-
-        let eff_rank = if level_type.is_core() {
-            Some(((cpuid.ebx >> 16) & 0xFF) as u8)
-        } else {
-            None
-        };
+        let native_model_id = level_type.is_core().then_some(AmdNativeModelId::from(cpuid));
+        let eff_rank = level_type.is_core().then_some(((cpuid.ebx >> 16) & 0xFF) as u8);
 
         let num_proc = (cpuid.ebx & 0xFFFF) as u16;
         let _input_ecx = (cpuid.ecx & 0xFF) as u8;
