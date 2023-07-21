@@ -464,6 +464,14 @@ impl ProcInfo {
                 step_info: CpuStepping::Unknown(s),
                 node: Some(ProcessNode::NM(4)),
             },
+            /* https://lore.kernel.org/linux-edac/20230720125425.3735538-2-muralimk@amd.com/ */
+            /* https://lore.kernel.org/linux-edac/20230720125425.3735538-6-muralimk@amd.com/ */
+            0x90..=0x9F => Self {
+                codename: CpuCodename::Amd(AmdCodename::MI300),
+                archname: CpuMicroArch::Amd(AmdMicroArch::Zen4),
+                step_info: CpuStepping::Unknown(s),
+                node: Some(ProcessNode::NM(5)),
+            },
             _ => Self {
                 codename: CpuCodename::Unknown(CpuVendor::AuthenticAMD, 0x19, m),
                 archname: CpuMicroArch::Unknown,
@@ -531,6 +539,7 @@ pub enum AmdCodename {
     Raphael,
     Phoenix,
     Phoenix2,
+    MI300,
 }
 
 #[cfg(feature = "std")]
