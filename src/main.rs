@@ -371,6 +371,10 @@ impl MainOpt {
                 #[cfg(debug_assertions)]
                 "aida64" => {
                     opt.load_aida64 = args.get(idx+1).cloned();
+
+                    if opt.load_aida64.is_none() {
+                        std::process::exit(1);
+                    }
                 },
                 "leaf" => {
                     opt.skip_zero = false;
