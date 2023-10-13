@@ -753,7 +753,7 @@ impl ProcInfo {
 }
 
 /// List of Intel CPU (SoC) codenmaes
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 #[allow(non_camel_case_types)]
 pub enum IntelCodename {
 /* Family 5 */
@@ -866,7 +866,7 @@ impl fmt::Display for IntelCodename {
 }
 
 /// List of Intel micro-architectures
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 #[allow(non_camel_case_types)]
 pub enum IntelMicroArch {
     P5C,
@@ -910,8 +910,35 @@ pub enum IntelMicroArch {
 }
 
 impl IntelMicroArch {
-    pub fn hybrid(core: Self, atom: Self) -> Self {
+    pub(crate) fn hybrid(core: Self, atom: Self) -> Self {
         Self::Hybrid(Box::new(core), Box::new(atom))
+    }
+
+    pub fn is_atom(&self) -> bool {
+        match self {
+            Self::Bonnell |
+            Self::Saltwell |
+            Self::Silvermont |
+            Self::Airmont |
+            Self::Goldmont |
+            Self::GoldmontPlus |
+            Self::Tremont |
+            Self::Gracemont |
+            Self::Crestmont => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_core(&self) -> bool {
+        !self.is_atom() && *self != Self::_Reserved
+    }
+
+    pub fn is_hybrid(&self) -> bool {
+        if let Self::Hybrid(_, _) = *self {
+            true
+        } else {
+            false
+        }
     }
 }
 

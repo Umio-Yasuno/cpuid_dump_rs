@@ -84,7 +84,7 @@ impl From<&CpuidResult> for Vendor {
 }
 
 /// List of x86_64 CPU vendors
-#[derive(Debug, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub enum CpuVendor {
     AuthenticAMD,
     GenuineIntel,

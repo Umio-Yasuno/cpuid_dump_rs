@@ -62,6 +62,7 @@ pub struct ProcInfo {
 }
 
 /// CPU (SoC) codenames by vendor
+#[derive(Debug, PartialEq, Eq)]
 pub enum CpuCodename {
     Amd(AmdCodename),
     Intel(IntelCodename),
