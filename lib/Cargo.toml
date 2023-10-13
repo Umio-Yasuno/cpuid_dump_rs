@@ -1,7 +1,7 @@
 [package]
 name = "libcpuid_dump"
-version = "0.1.0"
-authors = ["Umio Yasuno <53935716+Umio-Yasuno@users.noreply.github.com>"]
+version = "0.1.1"
+authors = ["Umio Yasuno <coelacanth_dream@protonmail.com>"]
 edition = "2018"
 license = "MIT"
 
