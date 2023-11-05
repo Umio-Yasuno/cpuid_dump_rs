@@ -17,7 +17,7 @@ checksum = "a08173bc88b7955d1b3145aa561539096c421ac8debde8cbc3612ec635fee29b"
 
 [[package]]
 name = "libcpuid_dump"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "libc",
  "windows",

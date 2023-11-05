@@ -17,4 +17,4 @@ name = "cpuid_dump"
 path = "src/main.rs"
 
 [dependencies]
-libcpuid_dump = { path = "lib/" }
+libcpuid_dump = { path = "lib/", version = "0.1.1" }
