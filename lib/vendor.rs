@@ -3,7 +3,7 @@ use crate::{cpuid, CpuidResult};
 /* ref: https://github.com/llvm/llvm-project/blob/main/clang/lib/Headers/cpuid.h */
 /* ref: https://github.com/gcc-mirror/gcc/blob/master/gcc/config/i386/cpuid.h */
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct Vendor {
     pub ebx: u32,
     pub ecx: u32,
@@ -84,7 +84,7 @@ impl From<&CpuidResult> for Vendor {
 }
 
 /// List of x86_64 CPU vendors
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum CpuVendor {
     AuthenticAMD,
     GenuineIntel,

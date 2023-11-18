@@ -1,7 +1,7 @@
 use crate::{CpuidResult, CpuVendor};
 use super::*;
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct RawCpuid {
     pub leaf: u32,
     pub sub_leaf: u32,

@@ -4,6 +4,7 @@
 use core::arch::x86_64::CpuidResult;
 use std::io;
 
+use libcpuid_dump::TopoId;
 use libcpuid_dump::{cpuid, CpuVendor};
 
 pub const INPUT_WIDTH: usize = "  0x00000000 0x0:  ".len();
@@ -154,43 +155,6 @@ fn bin_head() -> String {
     \n")
 }
 
-fn topo_info_head() -> String {
-    use libcpuid_dump::TopoId;
-
-    let topo_info = match TopoId::get_topo_info() {
-        Some(topo) => topo,
-        None => return "".to_string(),
-    };
-
-    let TopoId { pkg_id, core_id, smt_id, x2apic_id } = topo_info;
-
-    format!("\n[\
-        Pkg: {pkg_id:03}, \
-        Core: {core_id:03}, \
-        SMT: {smt_id:03}, \
-        x2APIC: {x2apic_id:03}\
-    ]\n")
-}
-
-fn topo_info_thread_id_head(thread_id: usize) -> String {
-    use libcpuid_dump::TopoId;
-
-    let topo_info = match TopoId::get_topo_info() {
-        Some(topo) => topo,
-        None => return format!("[Thread: {thread_id:03}]\n"),
-    };
-
-    let TopoId { pkg_id, core_id, smt_id, x2apic_id } = topo_info;
-
-    format!("\n[\
-        Pkg: {pkg_id:03}, \
-        Core: {core_id:03}, \
-        SMT: {smt_id:03}, \
-        x2APIC: {x2apic_id:03}, \
-        Thread: {thread_id:03}\
-    ]\n")
-}
-
 fn dump_write(pool: &[u8]) -> io::Result<()> {
     use std::io::{Write, stdout};
     let mut out = stdout().lock();
@@ -246,7 +210,7 @@ fn help_msg() {
     println!("{MSG}")
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Copy, Clone)]
 enum DumpFormat {
     Raw,
     Binary,
@@ -256,13 +220,6 @@ enum DumpFormat {
 }
 
 impl DumpFormat {
-    fn thread_id_head(&self, thread_id: usize) -> String {
-        match self {
-            Self::CompatCpuid => format!("CPU {thread_id}:\n"),
-            _ => topo_info_thread_id_head(thread_id),
-        }
-    }
-
     fn head_fmt(&self) -> String {
         match self {
             Self::Binary => bin_head(),
@@ -428,22 +385,6 @@ impl MainOpt {
         opt
     }
 
-    fn rawcpuid_pool(&self, leaf_pool: &[(u32, u32)]) -> Vec<RawCpuid> {
-        let mut cpuid_pool: Vec<RawCpuid> = Vec::with_capacity(leaf_pool.len());
-
-        for (leaf, sub_leaf) in leaf_pool {
-            let cpuid = RawCpuid::exe(*leaf, *sub_leaf);
-
-            if self.skip_zero && cpuid.check_result_zero() {
-                continue;
-            }
-
-            cpuid_pool.push(cpuid)
-        }
-
-        cpuid_pool
-    }
-
     fn select_pool(&self, rawcpuid_pool: &[RawCpuid], vendor: &CpuVendor) -> Vec<u8> {
         let fmt_func = self.fmt.rawcpuid_fmt_func();
 
@@ -453,118 +394,27 @@ impl MainOpt {
             .collect()
     }
 
-    fn pool_all_thread(&self, leaf_pool: &[(u32, u32)], cpu_vendor: CpuVendor) -> Vec<u8> {
-        use std::thread;
-        use std::sync::Arc;
-        use libcpuid_dump::util;
-
-        let opt = Arc::new(self.clone());
-        let len = leaf_pool.len();
-        let leaf_pool = Arc::from(leaf_pool);
-        let cpu_list = util::cpu_set_list().unwrap();
-        let cpu_vendor = Arc::new(cpu_vendor);
-        /* this with_capacity is experiental */
-        let mut main_pool = Vec::<u8>::with_capacity( if opt.diff {
-            TOTAL_WIDTH * len * cpu_list.len() / 2
-        } else {
-            TOTAL_WIDTH * len * cpu_list.len() * 2
-        });
-        let mut handles: Vec<thread::JoinHandle<_>> = Vec::with_capacity(cpu_list.len());
-
-        let (first_pool, topo_head) = {
-            /* To confine the effects of pin_thread */
-            thread::scope(|s| s.spawn(|| {
-                let cpu = cpu_list[0];
-                util::pin_thread(cpu).unwrap();
-
-                let topo_head = opt.fmt.thread_id_head(cpu);
-
-                (
-                    Arc::new(opt.rawcpuid_pool(&leaf_pool)),
-                    topo_head.into_bytes(),
-                )
-            }).join().unwrap())
-        };
-
-        main_pool.extend(topo_head);
-        main_pool.extend(opt.fmt.head_fmt().into_bytes());
-        main_pool.extend(opt.select_pool(&first_pool, &cpu_vendor));
-
-        for cpu in &cpu_list[1..] {
-            let cpu = *cpu;
-            let opt = Arc::clone(&opt);
-            let leaf_pool = Arc::clone(&leaf_pool);
-            let first_pool = Arc::clone(&first_pool);
-            let cpu_vendor = Arc::clone(&cpu_vendor);
-
-            handles.push(thread::spawn(move || {
-                util::pin_thread(cpu).unwrap();
-
-                let diff = {
-                    let mut sub_pool = opt.rawcpuid_pool(&leaf_pool);
-
-                    if opt.diff {
-                        let mut first_pool = first_pool.iter();
-                        sub_pool.retain(|sub| first_pool.next().unwrap() != sub );
-                    }
-
-                    sub_pool
-                };
-
-                let topo_head = opt.fmt.thread_id_head(cpu);
-
-                [
-                    topo_head.into_bytes(),
-                    LINE.as_bytes().to_vec(),
-                    opt.select_pool(&diff, &cpu_vendor),
-                ].concat()
-            }));
-        }
-
-        for h in handles {
-            let v = h.join().unwrap();
-            main_pool.extend(v);
-        }
-
-        main_pool
-    }
-
     fn dump_pool(&self) -> Vec<u8> {
         let leaf_pool = leaf_pool();
-        let cpu_vendor = CpuVendor::get();
 
         if self.dump_all {
-            return self.pool_all_thread(&leaf_pool, cpu_vendor);
+            return dump_all_threads(&leaf_pool, self.skip_zero, self.fmt, self.diff).into_bytes();
         }
 
-        let rawcpuid_pool = self.rawcpuid_pool(&leaf_pool);
+        let cpuid_dump = CpuidDump::new(&leaf_pool, self.skip_zero);
 
-        [
-            topo_info_head().into_bytes(),
-            self.fmt.head_fmt().into_bytes(),
-            self.select_pool(&rawcpuid_pool, &cpu_vendor),
-        ].concat()
+        cpuid_dump.top_disp(self.fmt).into_bytes()
     }
 
     fn only_leaf(&self, leaf: u32, sub_leaf: u32) -> io::Result<()> {
-        let cpu_vendor = CpuVendor::get();
-
         let tmp = if self.dump_all {
-            self.pool_all_thread(&[(leaf, sub_leaf)], cpu_vendor)
+            dump_all_threads(&[(leaf, sub_leaf)], self.skip_zero, self.fmt, self.diff)
         } else {
-            let raw_result = RawCpuid::exe(leaf, sub_leaf);
-            let dump_fmt = self.fmt.rawcpuid_fmt_func();
-
-            [
-                topo_info_head(),
-                self.fmt.head_fmt(),
-                dump_fmt(&raw_result, &cpu_vendor),
-            ]
-            .concat()
-            .into_bytes()
+            let cpuid_dump = CpuidDump::new(&[(leaf, sub_leaf)], self.skip_zero);
+            cpuid_dump.top_disp(self.fmt)
         };
 
-        dump_write(&tmp)?;
+        dump_write(&tmp.into_bytes())?;
 
         Ok(())
     }
@@ -611,6 +461,154 @@ impl MainOpt {
             },
         }
     }
+}
+
+#[derive(Debug, Clone)]
+struct CpuidDump {
+    pub cpu_vendor: CpuVendor,
+    pub rawcpuid_pool: Vec<RawCpuid>,
+    pub topo_id: Option<TopoId>,
+    pub thread_id: Option<usize>,
+}
+
+impl CpuidDump {
+    fn new(leaf_pool: &[(u32, u32)], skip_zero: bool) -> Self {
+        let cpu_vendor = CpuVendor::get();
+
+        let rawcpuid_pool = leaf_pool.iter().filter_map(|(leaf, sub_leaf)| {
+            let rawcpuid = RawCpuid::exe(*leaf, *sub_leaf);
+            
+            if skip_zero && rawcpuid.check_result_zero() {
+                None
+            } else {
+                Some(rawcpuid)
+            }
+        }).collect();
+        let topo_id = TopoId::get_topo_info();
+
+        Self {
+            cpu_vendor,
+            rawcpuid_pool,
+            topo_id,
+            thread_id: None,
+        }
+    }
+
+    fn new_with_thread_id(leaf_pool: &[(u32, u32)], skip_zero: bool, thread_id: usize) -> Self {
+        let mut tmp = Self::new(leaf_pool, skip_zero);
+        tmp.thread_id = Some(thread_id);
+
+        tmp
+    }
+
+    fn top_disp(&self, dump_fmt: DumpFormat) -> String {
+        [
+            self.topo_info_head(),
+            dump_fmt.head_fmt(),
+            self.select_pool(dump_fmt),
+        ].concat()
+    }
+
+    fn disp(&self, dump_fmt: DumpFormat) -> String {
+        [
+            self.topo_info_head(),
+            // dump_fmt.head_fmt(),
+            self.select_pool(dump_fmt),
+        ].concat()
+    }
+
+    fn select_pool(&self, dump_fmt: DumpFormat) -> String {
+        let fmt_func = dump_fmt.rawcpuid_fmt_func();
+
+        self.rawcpuid_pool
+            .iter()
+            .map(|rawcpuid| fmt_func(rawcpuid, &self.cpu_vendor))
+            .collect()
+    }
+
+    fn topo_info_head(&self) -> String {
+        match (&self.topo_id, &self.thread_id) {
+            (Some(topo), Some(thread_id)) => {
+                let TopoId { pkg_id, core_id, smt_id, x2apic_id } = topo;
+
+                format!("\n[\
+                    Pkg: {pkg_id:03}, \
+                    Core: {core_id:03}, \
+                    SMT: {smt_id:03}, \
+                    x2APIC: {x2apic_id:03}, \
+                    Thread: {thread_id:03}\
+                ]\n")
+            },
+            (Some(topo), None) => {
+                let TopoId { pkg_id, core_id, smt_id, x2apic_id } = topo;
+
+                format!("\n[\
+                    Pkg: {pkg_id:03}, \
+                    Core: {core_id:03}, \
+                    SMT: {smt_id:03}, \
+                    x2APIC: {x2apic_id:03}\
+                ]\n")
+            },
+            (_, Some(thread_id)) => format!("[Thread: {thread_id:03}]\n"),
+            (_, _) => String::new(),
+        }
+    }
+}
+
+fn dump_all_threads(
+    leaf_pool: &[(u32, u32)],
+    skip_zero: bool,
+    dump_fmt: DumpFormat,
+    diff: bool,
+) -> String {
+    use std::thread;
+    use std::sync::Arc;
+    use libcpuid_dump::util;
+
+    let leaf_pool = Arc::from(leaf_pool);
+    let cpu_list = util::cpu_set_list().unwrap();
+    let mut handles: Vec<thread::JoinHandle<_>> = Vec::with_capacity(cpu_list.len());
+
+    let first = {
+        /* To confine the effects of pin_thread */
+        thread::scope(|s| s.spawn(|| {
+            let cpu = cpu_list[0];
+            util::pin_thread(cpu).unwrap();
+
+            Arc::new(CpuidDump::new_with_thread_id(&leaf_pool, skip_zero, cpu))
+        }).join().unwrap())
+    };
+
+    for cpu in &cpu_list[1..] {
+        let cpu = *cpu;
+        let leaf_pool = Arc::clone(&leaf_pool);
+        let first = Arc::clone(&first);
+
+        handles.push(thread::spawn(move || {
+            util::pin_thread(cpu).unwrap();
+
+            let cpuid_dump = {
+                let mut sub = CpuidDump::new_with_thread_id(&leaf_pool, skip_zero, cpu);
+
+                if diff {
+                    let mut first = first.rawcpuid_pool.iter();
+                    sub.rawcpuid_pool.retain(|sub| first.next().unwrap() != sub );
+                }
+
+                sub
+            };
+
+            cpuid_dump
+        }));
+    }
+
+    let s = first.top_disp(dump_fmt);
+    let ss: String = handles.into_iter().filter_map(|h| {
+        let cpuid_dump = h.join().ok()?;
+        Some(cpuid_dump.disp(dump_fmt))
+    }).collect();
+
+    format!("{s}{ss}")
 }
 
 fn main() {
