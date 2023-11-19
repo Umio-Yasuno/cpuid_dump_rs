@@ -7,7 +7,7 @@ const LEAF: u32 = 0x8000_0026;
 /* from AMD Zen 4 */
 /* ref: #55901, Preliminary Processor Programming Reference (PPR) for AMD Family 19h Model 11h, Revision B1 Processors Volume 1 of 6 */
 /// AMD Extended Topology, available from `CPUID.(EAX=8000_0026h, ECX=n)`
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct AmdExtTopo {
     pub asymmetric_cores: bool,
     pub hetero_cores: bool,
@@ -23,7 +23,7 @@ pub struct AmdExtTopo {
 }
 
 /// Used for [AmdExtTopo]
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
 pub enum AmdTopoLevelType {
     Core = 1,
@@ -65,7 +65,7 @@ impl AmdTopoLevelType {
 }
 
 /// Used for [AmdExtTopo]
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AmdCoreType {
     Performance,
     Efficiency,
@@ -96,7 +96,7 @@ impl fmt::Display for AmdCoreType {
 }
 
 /// Used for [AmdExtTopo]
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[allow(non_camel_case_types)]
 pub enum AmdNativeModelId {
     Zen_4,

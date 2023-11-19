@@ -51,7 +51,7 @@ impl ProcInfo {
 }
 
 /// List of Zhaoxin CPU (SoC) codenmaes
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[allow(non_camel_case_types)]
 pub enum ZhaoxinCodename {
     ZX_C_4000,
@@ -74,7 +74,7 @@ impl fmt::Display for ZhaoxinCodename {
 }
 
 /// List of Zhaoxin micro-architectures
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ZhaoxinMicroArch {
     Zhangjiang, // 张江
     Wudaokou, // 五道口

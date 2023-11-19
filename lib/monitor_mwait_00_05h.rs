@@ -1,7 +1,7 @@
 use crate::{cpuid, CpuidResult};
 
 /// Information available from `CPUID.(EAX=05h)`
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct MonitorMwait {
     pub min_monitor_line_size: u16,
     pub max_monitor_line_size: u16,

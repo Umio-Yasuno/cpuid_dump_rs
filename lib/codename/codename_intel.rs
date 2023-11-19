@@ -753,7 +753,7 @@ impl ProcInfo {
 }
 
 /// List of Intel CPU (SoC) codenmaes
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[allow(non_camel_case_types)]
 pub enum IntelCodename {
 /* Family 5 */
@@ -866,7 +866,7 @@ impl fmt::Display for IntelCodename {
 }
 
 /// List of Intel micro-architectures
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[allow(non_camel_case_types)]
 pub enum IntelMicroArch {
     P5C,

@@ -1,6 +1,7 @@
 use crate::{CpuidResult};
 
 /// Physical/Virtual Addresses size (bit) available from `CPUID.(EAX=8000_0008h):EAX`
+#[derive(Debug, Clone)]
 pub struct AddressSize {
     pub physical: u8,
     pub virtual_: u8,

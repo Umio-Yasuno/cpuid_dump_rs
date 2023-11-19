@@ -54,6 +54,7 @@ impl ProcInfo {
 }
 
 /// Codename, Micro-architecture, Stepping, ProcessNode
+#[derive(Debug, Clone)]
 pub struct ProcInfo {
     pub codename: CpuCodename,
     pub archname: CpuMicroArch,
@@ -62,7 +63,7 @@ pub struct ProcInfo {
 }
 
 /// CPU (SoC) codenames by vendor
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum CpuCodename {
     Amd(AmdCodename),
     Intel(IntelCodename),
@@ -83,6 +84,7 @@ impl fmt::Display for CpuCodename {
 }
 
 /// CPU micro-architectures by vendor
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub enum CpuMicroArch {
     Amd(AmdMicroArch),
     Intel(IntelMicroArch),
@@ -103,7 +105,7 @@ impl fmt::Display for CpuMicroArch {
 }
 
 /// Stepping information (A0, A1, B0 ...)
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 #[allow(non_camel_case_types)]
 pub enum CpuStepping {
     A0,
@@ -161,6 +163,7 @@ impl fmt::Display for CpuStepping {
     }
 }
 
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum ProcessNode {
     _UM(u8),
     NM(u8),
@@ -181,6 +184,7 @@ impl fmt::Display for ProcessNode {
 }
 
 /// Family/Model/Stepping
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct FamModStep {
     pub syn_fam: u32,
     pub syn_mod: u32,

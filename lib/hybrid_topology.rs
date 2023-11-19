@@ -5,14 +5,14 @@ use crate::util::*;
 use std::sync::Arc;
 use std::thread;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct CachePropCount {
     pub prop: CacheProp,
     pub count: u32,
     pub shared_between_topology: bool, // shared_all_threads?
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TopoCacheInfo {
     pub l1d: Option<CachePropCount>,
     pub l1i: Option<CachePropCount>,
@@ -261,6 +261,7 @@ impl TopoCacheInfo {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct TopoPartInfo {
    pub core_type: HybridCoreType,
    pub num_logical_proc: u32,

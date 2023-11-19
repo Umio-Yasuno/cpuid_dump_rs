@@ -1,7 +1,7 @@
 #[cfg(feature = "std")]
 use std::fmt;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum TlbType {
     L1d,
     L1i,
@@ -16,7 +16,7 @@ impl fmt::Display for TlbType {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub enum TlbAssoc {
     Disabled,
     Way(u8),

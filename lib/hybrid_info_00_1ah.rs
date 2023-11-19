@@ -3,7 +3,7 @@ use crate::{cpuid, CpuidResult};
 /* https://github.com/slimbootloader/slimbootloader/blob/master/Platform/AlderlakeBoardPkg/Library/Stage2BoardInitLib/CpuInfoLib.c */
 
 /// Used for [HybridInfo]. The core-type within the Intel hybrid architecture.
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd)]
 #[repr(u8)]
 pub enum HybridCoreType {
     _Reserved1 = 0x10, // Quark?
@@ -49,7 +49,7 @@ impl IntelNativeModelId {
 
 /// The micro-arhitecture within the Inel hybrid architecture.
 /// It is determined from `CPUID.(EAX=1Ah):EAX`.
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 #[repr(u32)]
 pub enum IntelNativeModelId {
     /* Atom */

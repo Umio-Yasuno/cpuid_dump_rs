@@ -1,6 +1,6 @@
 use crate::CpuidResult;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct IntelTlbParam {
     pub cache_type: IntelTlbType,
     pub cache_level: u8,
@@ -60,7 +60,7 @@ impl IntelTlbParam {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum IntelTlbType {
     Null,
     Data,

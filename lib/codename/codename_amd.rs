@@ -483,7 +483,7 @@ impl ProcInfo {
 }
 
 /// List of AMD CPU (SoC) codenmaes
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 #[allow(non_camel_case_types)]
 pub enum AmdCodename {
     /* Fam10h */
@@ -556,7 +556,7 @@ impl fmt::Display for AmdCodename {
 }
 
 /// List of AMD micro-architectures
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum AmdMicroArch {
     Puma2008,
     K10,

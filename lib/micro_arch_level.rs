@@ -3,7 +3,7 @@ use crate::{cpuid, CpuidResult};
 /// Micro-architecture level defined by the x86-64 psABI
 #[allow(non_camel_case_types)]
 #[repr(u8)]
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum MicroArchLevel {
     X86_64_V0,
     X86_64_V1, // baseline
