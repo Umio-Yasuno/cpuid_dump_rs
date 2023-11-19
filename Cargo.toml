@@ -1,9 +1,16 @@
 [package]
-name = "cpuid_dump"
-version = "0.1.0"
+name = "cpuid_dump_rs"
+version = "0.1.2"
 edition = "2018"
-authors = ["Umio Yasuno <53935716+Umio-Yasuno@users.noreply.github.com>"]
+authors = ["Umio Yasuno <coelacanth_dream@protonmail.com>"]
 license = "MIT"
+
+description = "The simple cpuid dump tool & library"
+homepage = "https://github.com/Umio-Yasuno/cpuid_dump_rs"
+repository = "https://github.com/Umio-Yasuno/cpuid_dump_rs"
+
+keywords = ["cpuid", "x86", "amd64"]
+readme = "README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -17,4 +24,4 @@ name = "cpuid_dump"
 path = "src/main.rs"
 
 [dependencies]
-libcpuid_dump = { path = "lib/", version = "0.1.1" }
+libcpuid_dump = { path = "lib/", version = "0.1.2" }
