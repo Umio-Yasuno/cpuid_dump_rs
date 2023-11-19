@@ -46,16 +46,10 @@ impl TopoId {
         None
     }
 
-    /*
-        Page 9: Detecting Hyper-Threading Technology - kuo-cputopology-rc1-rh1-final-256920.pdf
-        https://www.intel.com/content/dam/develop/external/us/en/documents/kuo-cputopology-rc1-rh1-final-256920.pdf
-    */
-    pub fn get_topo_info() -> Option<Self> {
-        let topo_leaf = Self::get_topology_leaf()?;
-
-        let smt_cpuid = Self::get_cpuid_by_level_type(topo_leaf, TopoLevelType::SMT)?;
-        let core_cpuid = Self::get_cpuid_by_level_type(topo_leaf, TopoLevelType::Core)?;
-
+    pub fn get_topo_info_with_smt_core_cpuid(
+        smt_cpuid: &CpuidResult,
+        core_cpuid: &CpuidResult,
+    ) -> Self {
         let x2apic_id = smt_cpuid.edx;
 
         let smt_mask_width = smt_cpuid.eax & 0x1F;
@@ -70,11 +64,24 @@ impl TopoId {
         let core_id = (x2apic_id & coreonly_select_mask) >> smt_mask_width;
         let pkg_id = (x2apic_id & pkg_select_mask) >> coreplus_mask_width;
 
-        Some(Self {
+        Self {
             smt_id,
             core_id,
             pkg_id,
             x2apic_id,
-        })
+        }
+    }
+
+    /*
+        Page 9: Detecting Hyper-Threading Technology - kuo-cputopology-rc1-rh1-final-256920.pdf
+        https://www.intel.com/content/dam/develop/external/us/en/documents/kuo-cputopology-rc1-rh1-final-256920.pdf
+    */
+    pub fn get_topo_info() -> Option<Self> {
+        let topo_leaf = Self::get_topology_leaf()?;
+
+        let smt_cpuid = Self::get_cpuid_by_level_type(topo_leaf, TopoLevelType::SMT)?;
+        let core_cpuid = Self::get_cpuid_by_level_type(topo_leaf, TopoLevelType::Core)?;
+
+        Some(Self::get_topo_info_with_smt_core_cpuid(&smt_cpuid, &core_cpuid))
     }
 }
