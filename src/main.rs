@@ -254,8 +254,12 @@ fn dump_all_threads(
                 let mut sub = CpuidDump::new_with_thread_id(&leaf_pool, skip_zero, cpu);
 
                 if diff {
-                    let mut first = first.rawcpuid_pool.iter();
-                    sub.rawcpuid_pool.retain(|sub| first.next().unwrap() != sub );
+                    let mut first_rawcpuid_pool = first.rawcpuid_pool.iter();
+
+                    sub.rawcpuid_pool.retain(|sub| {
+                        let Some(first) = first_rawcpuid_pool.next() else { return false };
+                        first != sub
+                    });
                 }
 
                 sub

@@ -82,7 +82,8 @@ fn help_msg() {
         "        Display result only for the specified value, the value is Sub_Leaf/InputECX <u32>.\n",
         "    --s <path/filename>, --save <path/filename>\n",
         "        Save dump result to text file.\n",
-        "        If there is no path/filename argument, will be used \"./<processor_name>\".",
+        "        If there is no path/filename argument, will be used \"./<processor_name>\".\n",
+        "    --aida64 <path/filename>\n",
     );
 
     println!("{MSG}")
@@ -253,20 +254,15 @@ impl MainOpt {
                     opt.skip_zero = false;
                     opt.diff = false;
                 },
-                _ => eprintln!("Unknown option: {}", arg),
+                _ => {
+                    eprintln!("Unknown option: {}", arg);
+                    help_msg();
+                    std::process::exit(1);
+                },
             }
         }
 
         opt
-    }
-
-    fn select_pool(&self, rawcpuid_pool: &[RawCpuid], vendor: &CpuVendor) -> Vec<u8> {
-        let fmt_func = self.fmt.rawcpuid_fmt_func();
-
-        rawcpuid_pool
-            .iter()
-            .flat_map(|rawcpuid| fmt_func(rawcpuid, vendor).into_bytes())
-            .collect()
     }
 
     pub fn dump_pool(&self) -> Vec<u8> {
@@ -310,10 +306,25 @@ impl MainOpt {
 
     pub fn load_aida64(&self, path: &String) -> io::Result<()> {
         let log = std::fs::read_to_string(path)?;
-        let (rawcpuid_pool, cpu_vendor) = load_aida64_log::parse_aida64(&log);
-        let tmp = self.select_pool(&rawcpuid_pool, &cpu_vendor);
+        let mut vec_cpuid_dump = load_aida64_log::parse_aida64(&log);
+        let mut cpuid_dump_iter = vec_cpuid_dump.iter_mut();
+        let first = cpuid_dump_iter.next().unwrap();
 
-        dump_write(&tmp)?;
+        let s = first.top_disp(self.fmt);
+        let ss: String = cpuid_dump_iter.map(|cpuid_dump| {
+            if self.diff {
+                let mut first_rawcpuid_pool = first.rawcpuid_pool.iter();
+
+                cpuid_dump.rawcpuid_pool.retain(|sub| {
+                    let Some(first) = first_rawcpuid_pool.next() else { return false };
+                    first != sub
+                });
+            }
+
+            cpuid_dump.disp(self.fmt)
+        }).collect();
+
+        dump_write(&format!("{s}{ss}").into_bytes())?;
 
         Ok(())
     }
