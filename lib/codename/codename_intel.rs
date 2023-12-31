@@ -701,7 +701,7 @@ impl ProcInfo {
             },
             /* Meteor Lake */
             0xAA => Self {
-                codename: CpuCodename::Intel(IntelCodename::MeteorLake_S),
+                codename: CpuCodename::Intel(IntelCodename::MeteorLake_L),
                 archname: CpuMicroArch::Intel(IntelMicroArch::hybrid(
                     IntelMicroArch::RedwoodCove,
                     IntelMicroArch::Crestmont,
@@ -710,7 +710,7 @@ impl ProcInfo {
                 node: None,
             },
             0xAC => Self {
-                codename: CpuCodename::Intel(IntelCodename::MeteorLake_L),
+                codename: CpuCodename::Intel(IntelCodename::MeteorLake_S),
                 archname: CpuMicroArch::Intel(IntelMicroArch::hybrid(
                     IntelMicroArch::RedwoodCove,
                     IntelMicroArch::Crestmont,
@@ -731,7 +731,7 @@ impl ProcInfo {
                 node: None,
             },
             0xC5 => Self {
-                codename: CpuCodename::Intel(IntelCodename::ArrowLake),
+                codename: CpuCodename::Intel(IntelCodename::ArrowLake_H),
                 archname: CpuMicroArch::Unknown,
                 step_info: CpuStepping::Unknown(s),
                 node: Some(ProcessNode::IntelA(20)),
@@ -851,7 +851,7 @@ pub enum IntelCodename {
     MeteorLake_L,
     MeteorLake_B5H,
     LunarLake_M,
-    ArrowLake,
+    ArrowLake_H,
     ArrowLake_S,
     /* Xeon Phi */
     KnightsLanding,
