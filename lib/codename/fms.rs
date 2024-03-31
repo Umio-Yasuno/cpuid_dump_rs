@@ -30,6 +30,7 @@ impl ProcInfo {
                 0x16 => Self::amd_fam16h(m, s),
                 0x17 => Self::amd_fam17h(m, s),
                 0x19 => Self::amd_fam19h(m, s),
+                0x1A => Self::amd_fam1ah(m, s),
                 _ => unknown!(vendor, f, m, s),
             },
             CpuVendor::GenuineIntel => match f {

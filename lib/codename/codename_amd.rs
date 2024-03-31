@@ -480,6 +480,17 @@ impl ProcInfo {
             },
         }
     }
+    
+    pub(crate) fn amd_fam1ah(m: u32, s: u32) -> Self {
+        match m {
+            _ => Self {
+                codename: CpuCodename::Unknown(CpuVendor::AuthenticAMD, 0x1A, m),
+                archname: CpuMicroArch::Amd(AmdMicroArch::Zen5),
+                step_info: CpuStepping::Unknown(s),
+                node: None,
+            }
+        }
+    }
 }
 
 /// List of AMD CPU (SoC) codenmaes
@@ -576,6 +587,7 @@ pub enum AmdMicroArch {
     Zen3,
     Zen3Plus,
     Zen4,
+    Zen5,
     _Reserved,
 }
 
@@ -588,6 +600,7 @@ impl fmt::Display for AmdMicroArch {
             Self::Zen3 => write!(f, "Zen 3"),
             Self::Zen3Plus => write!(f, "Zen 3+"),
             Self::Zen4 => write!(f, "Zen 4"),
+            Self::Zen5 => write!(f, "Zen 5"),
             _ => write!(f, "{:?}", self),
         }
     }
