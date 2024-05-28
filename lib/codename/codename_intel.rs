@@ -292,7 +292,7 @@ impl ProcInfo {
             /* Kaby Lake */
             0x8E => {
                 let (codename, step_info) = match s {
-                    0x9 => (IntelCodename::KabyLake_L, CpuStepping::H0), // B0, S0, J0, J1
+                    0x9 => (IntelCodename::AmberLake_L, CpuStepping::H0), // B0, S0, J0, J1
                     0xA => (IntelCodename::KabyLake_L, CpuStepping::Y0),
                     0xB => (IntelCodename::WhiskeyLake_L, CpuStepping::W0),
                     0xC => (IntelCodename::WhiskeyLake_L, CpuStepping::V0),
