@@ -483,6 +483,12 @@ impl ProcInfo {
     
     pub(crate) fn amd_fam1ah(m: u32, s: u32) -> Self {
         match m {
+            0x44 => Self {
+                codename: CpuCodename::Amd(AmdCodename::GraniteRidge),
+                archname: CpuMicroArch::Amd(AmdMicroArch::Zen5),
+                step_info: CpuStepping::Unknown(s),
+                node: Some(ProcessNode::NM(4)),
+            },
             _ => Self {
                 codename: CpuCodename::Unknown(CpuVendor::AuthenticAMD, 0x1A, m),
                 archname: CpuMicroArch::Amd(AmdMicroArch::Zen5),
@@ -551,6 +557,7 @@ pub enum AmdCodename {
     Phoenix,
     Phoenix2,
     MI300,
+    GraniteRidge,
 }
 
 #[cfg(feature = "std")]
