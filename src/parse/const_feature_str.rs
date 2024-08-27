@@ -553,6 +553,7 @@ pub(crate) const fn ftr_amd_80_21_eax_x0() -> [&'static str; 32] {
     /* */
     ftr[17] = "CpuidUserDis"; // GpOnUserCpuid
     ftr[18] = "EPSF"; // Enhanced Predictive Store Forwarding
+    ftr[22] = "Workload_Class";
 
     ftr
 }
