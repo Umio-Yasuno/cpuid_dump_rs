@@ -550,10 +550,16 @@ pub(crate) const fn ftr_amd_80_21_eax_x0() -> [&'static str; 32] {
     ftr[11] = "FSRC"; // Fast Short Repe Cmpsb
     // ftr[12] = "";
     ftr[13] = "PrefetchCtlMsr";
+    ftr[14] = "L2TlbSizeX32";
+    ftr[15] = "AMD_ERMSB";
     /* */
     ftr[17] = "CpuidUserDis"; // GpOnUserCpuid
     ftr[18] = "EPSF"; // Enhanced Predictive Store Forwarding
-    ftr[22] = "Workload_Class";
+    ftr[19] = "FAST_REP_SCASB"; // Enhanced REP MOVSB/STOSB
+    ftr[21] = "FP512_DOWNGRADE";
+    ftr[22] = "Workload_Class"; // WL_CLASS_SUPPORT
+    ftr[24] = "ERAPS"; // enhanced return address predictor security
+    ftr[27] = "SBPB"; // Selective Branch Predictor Barrier
 
     ftr
 }
